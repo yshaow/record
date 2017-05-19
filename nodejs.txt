@@ -1,0 +1,79 @@
+官网：nodejs.org www.npmjs.com
+1.安装node.js  
+	》node.js的版本  偶数位为稳定版本  奇数为非稳定版本
+	》git下载  用www.bing.com下载 比较快 搜索git bash
+	》node.js下载  nodejs.org官网下载
+
+2.node.js API讲解
+
+3.node.js搭建小应用
+
+
+4.grunt前端自动化工具
+	》前端集成解决方案
+	》grunt依赖于nodejs
+	》npm --》node package manager node包管理和分发工具
+	》安装grunt  npm install -g(全局安装) grunt-cli
+	》yeoman http://yeoman.io/ 安装 npm install -g yo 验证方法 yo -v
+		作用：在web项目的立项阶段 使用yeoman来生成项目的文件，代码结构
+		yeoman自动将最佳实践和工具整合进来 加速和方便了我们后续的开发
+		代码校验
+		测试
+		压缩
+		生成器自由发挥 
+		》yeoman的使用
+			生成器 generators
+			安装generator
+			npm install -g generator-angular
+			mkdir yo  
+			生成ng项目：yo angular 名称
+	》bower http://bower.io/ npm install -g bower    bower -v
+		web的包管理器  自动下载框架 库
+		下载文档：bower install jquery(或者url)  最新的稳定版本
+		bower init 生成配置文件
+
+	》grunt http://gruntjs.com npm install -g grunt-cli grunt
+		
+	》npm uninstall -g yo 卸载yeoman
+	  npm cache clean 清除npm缓存
+	  npm install -g npm 更新npm
+
+	  {//package.json
+		"name": "grunttest",
+		"version": "1.0.0",
+		"devDependencies":{//开发依赖项
+		
+		}
+	   }
+	   在具体的项目目录中 安装grunt npm install grunt --save-dev
+	   grunt插件： http://www.gruntjs.net/plugins 
+	   常用插件：
+		Contrib-jshint——javascript语法错误检查；
+			npm install grunt-contrib-jshint --save-dev
+		Contrib-watch——实时监控文件变化、调用相应的任务重新执行；ctrl + c暂停自动检查
+			npm install grunt-contrib-watch --save-dev
+		Contrib-clean——清空文件、文件夹；
+		Contrib-uglify——压缩javascript代码
+			npm install grunt-contrib-uglify --save-dev  安装插件
+		Contrib-copy——复制文件、文件夹
+		Contrib-concat——合并多个文件的代码到一个文件中
+		contrib-cssmin--压缩css
+			npm install grunt-contrib-cssmin --save-dev
+		contrib-htmlmin --压缩html
+			npm install grunt-contrib-htmlmin --save-dev
+		contrib-csslint  --css语法检查
+			npm install grunt-contrib-csslint --save-dev
+		karma——前端自动化测试工具
+		************************************************
+		npm install load-grunt-tasks --save-dev
+		npm install time-grunt --save-dev
+		***注意：批量安装插件  npm install  不过要在当前目录下有package.json文件***
+		grunt+bower  npm install grunt-bower-task --save-dev  最后：grunt bower
+		************************************************
+		创建项目过程：
+			》通过 npm init 生成 package.json文件
+			》安装 grunt 等所需插件
+			》编写 gruntfile.js 文件
+			拷贝文件：npm install grunt-contrib-copy --save-dev
+			删除文件：npm install grunt-contrib-clean --save-dev
+			Modernizr--检测浏览器对css3和html5功能的支持情况 npm install grunt-modernizr --save-dev
