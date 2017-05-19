@@ -1,0 +1,67 @@
+﻿1.如果支持Google Chrome Frame：GCF，则使用GCF渲染；如果系统安装ie8或以上版本，则使用最高版本ie渲染；否则，这个设定可以忽略。
+<meta http-equiv="X-UA-Compatible" content="IE=Edge，chrome=1">
+2.使得低版本的ie兼容h5与css3
+<!--[if lt IE 9]>
+    /***用于解决IE9以下版本浏览器对HTML5新增标签不识别，并导致CSS不起作用的问题。***/
+    <!--<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>-->
+    
+    /***Respond.js 是一个快速、轻量的 polyfill，用于为 IE6-8 以及其它不支持 CSS3 Media Queries 的浏览器
+    提供媒体查询的 min-width 和 max-width 特性，实现响应式网页设计（Responsive Web Design）。***/
+    <!--<script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>-->
+<![endif]-->
+3.使得低版本ie兼容rgba
+filter:progid:DXImageTransform.Microsoft.gradient(startColorstr=#7fffffff,endColorstr=#7fffffff);/*ie7 IE8支持透明度*/
+4.使得低版本ie兼容rem
+https://github.com/chuckcarpenter/REM-unit-polyfill 下载rem.js引用到文档的最后
+5.Ie9以下font-size没继承？
+6.ie中img的offset问题  增加了垂直方向上的距离
+给img加样式display:block 将图片转为块级元素
+7.使用rem.js之后 ie8 ie7的背景图片无法显示--》在引入rem.js之后在引入相关css文件
+8.ie6,ie7下，父元素加了个filter滤镜渐变背景后，里面的子元素用绝对定位超出盒子，就被隐藏了
+9.img会把父层元素的高度撑高一定的高度
+img{
+    vertical-align:bottom;
+}
+10.ie不支持 :last-child :nth-child
+	如：li:first-child+li  表示nth-child(2)
+	    li:first-child+li+li  表示nth-child(3)
+11.ie默认保留小数位是两位  特别是设置元素宽度时需要注意
+12.ie 行内元素与块级元素挨着的两行会隔着很远  把两个都换成块级元素即可
+13.ie7 不支持display:inline-block
+	ul{
+		display: inline-block;
+		*zoom: 1;
+		*display: inline;
+	}
+14.ie h标签  位置和前面元素有大约10px的重叠问题 将其设置为inline-block
+15.ie7中 如果子元素中有position：relative 或者absolute  那么父层元素的overflow：hidden将失效
+16.ie中 display:inline-block  占满一行
+为其父元素设置position:relative
+17.ie7中font-size:0  无效  他会显示的非常小  像一个小点一样
+可以用line-height:0 或者text-indent:-9999em来解决
+18.ie7  图片通过line-height 无法居中时 可以通过给img标签前后添加空格来实现
+19.ie7 position：absolute元素与相邻元素的margin-top冲突 即margin-top失效  
+给position:absolute元素添加display:inline即可
+20.ie10一下不支持placeholder 用placeholder插件
+21.ie8 select标签无法用line-height解决垂直居中问题  可以通过padding来实现
+   ie7 select标签无法垂直居中的问题  可以用过为其外层嵌套一层元素来实现
+/*******************ie6********************/
+支持ie6的轮播：http://www.huawenonline.com/js/unslider.min.js
+1.解决IE6下元素左浮动自动换行的问题  
+自适应宽度的左浮动元素加上display: inline-block;overflow: hidden;white-space: nowrap;
+2.ie6不支持png图片格式
+EvPng.js
+3.ie6不支持固定定位
+#top{ 
+position:fixed;  
+bottom:0; 
+right:20px; 
+_position:absolute;
+_bottom:auto; 
+_top:expression(eval(document.documentElement.scrollTop+document.documentElement.clientHeight-this.offsetHeight-(parseInt(this.currentStyle.marginTop,10)||0)-(parseInt(this.currentStyle.marginBottom,10)||0))); }\
+4.ie6对于直接查找子元素的">"无法识别
+5.ie5 margin:0 auto失效  需要对body标签设置text-align:center的样式
+6.条件注释 非ie的情况
+	<!--[if !IE]><!-->
+        <link rel="stylesheet" href="css/index.css"/>
+	<!--<![endif]-->
