@@ -1,0 +1,29 @@
+全局安装babel：npm install -g babel
+项目中安装babel:npm install babel-core --save-dev
+1.安装babel--确保有package.json文件
+	npm install babel-cli --save-dev
+2.babel处理文件
+	babel script.js --out-file script-compiled.js
+3.babel编译整个目录
+	babel src --watch --out-dir lib
+4.把要执行的命令放入npm的script里面
+	package.json中添加：
+	scripts:{
+		'build':"要执行的babel命令如：babel src --watch --out-dir lib"
+	}
+	在cmd中执行  npm run build即可执行相关babel命令
+5.安装es2015预设
+	npm install babel-preset-es2015 --save-dev
+6.添加babel的配置文件
+	.babelrc文件
+		在其文件中添加要使用的预设
+		{
+			"presets":['es2015']
+		}
+7.在开发或测试过程中，采用浏览器实时自动编译es6代码
+	在页面中引入
+	<script src='node_modules/babel-core/browser.js'></script>
+	<script src='node_modules/babel-core/browser-polyfill.js'</script>
+	//引入es6代码
+	<script src='script.js' type='text/babel'></script>
+	

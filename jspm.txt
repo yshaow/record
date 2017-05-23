@@ -1,0 +1,25 @@
+js的模块化：AMD CommonJs ECMAScript6等，JSPM支持所有方法写的js模块化
+1.全局安装jspm
+	npm install jspm -g
+2.项目中安装jspm
+	npm install jspm --save-dev
+3.创建配置文件
+	jspm init
+	注意：jspm动态的载入了babel的文件，即只需要在js文件中用了es6的模块化 该es6文件就可直接通过浏览器解析无需其他编译
+	在页面中使用：
+		<script src="../jspm_packages/system.js"></script>
+		<script src="../config.js"></script>
+		<script>
+			System.import('./js/ES6/test');
+		</script>
+4.jspm可以安装来自不同地方的包，默认有npm与github
+	安装包：
+		jspm install jquery=github:components/jquery
+5.jspm支持打包的功能--把一些资源打包成一个文件
+	命令：jspm bundle app/main app/build.js
+	把main打包成build.js 且把main中引入的其他文件一起打包到build.js  这样浏览器引入的文件数目将减少
+	》然后在页面中载入打包后面的文件
+		<script src='app/build.js'></script>
+		或打包时自动引入
+		jspm bundle app/main app/build.js --inject
+	

@@ -1,0 +1,34 @@
+1.//消除移动端时  点击a标签出现的蓝色背景
+a{
+    -webkit-tap-highlight-color:transparent;
+}
+2.针对火狐浏览器的CSS Hack:
+	@-moz-document url-prefix() {.selector {attribute: value;}}
+针对webkit内核及Opera浏览器的CSS Hack:
+	@media all and (min-width:0){.selector {attribute: value;/*for webkit and opera*/}}
+从这个样式我们只能把webkit内核的浏览器和Opera浏览器从其它浏览器中区分出来，但并不能区分它们俩，因此我们还需要在上面样式的基础上再加一个样式：
+	@media screen and (-webkit-min-device-pixel-ratio:0) {.selector {attribute:value ForWebKit;/*only for webkit*/    }}
+3.多行文本添加省略号
+	jQuery.dotdotdot.js插件
+/****************地址*****************/
+dva:https://github.com/dvajs/dva-knowledgemap#javascript-%E8%AF%AD%E8%A8%80
+react:https://facebook.github.io/react/
+node-sass:https://npm.taobao.org/mirrors/node-sass/v4.5.0/
+vue:https://cn.vuejs.org/
+npm:https://www.npmjs.com/
+swiper:http://www.swiper.com.cn/
+慕课网：http://www.imooc.com/course/list?c=vuejs
+webpack:http://webpack.github.io/
+阮一峰：http://www.ruanyifeng.com/home.html
+compass:http://compass-style.org/
+html5tricks:http://www.html5tricks.com/
+条件注释：http://www.cnblogs.com/libinblog/p/4239227.html
+sass:http://sass-lang.com/  中文：http://www.css88.com/doc/sass/
+grunt插件：http://www.gruntjs.net/plugins
+es6:http://es6.ruanyifeng.com/
+单行 多行 省略：http://www.daqianduan.com/6179.html
+github：https://github.com/
+响应式的适配屏幕：https://zhidao.baidu.com/question/1894060773333596020.html
+兼容ie8的rgba：http://www.tuicool.com/articles/juiEFrb
+meta:http://blog.csdn.net/yc123h/article/details/51356143
+unslider:http://www.jq22.com/jquery-info1940

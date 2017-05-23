@@ -1,0 +1,678 @@
+*******************webpack http://webpackdoc.com/ ********************
+http://webpack.github.io/docs/
+1.webpack的安装
+	》全局范围的安装
+		npm install webpack --global
+	》项目本地的安装
+		npm install webpack --save-dev
+2.帮助信息
+	webpack --help
+3.webpack打包
+	webpack entry.js bundle.js
+4.webpack默认只会处理js，如果需要处理html  css  json等需要安装其他的loader(转换器)。
+	处理css的loader安装：npm install css-loader style-loader --save-dev
+	然后在需要生成的js文件中导入css即可把样式加给页面：require('style!css!style.css');
+5.webpack的配置文件
+	webpack.config.js--webpack需要做的事情
+	module.exports={
+		//配置文件基本信息
+		entry:"入口文件路径",
+		output:{
+			path:"生成文件存储的位置如：__dirname(表示同一目录)",
+			filename:"生成文件名"
+		},
+		//生成source-map
+		devtool:"source-map",
+		//配置相关loader
+		module:{
+			loader:[
+				{test:/\.css$/,loader:"style!css"},
+				{test:/\.js$/,exclude:/node_modules/,loader:"react-hot!babel"}//exclude:排除不想使用对应loader的目录
+			]
+		}
+	}
+	最后只需要执行webpack即可。
+6.生成source-map文件
+	webpack --devtool source-map
+7.webpack与babel结合
+	》安装：npm install babel-loader babel-core babel-preset-es2015 --save-dev
+	》添加babel配置文件：.babelrc
+		{
+			"presets":["es2015"]
+		}
+	》修改webpack配置文件
+		loaders:[
+			{test:/\.js$/,loader:"babel"}
+		]
+8.webpack-dev-server服务器，提供一个开发服务器，当文件有变化时自动打包，并只替换有变化的部分
+	》安装
+		》全局范围：npm install webpack-dev-server --global
+		》项目本地：npm install webpack-dev-server --save-dev
+	》启用
+		webpack-dev-server --inline --hot
+9.生成一个react项目
+	》安装环境
+		npm install babel-core babel-preset-es2015 babel-preset-react webpack webpack-dev-server babel-loader style-loader css-loader react-hot-loader --save-dev
+	》安装react相关文件
+		npm install react react-dom --save
+	》配置webpack配置文件
+		module.exports={
+		    entry:"./script",
+		    output:{
+			path:__dirname,
+			filename:"script-build.js"
+		    },
+		    devtool:"source-map",
+		    module:{
+			loaders:[
+			    {test:/\.css$/,loader:"style-loader!css-loader"},
+			    {test:/\.js$/,exclude:/node_modules/,loader:"react-hot-loader!babel-loader"}
+			]
+		    }
+		}
+	》配置babel
+		{
+			"presets":["es2015","react"]
+		}
+	》在package.json中配置
+		"scripts": {
+		    "watch":"webpack-dev-server --inline --hot"
+		  }
+	》执行npm run watch
+	》在页面中引入打包后的文件
+/**************************文档分析*******************************/
+1.webpack概述	
+	webpack是前端资源模块化管理与打包工具，它可以将许多松散的模块按照依赖与规则打包成符合生产环境部署的前端资源。
+	还可以将按需加载的模块进行代码分隔，等到实际需要的时候在异步加载。通过loader的转换，任何形式的资源都可以视作
+	模块，比如CommonJs模块、AMD模块、ES6模块、CSS、图片、json、Coffeescript、Less等。
+2.模块系统--主要解决模块的定义、依赖和导出
+	》模块系统的演进
+		》<script>标签
+			<script src='module1.js'></script>
+			最原始的js文件加载方式，如果把每个文件看做是一个模块，那么他们的接口通常是暴露在全局作用域中，即定义在window对象中。
+			缺点：
+				》全局作用域下容易造成变量冲突
+				》文件只能按照<script>的书写顺序进行加载
+				》开发人员必须主观解决模块和代码库的依赖关系
+				》大型项目中各种资源难以管理，长期积累的问题导致代码库混乱
+		》CommonJs
+			服务器端的Node.js遵循commonJs规范，该规范的核心思想是允许模块通过require方法来**同步加载**所要依赖的其他模块，
+			然后通过exports或module.exports来导出需要暴露的接口
+				require("module");
+				require("../file.js");
+				exports.doStuff=function(){}
+				module.exports=someValue;
+			》优点
+				》服务器端模块便于重用
+				》NPM中已经有将近20万个可以使用的模块包
+				》简单并容易使用
+			》缺点
+				》同步的模块加载方式不适合在浏览器环境中，同步意味着阻塞加载，浏览器资源是异步加载的
+				》不能非阻塞并行加载多个模块
+			》实现
+				服务器端的Node.js
+				Browserify,浏览器端的CommonJs实现可以使用npm的模块，但是编译打包后的文件体积可能很大
+		》AMD
+			asynchronous module definition 规范其实只有一个主要接口，define(id?,dependencies?factory),它
+			要在声明模块的时候指定所有的依赖dependencies，并且还要当做形参传到factory中，对依赖的模块提前
+			执行，依赖前置
+				define('module',['dep1','dep2'],function(d1,d2){
+					return someExportedValue;
+				})
+				require(['module','../file'],function(module,file){
+					...
+				})
+			》优点
+				》适合在浏览器环境中异步加载模块
+				》可以并行加载多个模块
+			》缺点
+				》提高了开发成本，代码的阅读与书写比较困难，模块定义方式的语义不顺畅
+				》不符合通用的模块化思维方式，是一种妥协的实现
+			》实现
+				RequireJs
+				curl
+		》CMD
+			Common Module Definition规范和AMD很相似，尽量保持简单，并与CommonJs和Node.js的莫杜勒斯规范保持了很大的兼容性
+				define(function(require, exports, module) {
+				  var $ = require('jquery');
+				  var Spinning = require('./spinning');
+				  exports.doSomething = ...
+				  module.exports = ...
+				})
+			》优点
+				依赖就近，延迟执行
+				可以很容易在Node.js中运行
+			》缺点
+				依赖spm打包，模块的加载逻辑偏重
+			》实现
+				sea.js
+				coolie
+		》UMD
+			Universal Module Definition规范类似与兼容commonJs和AMD的语法糖，是模块定义的跨平台解决方案
+		》ES6模块
+			ES6标准增加了js语言层面的模块体系定义。ES6模块的设计思想是尽量的静态化，使得编译时就能确定模块的依赖关系
+			以及输入和输出的变量。CommonJs和AMD都只能在运行时确定这些东西
+				import 'jquery';
+				export function doStuff(){}
+			》优点
+				容易进行静态分析
+				面向未来的ES标准
+			》缺点
+				原生浏览器还没有实现该标准
+				全新的命令字，新版的Node.js才支持
+			》实现
+				Babel
+		》期望的模块系统
+			可以兼容多种模块风格，尽量可以利用已有的代码，不仅仅只是js模块化，还有css、图片、字体等资源也需要模块化
+		》前端模块加载
+			前端模块要在客户端中执行，所以他们需要增量加载到浏览器中
+			模块的加载与传输方式：
+				》每个模块文件都单独请求--不好
+				》把所有模块打包成一个文件然后只请求一次--不好
+				》分块传输：按需进行**赖加载**，在实际用到模型模块的时候在增量更新，才是较为合适的模块加载方案
+					    要实现模块的按需加载，就需要一个对整个代码库中的模块进行静态分析、编译打包的过程
+		》静态分析
+			在编译的时候，要对整个代码进行静态分析，分析出各个模块的类型和它们依赖关系，然后将不同的类型的模块提交给适配的
+			加载器来处理。如less写的样式模块，可以用less加载器将它转成css模块，在通过css模块把它插入到页面的<style>标签中执行。
+			webpack就是在这样的需要中应运而生。
+3.什么是webpack
+	Webpack 是一个模块打包器。它将根据模块的依赖关系进行静态分析，然后将这些模块按照指定的规则生成对应的静态资源。
+4.webpack特点
+	》代码拆分
+		webpack有两种组织模块依赖的方式：同步和异步，异步依赖作为分割点，形成一个新的块。在优化了依赖树后，每个异步区块都作为一个文件被打包
+	》Loader
+		webpack本身只能处理原生的js模块，但是loader转换器可以将各种类型的资源转成js模块。这样任何资源可以成为webpack可以处理的模块
+	》智能解析
+		webpack有一个只能解析器，几乎可以处理任何第三方库，无论它们的模块形式commonJs、amd还是普通的js文件。甚至在加载依赖的时候，运行使用
+		动态表达式require('./templates/'+name+'.jade');
+	》插件系统
+		webpack还有一个功能丰富的插件系统。大多数内容功能都是基于这个插件系统运行的，还可以开发和使用开源的webpack插件，来满足各式各样的需求。
+	》快速运行
+		webpack使用异步I/o和多级缓存提高运行效率，这使得webpack能够以令人难以置信的速度快速增量编译
+5.安装
+	》用npm安装webpack
+		npm install webpack -g;
+	》将webpack安装到项目依赖中
+		npm install webpack --save-dev
+	》查看webpack版本信息
+		npm info webpack
+	》安装指定版本的webpack
+		npm install webpack@1.12.x --save-dev
+	》如果需要使用webpack开发工具，要单独安装
+		npm install webpack-dev-server --save-dev
+6.使用
+	》首先
+		创建页面引入打包后的js
+			//index.html
+			<script src='bundle.js'></script>
+		创建js入口文件
+			//entry.js
+			document.write('It works.');
+	》然后
+		编译entry.js并打包到bundle.js
+			webpack entry.js bundle.js
+	》最后在浏览器中打开index.html将会看到It works.
+	》为入口文件添加模块
+		//module.js
+		module.exports='It works from module.js';
+		//entry.js
+		document.write(require('./module.js'));//添加模块
+		//重新打包并刷新页面
+		webpack会分析入口文件，解析包含依赖关系的各各文件。这些文件(模块)都打包到bundle.js。webpack会给每个模块分配一个唯一的id
+		并通过id索引和访问模块。在页面启动时，会先执行entry.js中的代码，其他模块会在运行require的时候再执行。
+7.loader
+	webpack本身只能处理js模块，如果要处理其他类型的文件，就需要使用loader进行转换。
+	Loader可以理解为是模块和资源的转换器，它本身是一个函数，接受源文件作为参数，返回转换的结果。这样，我们就可以通过require来加载任何类型
+	的模块或文件，如jsx、less、或图片
+	Loader 特性：
+		》Loader可以通过管道方式链式调用，每个loader可以把资源转成任意格式并传递给下一个loader，但是最后一个loader必须返回js
+		》loader可以同步或异步执行
+		》loader运行在node.js环境中，所以可以做任何可能的事情
+		》loader可以接受参数，以此来传递配置项给loader
+		》loader可以通过文件扩展名(或正则表达式)绑定给不同类型的文件
+		》loader可以通过npm发布和安装
+		》除了通过package.json的main指定，通常的模块也可以导出一个loader来使用
+		》loader可以访问配置
+		》插件可以让loader拥有更多特性
+		》loader可以分出附加的任意文件
+		loader本身也是运行在node.js环境中的js模块，它通常会返回一个函数。大多数情况下，我们通过npm来管理loader，但是你也可以在项目中
+		自己写loader模块
+		按照惯例，而非必须，loader一般以xxx-loader方式命名，xxx代表了这个loader要做的转换功能，如：json-loader
+		在引用loader的时候可以使用全名json-loader，或使用短名json。这个命名规则和搜索优先级顺序在webpack的resolveLoader.moduleTemplates api中定义。
+			Default: ["*-webpack-loader", "*-web-loader", "*-loader", "*"]
+		Loader可以在require()引用模块的时候添加，也可以在webpack全局配置中进行绑定，还可以通过命令行的方式使用
+			如：在页面中引入css文件，首先将style.css看出一个模块然后用css-loader来读取它，再用style-loader把他插入到页面中
+			//style.css
+			body{background:yellow}
+			//修改entry.js
+			require('!style!css!./style.css');//引入style.css
+			//安装loader
+			npm install css-loader style-loader
+			//重新编译打包，刷新页面
+			如果require CSS文件的时候都要写loader前缀，是一件很繁琐的事情。我们可以根据模块类型的扩展名来自动绑定loader
+				//将entry.js
+				require('./style.css');
+				//执行
+				webpack entry.js bundle.js --module-bind 'css=style!css'
+				//有些环境可能需要使用双引号
+				webpack entry.js bundle.js --module-bind "css=style!css"
+8.配置文件
+	webpack在执行的时候，除了在命令行传入参数，还可以通过指定的配置文件来执行。默认情况下会搜索当前目录的webpack.config.js文件，
+	这个文件是一个node.js模块，返回一个json格式的配置信息对象，或通过--config选项来指定配置文件
+	webpack.config.js
+		var webpack = require('webpack');
+		module.exports = {
+		  entry: './entry.js',
+		  output: {
+		    path: __dirname,
+		    filename: 'bundle.js'
+		  },
+		  module: {
+		    loaders: [
+		      {test: /\.css$/, loader: 'style!css'}
+		    ]
+		  },
+		  plugins: [
+			new webpack.BannerPlugin('This file is created by zhaoda')//添加头部注释信息
+		  ]
+		}
+		//这样同样可以简化entry.js中的style.css加载方式
+		require('./style.css');
+		//最后运行webpack
+9.插件
+	插件可以完成更多loader不能完成的功能，插件的使用一般是在webpack的配置信息plugins选项中指定。
+	webpack本身内置了一些常用的插件，还可以通过npm安装第三方插件。
+	测试BannerPlugin内置插件--给输出的文本头部添加注释信息
+	//根据上面配置，然后运行webpack，生成的打包文件头部就会出现我们指定的信息
+10.开发环境
+	当项目逐渐变大，webpack的编译时间会变长，可以通过编译的输出内容带有进度和颜色
+	webpack --progress --colors
+	如果不想每次都修改模块后都重新编译，那么可以启动监听模式，开启监听模式后，没有变化的模块会在编译后缓存到内存中，而不会每次都被重新编译
+	webpack --progress  --colors --watch
+	当然使用webpack-dev-server开发服务是一个更好的选择
+	# 安装
+	$ npm install webpack-dev-server -g
+	# 运行
+	$ webpack-dev-server --progress --colors
+11.故障处理
+	一般情况下，webpack如果出问题，会打印一些简单的错误信息，比如模块没有找到。我们可以通过参数--display-error-details来打印错误详情
+	 webpack --display-error-details
+	 webpack的配置提供了resolve和resolveLoader参数来设置模块解析的处理细节，resolve用来配置应用层的模块(要被打包的模块)解析，resolveLoader
+	 用来配置loader模块的解析。
+	 当引入通过npm安装的node.js模块时，可能出现找不到依赖的错误。Node.js模块的依赖解析算法很简单，是通过查看模块的每一层父目录中的node_modules
+	 文件夹来查询依赖的。当出现Node.js模块依赖查找失败的时候，可以尝试射手resolve.fallback和resolveLoader.fallback来解决问题
+		module.exports = {
+		  resolve: { fallback: path.join(__dirname, "node_modules") },
+		  resolveLoader: { fallback: path.join(__dirname, "node_modules") }
+		};
+	Webpack 中涉及路径配置最好使用绝对路径，建议通过 path.resolve(__dirname, "app/folder") 
+	或 path.join(__dirname, "app", "folder") 的方式来配置，以兼容 Windows 环境。
+12.CommonJs规范
+	CommonJs是以在浏览器环境以外构建js生态系统为目标而产生的项目。比如服务器和桌面环境中
+	CommonJs规范是为了解决js的作用域问题而定义的模块形式，可以使每个模块它自身的命名空间中执行。该规范的主要内容是模块必须通过
+	module.exports导出对外的变量或接口，通过require()来导入其他模块的输出到当前模块作用域中
+		// moduleA.js
+		module.exports = function( value ){
+		    return value * 2;
+		}
+		// moduleB.js
+		var multiplyBy2 = require('./moduleA');
+		var result = multiplyBy2(4);
+	CommonJs是同步加载模块，但其实也有浏览器端的实现，其原理是先将所有模块都定义好并通过id索引，这样可以方便的在浏览器环境中解析。
+13.AMD规范
+	AMD异步模块定义是为浏览器环境设计的，因为CommonJs模块系统是同步加载的，当前浏览器环境还没有准备好同步加载模块的条件。
+	AMD定义了一套js模块依赖异步加载标准，来解决同步加载的问题。
+	》模块通过define函数定义在闭包中
+		define(id?:String,dependencies?:String[],factory:Function|Object)
+		id:模块名字，它是可选参数
+		dependencies:指定所要依赖的模块列表，它是一个数组，也是可选的参数，每个依赖的模块的输出将作为参数传入factory中，如果没有
+			     指定dependencies，那么它的默认值是['require','exports','module']
+			     define(function(require,exports,module){
+			     
+			     })
+		factory是最后一个参数，它包裹了模块的具体实现，它是一个函数或者对象。如果是函数那么它的返回值就是模块的输出接口或值
+	》案例
+		//定义一个名为myModule的模块，它依赖jQuery
+		define('myModule',['jquery'],function($){
+			$('body').text('hello');
+		})
+		//使用
+		define(['myModule'],function(myModule){});
+		注意：在webpack中，模块名只有局部作用域，在Requirejs中模块名是全局作用域，可以在全局引用
+		//定义一个没有id值的匿名模块，通常作为应用的启动函数
+		define(['jquery'],function($){
+			$('body').text('hello');
+		});
+		//依赖多个模块定义
+		define(['jquery', './math.js'], function($, math) {
+		    // $ 和 math 一次传入 factory
+		    $('body').text('hello world');
+		});
+		//模块输出
+		define(['jquery'], function($) {
+
+		    var HelloWorldize = function(selector){
+			$(selector).text('hello world');
+		    };
+
+		    // HelloWorldize 是该模块输出的对外接口
+		    return HelloWorldize;
+		});
+		//在模块定义内部引用依赖
+		define(function(require) {
+		    var $ = require('jquery');
+		    $('body').text('hello world');
+		});
+webpack配置文件常用配置项介绍：
+	》webpack有一个默认的配置文件webpack.config.js，这个文件需要手动的创建，位于项目根目录。
+	  可以为一个项目设置多个配置文件，已达到不同的配置文件完成不同的功能。
+	》webpack的配置文件会暴露出一个对象，格式如下
+		var path=require('path');
+		module.exports={
+			//配置项
+			entry:String\Object,//打包的入口文件
+				//String--表示需要打包的模块的了路径，如果只是一个要打包的模块，可以使用这种形式
+				//Object
+					//Array--当需要将多个模块打包成一个模块，可以使用这个方式。如果这些模块之间不存在依赖，数组中值的顺序没有要求
+						 //如果存在依赖，则要将依赖性最高的模块放在最后面 如['./app/one.js','.app/two.js']
+					//键值对形式的对象--当需要分别打包成多个模块时，可以使用这种方式
+						如：
+						entry:{
+							module1:'./app/one.js',
+							module2:['./app/two.js','./app.three.js']
+						}
+						//注意：当entry是一个键值对形式的对象时，包名就是键名，output的filename不能是一个固定的值，因为每个包的名字不能一样
+			output:{//配置打包的结果，Object
+				fileName:'',//定义输出文件名,String
+					//当输出一个文件,output.filename为一个确定的字符串如：{filename:'build.js'}
+					//当输出多个文件,output.filename不能为一个确定的字符串。为了让每个文件有一个唯一的名字，需要用到下面的变量
+						//[name]--对应entry的键名
+						//[hash]
+						//[chunkhash]
+						如：{
+							path:"./build",
+							filename:'[name].js'
+						}
+
+				path:'',//定义输出文件路径,相对路径，String
+			},
+			module:{//定义对模块的处理逻辑，Object
+				loaders:[//定义一系列的加载器，Array
+					{
+						test://,//正则表达式，用于匹配到的文件
+						loader/loaders:'',//String\Array处理匹配到的文件。如果只需要用到一个模块加载器则使用loader:string,
+								  //如果要使用多个模块加载器则使用loaders:array
+						include:'',//string\Array指包含的文件夹
+						exclude:''//字符串或者数组，指排除的文件夹
+					},
+					{//处理es6
+						test:/.js$/
+						loaders:["babel-loader"],
+						exclude:'/node_modules/'
+						include:path.resolve(__dirname(//当前项目),"/es6/")
+					},{//处理react npm install react react-dom babel-preset-react --save-dev
+						test:/.js$/,
+						loaders:["babel"],
+						//需要babel处理的  query只能在loaders中只有babel的情况来传递相应的参数
+						query:["es2015","react"]或 .babelrc中 {"presets":['es2015','react']},或将loaders改为:['react-hot','babel?presets[]=es2015&presets[]=react']
+						exclude:'/node_modules/',
+						include:path.resolve(__dirname,'react')
+						//webpack-dev-server是实现整个页面的自动刷新
+							//react的热加载 npm install react-hot-loader --save-dev--局部刷新 哪里改变哪里刷新
+					}
+				],
+			},
+			devServer:{//对webpack-dev-server服务的参数配置
+				hot:true,
+				inline:true,//--这两个比较特殊，就算在配置文件中配置了 也需要输入命令时带上以上两个参数即 --hot --inline;
+				content-base:"./src/"//设置启动服务时的根目录
+			}
+			resolve:{//影响对模块的解析Object--引入文件时的后缀
+				extensions:['','.js','.css','.jsx']//自动补全识别后缀Array，该属性并不是必须配置，当不配置时，会使用默认值['','.webpack.js','.web.js','.js']
+					     //当手动设置值，它的默认值会被覆盖
+							//如果你想要每个模块都能够按照它们自己扩展名正确的被解析，要在数组中添加一个空的字符串
+							//如果你想请求一个js文件但是在请求时，不带扩展如require('somecode'),那么就需要将'.js'添加到数组中。其他文件一样
+			},
+			plugins:[//定义插件，Array
+				//自动生成html文件的插件
+				//安装 npm install html-webpack-plugin --save-dev
+				//使用 在webpack.config.js中引入 var htmlPlugin=require('html-webpack-plugin');
+				//在plugins中配置 new htmlPlugin({//可以多次使用，来生成不同的html文件
+					title:"My first react app",//title标签内容
+					filename:"class.html",//生成文件名 默认为index.html
+					chunks:['index']//引用了那些模块
+				});
+			]
+		}
+		//当设置了配置文件后，在命令行中输入webpack就可按照默认配置文件中的配置项打包模块了
+		//设置多个webpack配置文件。webpack默认的配置文件是webpack.config.js。当在命令行中输入webpack时默认找的是
+		//webpack.config.js。通过在package.json的scripts中添加如'start-html':"webpack --config webpack.html.config.js",
+		//在命令行中输入npm run start-html查找的就是webpack.html.config.js,通过这种方式可以实现不同的配置文件有不同的用处，这样不用反复修改同一个配置文件
+		//webpack-dev-server--是一个轻量级的服务器，修改文件源码后，自动刷新页面。将修改同步到页面上
+			//安装webpack-dev-server
+				npm install webpack-dev-server -g
+			//在项目中安装并将依赖写在package.json文件
+				npm install webpack-dev-server --save-dev
+			//使用命令webpack-dev-server --hot --inline完成自动刷新
+			//默认的端口号是8080，如果需要的8080端口被占用，就需要该端口webpack-dev-server --port 3000(将端口号改为3000)
+			//安装webpack-dev-server后就可以在命令行中输入webpack-dev-server开启服务，然后在浏览器地址栏中输入localhost:端口号
+			  就可以在浏览器中打开项目根目录的index.html文件，如果项目根目录中没有index.html文件，就会在浏览器中列出项目根目录中的所有文件夹
+			//上面只是启动服务器并不能自动刷新，要自动刷新需要用到webpack-dev-server --hot --inline
+			//当使用webpack-dev-server  --hot --inline命令时，在每次修改文件是将文件打包保存在内存中并没有写在磁盘里(默认是根据webpack.config.js打包文件，--config xxx.js修改)，
+			//这种打包得到的文件和项目根目录中的index.html位于同一级(但是你看不到，因为在内存中并没有在磁盘里)。使用webpack命令将打包后的文件保存在磁盘中。
+				如：在index.html文件中引入通过webpack-dev-server --hot --inline打包的build.js
+　　　　				<script src="build.js"></script>
+　　				    在index.html文件中引入通过webpack命令打包的build.js
+　　　　				<script src="./build/build.js"></script>
+			//配置根目录
+				//当在命令行中输入webpack-dev-server --hot --inline，在再浏览器中输入localhost:端口号，浏览器会在项目的根目录中去
+				//找内容，通过--content-base可以配置根目录
+				//如：webpack-dev-server --hot --inline --content-base './build/'，在build文件夹中去加载index.html，
+				//如果没有index.html文件，将会在浏览器中显示所有build目录下的文件和文件夹
+			//require("style!css!./style.css");//style与css加载器不能写反  它是从右到左执行，先加载css然后引入css文件
+webpack.config.js配置详解
+	var path = require('path');
+	module.exports = {
+	  //入口文件
+	  entry: "./app/entry", // string | object | array
+	  output: {
+	    //全部输出文件的目录，需要一个绝对路径
+	    path: path.resolve(__dirname, "dist"), // string
+	    //打包之后的文件名
+	    filename: "bundle.js", // string
+	   
+	    publicPath: "/assets/", // string
+	    // the url to the output directory resolved relative to the HTML page
+
+	    library: "MyLibrary", // string,
+	    // the name of the exported library
+
+	    libraryTarget: "umd", // universal module definition
+	    // the type of the exported library
+
+	    /* Advanced output configuration (click to show) */
+	  },
+
+	  module: {
+	    // configuration regarding modules
+
+	    rules: [
+	      // rules for modules (configure loaders, parser options, etc.)
+
+	      {
+		test: /\.jsx?$/,
+		include: [
+		  path.resolve(__dirname, "app")
+		],
+		exclude: [
+		  path.resolve(__dirname, "app/demo-files")
+		]
+		// these are matching conditions, each accepting a regular expression or string
+		// test and include have the same behavior, both must be matched
+		// exclude must not be matched (takes preferrence over test and include)
+		// Best practices:
+		// - Use RegExp only in test and for filename matching
+		// - Use arrays of absolute paths in include and exclude
+		// - Try to avoid exclude and prefer include
+
+		issuer: { test, include, exclude },
+		// conditions for the issuer (the origin of the import)
+
+		enforce: "pre",
+		enforce: "post",
+		// flags to apply these rules, even if they are overridden (advanced option)
+
+		loader: "babel-loader",
+		// the loader which should be applied, it'll be resolved relative to the context
+		// -loader suffix is no longer optional in webpack2 for clarity reasons
+		// see webpack 1 upgrade guide
+
+		options: {
+		  presets: ["es2015"]
+		},
+		// options for the loader
+	      },
+
+	      {
+		test: "\.html$",
+
+		use: [
+		  // apply multiple loaders and options
+		  "htmllint-loader",
+		  {
+		    loader: "html-loader",
+		    options: {
+		      /* ... */
+		    }
+		  }
+		]
+	      },
+
+	      { oneOf: [ /* rules */ ] }
+	      // only use one of these nested rules
+
+	      { rules: [ /* rules */ ] }
+	      // use all of these nested rules (combine with conditions to be useful)
+
+	      { resource: { and: [ /* conditions */ ] } }
+	      // matches only if all conditions are matched
+
+	      { resource: { or: [ /* conditions */ ] } }
+	      { resource: [ /* conditions */ ] }
+	      // matches if any condition is matched (default for arrays)
+
+	      { resource: { not: /* condition */ } }
+	      // matches if the condition is not matched
+	    ],
+
+	    /* Advanced module configuration (click to show) */
+	  },
+
+	  resolve: {
+	    // options for resolving module requests
+	    // (does not apply to resolving to loaders)
+
+	    modules: [
+	      "node_modules",
+	      path.resolve(__dirname, "app")
+	    ],
+	    // directories where to look for modules
+
+	    extensions: [".js", ".json", ".jsx", ".css"],
+	    // extensions that are used
+
+	    alias: {
+	      // a list of module name aliases
+
+	      "module": "new-module",
+	      // alias "module" -> "new-module" and "module/path/file" -> "new-module/path/file"
+
+	      "only-module$": "new-module",
+	      // alias "only-module" -> "new-module", but not "module/path/file" -> "new-module/path/file"
+
+	      "module": path.resolve(__dirname, "app/third/module.js"),
+	      // alias "module" -> "./app/third/module.js" and "module/file" results in error
+	      // modules aliases are imported relative to the current context
+	    },
+	    /* alternative alias syntax (click to show) */
+
+	    /* Advanced resolve configuration (click to show) */
+	  },
+
+	  performance: {
+	    hints: "warning", // enum
+	    maxAssetSize: 200000, // int (in bytes),
+	    maxEntrypointSize: 400000, // int (in bytes)
+	    assetFilter: function(assetFilename) { 
+	      // Function predicate that provides asset filenames
+	      return assetFilename.endsWith('.css') || assetFilename.endsWith('.js');
+	    }
+	  },
+
+	  devtool: "source-map", // enum
+	  // enhance debugging by adding meta info for the browser devtools
+	  // source-map most detailed at the expense of build speed.
+
+	  context: __dirname, // string (absolute path!)
+	  // the home directory for webpack
+	  // the entry and module.rules.loader option
+	  //   is resolved relative to this directory
+
+	  target: "web", // enum
+	  // the environment in which the bundle should run
+	  // changes chunk loading behavior and available modules
+
+	  externals: ["react", /^@angular\//],
+	  // Don't follow/bundle these modules, but request them at runtime from the environment
+
+	  stats: "errors-only",
+	  // lets you precisely control what bundle information gets displayed
+
+	  devServer: {
+	    /* TODO */
+	  },
+
+	  plugins: [
+	    // ...
+	  ],
+	  // list of additional plugins
+
+
+	  /* Advanced configuration (click to show) */
+
+	  resolveLoader: { /* same as resolve */ }
+	  // separate resolve options for loaders
+
+	  profile: true, // boolean
+	  // capture timing information
+
+	  bail: true, //boolean
+	  // fail out on the first error instead of tolerating it.
+
+	  cache: false, // boolean
+	  // disable/enable caching
+
+	  watch: true, // boolean
+	  // enables watching
+
+	  watchOptions: {
+	    aggregateTimeout: 1000, // in ms
+	    // aggregates multiple changes to a single rebuild
+
+	    poll: true,
+	    poll: 500, // intervall in ms
+	    // enables polling mode for watching
+	    // must be used on filesystems that doesn't notify on change
+	    // i. e. nfs shares
+	  },
+
+	  node: {
+	    /* TODO */
+	  },
+
+	  recordsPath: path.resolve(__dirname, "build/records.json"),
+	  recordsInputPath: path.resolve(__dirname, "build/records.json"),
+	  recordsOutputPath: path.resolve(__dirname, "build/records.json"),
+	  // TODO
+
+	}

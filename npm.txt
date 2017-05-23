@@ -1,0 +1,37 @@
+1.npm更新：
+	npm install npm --global
+2.npm安装包
+	npm install XXX -g(-g或--global 全局范围即本机)
+3.npm卸载包
+	npm uninstall xxx -g
+4.npm本地安装即项目内部安装使用
+	在项目目录中安装：npm install xxx
+5.查看npm安装了那些包
+	npm list 或npm ls
+6.查看需要安装包的信息
+	npm info xxx;
+7.安装指定版本的包
+	npm install jquery@1.6.0
+8.删除本地安装的包
+	npm uninstall xxx
+9.package.json
+	手动创建时，至少需要包含项目的名称，版本号
+	npm init//帮助创建该文件
+	npm install xxx --save 依赖会存在dependencies
+	npm install xxx --save-dev 依赖会存在devDependencies 开发依赖
+	如果卸载的时候加载了后缀，该文件中就不会存在对应的依赖
+	如果没有node_modules目录，npm install可以根据package.json文件下载需要的包
+10.显示可以更新的包
+	npm outdated
+11.更新包
+	npm update
+12.更换npm下载包的源
+	通过nrm工具更换npm的源
+	》安装nrm工具
+		npm install nrm --global
+	》查看可以使用的安装源
+		nrm ls
+	》测试电脑连接源的速度
+		nrm test  值越小表示连接越快
+	》切换源
+		nrm use xxx(源名称)  如：nrm use taobao
