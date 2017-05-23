@@ -92,10 +92,11 @@
 		git branch --set-upstream debug(本地分支) origin/debug(远程分支)
 	》查看当前远程仓库
 		git remote -v
-	》git fetch 远程仓库名 //从远程仓库抓取数据
+	》git fetch <远程仓库名> <远程分支名> //从远程仓库抓取数据
 	》把远程仓库的分支数据合并到本地仓库的分支数据
 		git merge 远程仓库名/分支名
 	》git pull 远程仓库名
+		git pull <远程主机名> <远程分支名>:<本地分支名>
 		相当于 git fetch 远程仓库名 + git merge 远程仓库名/分支名
 	》git branch -a 查看远程分支
 	》查看远程仓库信息
