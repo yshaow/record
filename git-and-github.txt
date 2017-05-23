@@ -193,4 +193,4 @@
 		》添加密钥到ssh: ssh-add 文件名//指定私钥
 		》在github上添加ssh密钥 即添加id_rsa.pub里面的公钥
 		》测试ssh公钥是否成功： ssh git@git服务器地址(github.com)
-aa
+aabb
