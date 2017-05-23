@@ -122,6 +122,8 @@
 		git pull origin master --allow-unrelated-histories//使用该命令可以pull
 		//提示为何要合并两个库时：
 		press "i"->write your merge message->press "esc"->write":wq"->then press enter,
+	》删除远程库中的分支
+		git push 远程库名(origin) :远程库分支名(test)
 4.git 基本概念
 	》staging area 暂存区，可以设置那些变更要提交到版本库，那些先不提交。 **.git文件下的index中**
 	》work area 工作区，工作的地方--**项目目录 除了.git文件**
