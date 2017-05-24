@@ -6531,6 +6531,25 @@ Compile template into render function|    |Compile el's outerHTML as template
 				参数：
 					{Element | string} [elementOrSelector]
 					{boolean} [hydrating]
+				返回值：vm - 实例自身
+				用法：
+					如果Vue实例在实例化时没有收到el选项，则它处于'未挂载'状态。
+					没有关联的DOM元素。可以使用 vm.$mount()手动地挂载一个未挂载的实例。
+					如果没有提供 elementOrSelector 参数，模版将被渲染为文档之外的元素，并且你必须使用原生DOM API把它插入文档中。
+				//这个方法返回实例自身，因而可以链式调用其他实例方法
+				var MyComponent=Vue.extend({
+					template: '<div>Hello!</div>'
+				});
+				//创建并挂载到#app
+				new MyComponent().$mount('#app');
+				//或
+				new MyComponent({el:'#app'});
+				//或在文档之外渲染并随后挂载
+				var component = new MyComponent().$mount()
+				document.getElementById('app').appendChild(component.$el)
+			》vm.$forceUpdate()
+				迫使Vue实例重新渲染。注意它仅仅影响实例本身和插入插槽内容的子组件，而不是所有子组件。
+
 			
 
 		
