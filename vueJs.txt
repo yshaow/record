@@ -6331,6 +6331,12 @@ Compile template into render function|    |Compile el's outerHTML as template
 		》render 类型Function
 			字符串模版的代替方案，允许你发挥js最大的编程能力。render函数接受一个createElement方法作为第一个参数
 			用来创建VNode。
+			如果组件是一个函数组件，Render函数还会接受一个额外的context参数，为没有实例的函数组件提供上下文信息。
+			注意：
+				Vue选项中的render函数若存在，则Vue构造函数**不会**从template选项或通过el选项指定的挂载元素中
+				中提取出html模板编译render函数。
+	》生命周期钩子
+		
 		
 		
 			
