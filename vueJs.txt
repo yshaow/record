@@ -6188,7 +6188,59 @@ Compile template into render function|    |Compile el's outerHTML as template
 			})
 3.选项
 	》数据
-		》data
+		》data	 类型：Object | Function  注意：组件的定义只接受function
+			Vue实例的数据对象，Vue将会递归将data的属性转换为getter/setter,从而让data的属性能够响应数据的变化。
+			**对象必须是纯粹的对象 包含零个或多个key value对**：浏览器API创建的原生对象，原型上的属性会被忽略。大概
+			来说，data应该只能是数据--不推荐观察拥有状态行为的对象。
+			一旦观察过，不需要再次在数据对象上添加响应式属性。因此推荐在创建实例之前，就声明所有的根级响应式属性。
+			实例创建之后可以通过vm.$data访问原始数据对象。Vue实例也代理了data对象上所有的属性，因此访问vm.a等价于
+			访问vm.$data.a。
+			以_或$开头的属性不会被Vue实例代理，因为他们可能和Vue内置的属性，API方法冲突，你可以使用vm.$data._property的
+			方式访问这些属性。
+			当一个组件被定义，**data必须声明为返回的一个初始数据对象的函数**，因为组件可能被用来创建多个实例。如果data
+			仍然是一个纯粹的对象，则所有的实例将共享引用同一个数据对象。通过提供data函数，每次创建一个新实例后，我们能够
+			调用data函数，从而返回初始数据的一个全新副本数据对象。
+			如果需要，可以通过将vm.$data传入JSON.paren(JSON.stringify());得到深拷贝的原始数据对象。
+			》实例
+				var data={a:1}
+				//直接创建一个实例
+				var vm=new Vue({
+					data:data
+				});
+				vm.a//1
+				vm.$data === data//true
+				//Vue.extend()中data必须是函数
+				var Component=Vue.extend({
+					data:function(){
+						return {a:1}
+					}
+				});
+				//注意：不应该对**data属性使用箭头函数**。因为箭头函数绑定了父级作用域的上下文
+				//所以this将不会按着期望指向Vue实例
+		》props 类型 Array<string> | Object
+			props可以是数据或对象，用于接受来自父组件的数据，props可以是简单的数组或者使用对象作为替代，对象允许配置
+			高级选项，如类型检测 自定义校验和设置默认值等
+			Vue.component('props-demo',{
+				//数组
+				props:['size','myMessage'],
+				//对象
+				props: {
+				    // 只检测类型
+				    height: Number,
+				    // 检测类型 + 其他验证
+				    age: {
+				      type: Number,
+				      default: 0,
+				      required: true,
+				      validator: function (value) {
+					return value >= 0
+				      }
+				    }
+			});
+		》propsData 类型 {[key:string]:any} 注意：只用于 new 创建的实例中
+			//创建实例时传递props 主要作用是方便测试。
+			//案例
+
 		
 		
 			
