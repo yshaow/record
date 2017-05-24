@@ -6449,17 +6449,51 @@ Compile template into render function|    |Compile el's outerHTML as template
 		当前vue实例是否运行于服务器
 》实例方法
 	》数据
-		vm.$watch(expOrFn,callback,[options]);
-		参数：
-		{string | Function} expOrFn
-		{Function} callback
-		{Object} [options]
-			{boolean} deep
-			{boolean} immediate
-		返回值：{function} unwatch
-		用法：
-			观察Vue实例变化的一个表达式或计算属性函数。回调函数得到的参数为新值和就值。表达式只接受监督的键路径，对于更复杂的表达式，用一个函数取代。
-		注意：在变异(不是替换)对象或数组时，旧值与新值相同，因为它们的引用指向同一个对象或数组。Vue不会保留变异之前值得副本。
+		》vm.$watch(expOrFn,callback,[options]);
+			参数：
+			{string | Function} expOrFn
+			{Function} callback
+			{Object} [options]
+				{boolean} deep
+					//为了发现对象内部值得变化，可以在选项参数中指定deep:true。注意监听数组的变动不需要这么做
+					vm.$watch('someObject',callback,{
+						deep:true
+					})
+				{boolean} immediate
+					//在选项参数中指定 immediate:true将立即以表达式的当前值触发回调：
+					vm.$watch('a',callback,{
+						immediate:true//立即以'a'的当前值触发回调
+					});
+			返回值：{function} unwatch
+			用法：
+				观察Vue实例变化的一个表达式或计算属性函数。回调函数得到的参数为新值和就值。表达式只接受监督的键路径，对于更复杂的表达式，用一个函数取代。
+			注意：在变异(不是替换)对象或数组时，旧值与新值相同，因为它们的引用指向同一个对象或数组。Vue不会保留变异之前值得副本。
+				//键路径
+				vm.$watch('a.b.c',function(newVal,oldVal){
+					//...
+				});
+				//函数
+				vm.$watch(function(){return this.a +this.b},function(newVal,oldVal){
+					//...
+				});
+				//vm.$watch返回一个取消观察的函数，用来停止触发回调
+				var unwatch=vm.$watch('a',callback)
+					//取消观察
+					unwatch();
+		》vm.$set(object,key,value)
+			参数：
+				{Object} object
+				{string} key
+				{any}    value
+			返回值：设置的值
+			//这是全局Vue.set的别名
+		》vm.$delete(object,key)
+			参数：
+				{Object} object
+				{string} key
+			//这是全局Vue.delete的别名
+	》事件
+		》vm.$on(event,callback);
 			
 
 		
