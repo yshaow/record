@@ -6363,6 +6363,34 @@ Compile template into render function|    |Compile el's outerHTML as template
 			Vue实例销毁后调用，调用后Vue实例指示的所有东西都会解绑定，所有
 			的事件监听器会被移除，所有的子实例也会被销毁。
 	》资源
+		》directives 类型 Object
+			包含Vue实例可用指令的哈希表
+		》filters 类型 Object
+			包含Vue实例可用过滤器的哈希表
+		》components 类型 Object
+			包含Vue实例可用组件的哈希表
+	》其他
+		》parent 类型 Vue instance
+			指定已创建的实例之父实例，在两者之间建立父子关系。子实例可以用this.$parent访问父实例，子实例被推入父实例的$children数组中。
+			注意：同时使用$parent和$children有冲突，他们作为同一个入口。更推荐用props和events实现父子组件通信。
+		》mixins 类型 Array<object>
+			mixins选项接受一个混合对象的数组，这些混合实例对象可以像正常的实例对象一样包含选项，他们将在Vue.extend()里面最终选择使用
+			相同的选项合并逻辑合并。
+			Mixin钩子按着传入顺序依次调用，并在调用组件自身的钩子之前被调用。
+			var mixin ={
+				created:function(){console.log(1)}
+			}
+			var vm=new Vue({
+				created:function(){console.log(2)},
+				mixins:[mixin]
+			});
+			//1
+			//2
+		》name 类型 String  --注意：只有作为组件选项时起作用
+			允许组件模版递归地调用自身。注意：组件在全局用Vue.component()注册时，全局id自动作为组件的name。
+			指定name选项的另一个好处是便于调式
+
+
 
 
 		
