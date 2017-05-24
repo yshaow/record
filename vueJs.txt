@@ -6277,7 +6277,56 @@ Compile template into render function|    |Compile el's outerHTML as template
 			vm.a       // -> 2
 			vm.aDouble // -> 4
 		》methods 类型 {[key:string]:Function}
+			methods将被混入到Vue实例中。可以直接通过VM实例访问这些方法，或者在指令表达式中使用。方法中的this
+			自动绑定为Vue实例。
+			//注意：不应该使用箭头函数来定义method函数。
+			var vm=new Vue({
+				data:{a:1},
+				methods:{
+					plus:function(){
+						this.a ++;
+					}
+				}
+			});
+			vm.plus();
+			vm.a//2
+		》watch 类型 {[key:string]:string | Function | Object}
+			一个对象，健是需要观察的表达式，值是对应回调的函数。值也可以是方法名或者包含选项的对象。
+			Vue实例将会在实例化时调用$watch(),遍历watch对象的每一个属性。
+			var vm=new Vue({
+				data:{
+					a:1,
+					b:2,
+					c:3
+				},
+				watch:{
+					//函数
+					a:function(newVal,oldVal){
+					
+					}
+					//方法名
+					b:'someMethod',
+					//深度watcher
+					c:{
+						handler:function(newVal,oldVal){
+							//
+						},
+						deep:true
+					}
+				}
+			});
+			//注意，不应该使用箭头函数来定义watcher函数
+	》DOM
+		》el 类型 string | HTMLElement 注意：只在由new 创建的实例中遵守
+			提供一个在页面上已存在的DOM元素作为Vue实例的挂载目标，可以是Css选择器，也可以是一个HTMLElement实例。
+			在实例挂载之后，元素可以用Vm.$el访问。
+			注意：如果这个选项在实例化时有作用，实例将立即进入编译过程，否则，需要显示调用vm.$mount()手动开启编译。
+
 			
+		》template
+
+		》render
+
 		
 			
 		
