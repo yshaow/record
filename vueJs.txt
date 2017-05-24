@@ -6494,6 +6494,43 @@ Compile template into render function|    |Compile el's outerHTML as template
 			//这是全局Vue.delete的别名
 	》事件
 		》vm.$on(event,callback);
+			参数：
+				{string} event
+				{Function} callback
+			用法：
+				监听当前实例上的自定义事件，事件可以由vm.$emit触发。
+				回调函数会接收所有传入事件触发函数的额外参数
+			案例
+				vm.$on('test',function(msg){//监听test事件
+					console.log(msg);//hi
+				})
+				//触发test事件
+				vm.$emit('test','hi')
+		》vm.$once(event,callback)
+			参数：
+				{string} event
+				{Function} callback
+			用法：
+				监听一个自定义事件，但是只触发一次，在第一次触发之后移除监听器
+		》vm.$off([event,callback]);
+			参数：
+				{string} [event]
+				{Function} [callback]
+			用法：
+				移除事件监听器
+				》如果没有提供参数，则移除所有的事件监听器
+				》如果只提供了事件，则移除该事件所有的监听器
+				》如果同时提供了事件与回调，则只移除这个回调的监听器
+		》vm.$emit(event,[...args]);
+			参数：
+				{string} event
+				[...args]
+			//触发当前实例上的事件，附加参数都会传给监听器的回调函数
+		》生命周期
+			》vm.$mount([elementOrSelector]);
+				参数：
+					{Element | string} [elementOrSelector]
+					{boolean} [hydrating]
 			
 
 		
