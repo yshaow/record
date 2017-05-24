@@ -6388,8 +6388,27 @@ Compile template into render function|    |Compile el's outerHTML as template
 			//2
 		》name 类型 String  --注意：只有作为组件选项时起作用
 			允许组件模版递归地调用自身。注意：组件在全局用Vue.component()注册时，全局id自动作为组件的name。
-			指定name选项的另一个好处是便于调式
-
+			指定name选项的另一个好处是便于调式。有名字的组件有更友好的警告信息。另外，当在有vue-devtools，未命名组件将显示
+			成<AnonymousComponent>，这没有语义。通过提供name选项，可以获得更有语义信息的组件树。
+		》extends 类型 Object | Function
+			允许声明扩展另一个组件--可以是一个简单的选项对象或构造函数，而无需使用Vue.extend，这主要是为了
+			便于扩展单文件组件。
+			这和mixins类似，区别在于组件自身的选项会比要扩展的源组件具有更高的优先级。
+			var CompA={...}
+			var CompB={
+				extends:CompA//在没有调用Vue.extend时继承 CompA
+			}
+		》delimiters 类型 Array<string> 默认值 ['{{',"}}"]
+			改变纯文本插入分隔符。这个选择只有**在独立构建时**才有用。
+			new Vue({
+				delimiters:["${","}"]//分隔符变成了ES6模版字符串的风格
+			});
+		》functional 类型 boolean
+			使组件无状态(没有data) 和 无实例(没有this上下文)。他们用一个简单的render函数返回虚拟节点使他们更容易渲染。
+》实例属性
+	
+			
+			
 
 
 
