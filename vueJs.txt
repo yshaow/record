@@ -6240,8 +6240,44 @@ Compile template into render function|    |Compile el's outerHTML as template
 		》propsData 类型 {[key:string]:any} 注意：只用于 new 创建的实例中
 			//创建实例时传递props 主要作用是方便测试。
 			//案例
-
-		
+			var Comp = Vue.extend({
+				props:['msg'],
+				template:'<div>{{msg}}</div>'
+			});
+			var vm=new Comp({
+				propsData:{
+					msg:'hello'
+				}
+			});
+		》computed 类型 {[key:string]:Function | {get:Function,set:Function}}
+			计算属性将被混入到Vue实例中。所有getter 和 setter的this上下文自动绑定为Vue实例。
+			//注意，不应该使用箭头函数来定义计算属性函数。因为箭头函数绑定了父级作用域的上下文
+			//所以this将不会按着期望指向Vue实例。
+			//计算属性的结果会被缓存，除非依赖的响应式属性变化才会重新计算
+			var vm=new Vue({
+				data:{a:1},
+				computed:{
+					//仅读取，值只须为函数
+					aDouble:function(){
+						return this.a *2
+					}
+					//读取和设置
+					aPlus:{
+						get:function(){
+							return this.a +1;
+						},
+						set:function(v){
+							this.a =v-1;
+						}
+					}
+				}
+			});
+			vm.aPlus   // -> 2
+			vm.aPlus = 3
+			vm.a       // -> 2
+			vm.aDouble // -> 4
+		》methods 类型 {[key:string]:Function}
+			
 		
 			
 		
