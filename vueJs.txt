@@ -6406,8 +6406,65 @@ Compile template into render function|    |Compile el's outerHTML as template
 		》functional 类型 boolean
 			使组件无状态(没有data) 和 无实例(没有this上下文)。他们用一个简单的render函数返回虚拟节点使他们更容易渲染。
 》实例属性
-	
+	》vm.$data 类型：Object
+		Vue实例观察的数据对象。Vue实例代理了对其data对象属性的访问。
+	》vm.$el 类型 HTMLElement 只读
+		Vue实例使用的根DOM元素
+	》vm.$options 类型 Object  只读
+		用于当前Vue实例的初始化选项。需要在选项中包含自定义属性时会有用处：
+			new Vue({
+				customOption:'foo',
+				created:function(){
+					console.log(this.$options.customOption);// 'foo'
+				}
+			});
+	》vm.$parent 类型 Vue instance 只读
+		父实例，如果当前实例有的话
+	》vm.$root 类型 Vue instance 只读
+		当前组件树的根Vue实例，如果当前实例没有父实例，此实例将会是其自己
+	》vm.$children 类型 Array<Vue instance> 只读
+		当前实例的直接子组件。需要注意 $children并不保证顺序 也不是响应式的。如果你发现自己正在
+		尝试使用$children来进行数据绑定，考虑使用一个数组配合v-for来生成子组件，并且使用Array作为真正的来源。
+	》vm.$slots 类型 {[name:string]:?Array<VNode>} 只读
+		用来访问被slot分发的内容，每个具名slot有其相应的属性如slot='foo'中的内容将会在vm.$slots.foo中被找到
+		default属性包括了所有没有被包含在具名slot中的节点。
+		//在使用render函数书写一个组件时，访问vm.$slots很有帮助
+		<blog-post>
+			<h1 slot='header'>About Me</h1>
+		</blog-post>
+		Vue.component('blog-post',{
+			render:function(createElement){
+				var header = this.$slots.header;
+				return createElement('div',[
+					createElement('header',header);
+				])
+			}
+		});
+	》vm.$scopedSlots 类型 {[name:string]:props=>VNode | Array<VNode>} 只读
+		用来访问scoped slots 对于包括默认slot在内的每一个slot，该对象都包含一个返回相应VNode的函数。
+		//在使用render函数书写一个组件时，访问vm.$scopedSlots最有帮助。
+	》vm.$refs 类型 Object 只读
+		一个对象 其中包含了所有拥有ref注册的子组件
+	》vm.$isServer 类型 boolean 只读
+		当前vue实例是否运行于服务器
+》实例方法
+	》数据
+		vm.$watch(expOrFn,callback,[options]);
+		参数：
+		{string | Function} expOrFn
+		{Function} callback
+		{Object} [options]
+			{boolean} deep
+			{boolean} immediate
+		返回值：{function} unwatch
+		用法：
+			观察Vue实例变化的一个表达式或计算属性函数。回调函数得到的参数为新值和就值。表达式只接受监督的键路径，对于更复杂的表达式，用一个函数取代。
+		注意：在变异(不是替换)对象或数组时，旧值与新值相同，因为它们的引用指向同一个对象或数组。Vue不会保留变异之前值得副本。
 			
+
+		
+		
+		
 			
 
 
