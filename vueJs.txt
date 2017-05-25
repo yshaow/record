@@ -6604,7 +6604,35 @@ Compile template into render function|    |Compile el's outerHTML as template
 			<div v-else-if='type === c'></div>
 			<div v-else></div>
 	》v-for 类型 Array | Object | number | string
-		
+		用法：
+			基于源数据多次渲染元素或模版块，此指令之值，必须使用特定语法 alias in expression。为当前
+			遍历的元素提供别名。
+			<div v-for='item in items'>
+				{{item.text}}
+			</div>
+			//另外也可以为数组索引指定别名 或用于对象的键
+			<div v-for='(item,index) in items'></div>
+			<div v-for='(val,key) in object'></div>
+			<div v-for='(val,key,index) in object'></div>
+			//v-for默认行为试着不改变整体，而不是替换元素，迫使其重新排序的元素，你需要提供一个key的特殊属性：
+			<div v-for='item in items' :key='item.id'>{{item.text}}</div>
+	》v-on 缩写@ 类型：Function | Inline Statement 
+		参数：event (required)
+		修饰符：
+			.stop 调用 event.stopPropagation()
+			.prevent 调用 event.preventDefault()
+			.capture 添加事件监听器时使用capture模式
+			.self 只当事件是从侦听器绑定的元素本身触发时才触发回调
+			.{keyCode | keyAlias} 只当事件是从特定键触发时才触发回调
+			.native 监听组件根元素的原生事件
+			.once 只触发一次回调
+			.left 只当点击鼠标左键时触发
+			.right 只当点击鼠标右键时触发
+			.middle 只当点击鼠标中键时触发
+			.passive 以{passive:true}模式添加侦听器
+		用法：
+			绑定事件监听器。事件类型由参数指定。表达式可以是一个方法的名字或一个内联语句。如果没有修饰符
+			也可以省略。
 
 
 		
