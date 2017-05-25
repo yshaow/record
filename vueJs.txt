@@ -6724,6 +6724,118 @@ Compile template into render function|    |Compile el's outerHTML as template
 		//不会显示 直到编译结束
 	》v-once 不需要表达式
 		只渲染元素和组件一次，随后的重新渲染 元素/组件及其所有的子节点将被视为静态内容并跳过。这个可以用于优化更新性能
+		<!-- 单个元素 -->
+		<span v-once>This will never change: {{msg}}</span>
+		<!-- 有子元素 -->
+		<div v-once>
+		  <h1>comment</h1>
+		  <p>{{msg}}</p>
+		</div>
+		<!-- 组件 -->
+		<my-component v-once :comment="msg"></my-component>
+		<!-- v-for 指令-->
+		<ul>
+		  <li v-for="i in list" v-once>{{i}}</li>
+		</ul>
+》特殊属性
+	》key 类型 string
+		key的特殊属性主要用在Vue的虚拟DOM算法，在新旧nodes对比时辨识VNodes。如果不使用key，Vue会使用
+		一种最大限度减少动态元素并且尽可能的尝试修复/在利用相同类型元素的算法。使用key，它会基于key的变化重新排列元素顺序，并且会移除
+		key不存在的元素。
+		//有相同父元素的子元素必须有独特的key。重复的key会造成渲染错误
+		//最常见的用例时结合v-for:
+			<ul>
+				<li v-for='item in items' :key='item.id'></li>
+			</ul>
+		//它也可以用于强制替换元素/组件而不是重复使用它。当你遇到如下场景时他可能会很有用：
+			//完整地触发组件的生命周期钩子
+			//触发过渡
+			<transition>
+				<span :key='text'>{{text}}</span>
+			</transition>
+			//当text发生改变时，<span></span>会随时被更新 因此会触发过渡
+	》ref  类型 string
+		ref 被用来给元素或子组件注册引用信息。引用信息将会注册在父组件的$refs对象上。如果在普通的DOM元素上
+		使用，引用指向的就是DOM元素，如果用在子组件上，引用就指向组件实例：
+		<p ref='p'>hello</p>//vm.$refs.p 指向p DOM事件
+		<child-comp ref='child'></child-comp>//指向child-comp的实例
+		当v-for用于元素或组件的时候，引用信息将是包含DOM节点或组件实例的数组
+		注意：关于ref注册时间的重要说明，因为ref本身是作为渲染结果被创建的，在初始渲染的时候你不能访问它们，它们还不存在
+		$refs也不是响应式的，因此你不应该试图用它在模板中做数据绑定。
+	》slot 类型 string
+		用于标记往哪个slot中插入子组件内容。
+》内置的组件
+	》component
+		属性：
+			is： 取值：string | ComponentDefinition | ComponentConstructor
+			inline-template : boolean
+		用法：
+			渲染一个元组件为动态组件。依 is 的值来决定哪个组件被渲染。
+		//动态组件由 vm 实例的属性值 componentId 控制
+		<component :is="componentId"></component>
+		//也能够渲染注册过的组件或 prop传入的组件
+		<component :is='$options.components.child'></component>
+	》transition
+		属性：
+			name - string, 用于自动生成 CSS 过渡类名。例如：name: 'fade' 将自动拓展为.fade-enter，.fade-enter-active等。默认类名为 "v"
+			appear - boolean, 是否在初始渲染时使用过渡。默认为 false。
+			css - boolean, 是否使用 CSS 过渡类。默认为 true。如果设置为 false，将只通过组件事件触发注册的 JavaScript 钩子。
+			type - string, 指定过渡事件类型，侦听过渡何时结束。有效值为 "transition" 和 "animation"。默认 Vue.js 将自动检测出持续时间长的为过渡事件类型。
+			mode - string, 控制离开/进入的过渡时间序列。有效的模式有 "out-in" 和 "in-out"；默认同时生效。
+			enter-class - string
+			leave-class - string
+			enter-active-class - string
+			leave-active-class - string
+			appear-class - string
+			appear-active-class - string
+		事件：
+			before-enter
+			enter
+			after-enter
+			before-leave
+			leave
+			after-leave
+			before-appear
+			appear
+			after-appear
+		用法：
+			<transition>元素作为单个元素/组件的过渡效果。<transition>不会渲染额外的DOM元素，也不会出现在检测过的组件层级中。它只是将内容包裹在其中，简单的运用过渡行为。
+			<!-- 简单元素 -->
+			<transition>
+			  <div v-if="ok">toggled content</div>
+			</transition>
+			<!-- 动态组件 -->
+			<transition name="fade" mode="out-in" appear>
+			  <component :is="view"></component>
+			</transition>
+			<!-- 事件钩子 -->
+			<div id="transition-demo">
+			  <transition @after-enter="transitionComplete">
+			    <div v-show="ok">toggled content</div>
+			  </transition>
+			</div>
+			new Vue({
+			  ...
+			  methods: {
+			    transitionComplete: function (el) {
+			      // 传入 'el' 这个 DOM 元素作为参数。
+			    }
+			  }
+			  ...
+			}).$mount('#transition-demo')
+	》transition-group
+		属性：
+			tag - string 默认为span
+			move-class -覆盖移动过渡期间应用的css类
+			除了mode，其他特性和<transition>相同
+		事件：
+			事件和<transition>相同
+		用法：
+			<transition-group>元素作为多个元素/组件的过渡效果，<transition-group>渲染一个真实的DOM元素，默认渲染<span>可以通过tag属性配置
+			哪个元素应该被渲染。
+		//每个<transition-group>的子节点必须有**独立的key**,动画才能正常工作。
+		<transition-group>支持通过CSS transform过渡移动。当一个子节点被更新，从屏幕上的位置发生变化，它将会获取应用CSS移动类
+		(通过name属性或配置move-class属性自动生成)，
 
  
 			
