@@ -6576,7 +6576,36 @@ Compile template into render function|    |Compile el's outerHTML as template
 				//在大多数场景中你不应该调用这个方法，最好使用v-if和v-for指令以数据驱动的方式控制
 				  子组件的生命周期。
 》指令
-	
+	》v-text 类型 string
+		更新元素的textContent。如果要更新**部分**的textContent，需要使用 {{Mustache}}插值
+	》v-html 类型 string
+		更新元素的 innerHTML。注意：内容按普通html插入-不会作为Vue模版进行编译。如果试图使用v-html组合模版
+		可以重新考虑是否通过使用组件来替代。
+		//在网站上动态渲染任意的html是非常危险的。因为容易导致XSS攻击。只在可信内容上使用v-html，**永不用再用户提交的内容上**
+	》v-show 类型 any
+		根据表达式之真假值，切换元素的display css属性
+		//当条件变化时该指令触发过渡效果。
+	》v-if 类型 any
+		根据表达式的值的真假条件渲染元素。在切换时元素以及它的数据绑定 /组件被销毁并重建。如果元素
+		是<template>将提出它的内容作为条件块。
+		//当条件变化时该指令触发过渡效果
+	》v-else  不需要表达式
+		限制：前一兄弟元素必须有 v-if 或 v-else-if
+		用法：
+			为v-if 或 v-else-if 添加 else块
+			<div v-if='Math.random() > .5'></div>
+			<div v-else></div>
+	》v-else-if 类型 any
+		限制：前一个兄弟元素必须有 v-if 或 v-else-if
+		用法：
+			表示 v-if的 else if块，可以链式调用
+			<div v-if='type === a'></div>
+			<div v-else-if='type === b'></div>
+			<div v-else-if='type === c'></div>
+			<div v-else></div>
+	》v-for 类型 Array | Object | number | string
+		
+
 
 		
 		
