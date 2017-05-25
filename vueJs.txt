@@ -6549,8 +6549,34 @@ Compile template into render function|    |Compile el's outerHTML as template
 				document.getElementById('app').appendChild(component.$el)
 			》vm.$forceUpdate()
 				迫使Vue实例重新渲染。注意它仅仅影响实例本身和插入插槽内容的子组件，而不是所有子组件。
-
-			
+			》vm.$nextTick([callback]);
+				参数：
+					{Function} [callback]
+				用法：
+					将回调延迟到下次DOM更新循环之后执行，在修改数据之后立即使用它，然后等待DOM更新后执行回调函数。
+					它更全局方法Vue.nextTick一样，不同的是回调的this自动绑定到调用它的实例上。
+				//如果没有提供回调且支持promise的环境中返回promise
+				new Vue({
+					methods:{
+						example:function(){
+							//修改数据
+							this.message = 'changed';
+							//DOM还没更新
+							this.$nextTick(function(){
+								//DOM 更新了  this绑定的是当前实例
+								this.doSomethingElse();
+							});
+						}
+					}
+				});
+			》vm.$destroy()
+				用法：
+					完全销毁一个实例，清理它与其他实例的链接，解绑它的全部指令以及事件监听器。
+				//触发beforeDestroy 和 destroyed的钩子
+				//在大多数场景中你不应该调用这个方法，最好使用v-if和v-for指令以数据驱动的方式控制
+				  子组件的生命周期。
+》指令
+	
 
 		
 		
