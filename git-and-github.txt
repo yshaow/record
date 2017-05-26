@@ -32,6 +32,9 @@
 		作用：把暂存区的文件放去版本库中
 	》git commit -am '注释'//修改之后再工作区的代码 还需要一次使用git add 文件名。才能提交 可以通过命令同时执行add 与 commit
 	》git log  //查看提交记录
+	》git log -p <filename> 查看每次详细修改内容
+	》git diff <file> 比较当前文件和暂存区文件差异
+	》git rm <file> 从版本库中删除文件
 	》git status //查看当前git版本库的状态
 		untracked：没有被跟踪的文件
 		unmodified:没有被修改过的
