@@ -17,6 +17,7 @@
 	》配置信息：
 		git config --global user.name 'yshaow'
 		git config --global user.email yshaow@126.com
+		git config --global credential.helper store //避免每次远程提交  输入用户名或密码
 	》获取命令帮助
 		git help config
 	》git初始化--从项目中建立git的版本控制
