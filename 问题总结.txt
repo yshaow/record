@@ -32,3 +32,13 @@ github：https://github.com/
 兼容ie8的rgba：http://www.tuicool.com/articles/juiEFrb
 meta:http://blog.csdn.net/yc123h/article/details/51356143
 unslider:http://www.jq22.com/jquery-info1940
+/******************Vue坑****************/
+1.单文件组件中 style标签加了scoped 会为样式添加属性选择器  如果用了第三方UI组件，可能会出现匹配不到的情况。
+	解决：去掉 scoped  避免影响全局样式，可以添加顶层选择器
+2.开发环境中，ajax异步请求找不到路径的问题。
+	解决：在webpack配置中添加代理，即可以找到
+3.vue-router的问题，打包之后，访问页面，内容无法显示的问题
+	解决：
+		第一步：在路由path前面加上基路径，因为'/'表示的是域名对应的根目录，如果不在根目录需要加上域名之后的多个层级目录
+		第二步：在webpack的配置文件中 build(生产环境)属性下的：assetsPublicPath属性，加上上面同样的基路径，避免组件中的
+			图片找不到位置。
