@@ -1,0 +1,667 @@
+/********************D3*******************/
+1.链接 https://d3js.org/
+    》安装
+        npm安装：npm install d3;
+        CDN:
+            <script src="https://d3js.org/d3.v4.js"></script>
+            压缩版：
+            <script src="https://d3js.org/d3.v4.min.js"></script>
+            单独使用d3某个模块：如单独使用d3-selection
+            <script src="https://d3js.org/d3-selection.v1.min.js"></script>
+    》支持环境
+            D3支持“现代”浏览器，也就是除IE8及以下的浏览器。D3针对Firefox，Chrome，Safari，Opera，IE9 +，Android和iOS进行
+        测试，D3的一部分功能能在旧版的浏览器中运行，因为D3的核心功能对浏览器的要求比较低：JavaScript和 W3C DOM API。
+        D3使用 Level 1级Selectors API，但是可以通过预先加载Sizzle来实现兼容。现代浏览器对SVG和CSS3 Transition 的支持比
+        较好。所以D3不支持更低级别的浏览器。
+            D3也可以运行在Node 和 Web workers中. 在Node环境中使用DOM的时候，必须要提供自己的DOM实现。推荐使用JSDOM，为了避免定义全局document，
+        建议将DOM传递给d3.select或者将NodeList传递给d3.selectAll,如下：
+            var d3 = require("d3"),
+                jsdom = require("jsdom");
+            var document = jsdom.jsdom(),
+                svg = d3.select(document.body).append("svg");
+    》本地开发
+        由于浏览器的安全限制，不能直接读取本地文件。在本地开发的时候，必须要运行一个服务器环境而不是使用file://,
+        推荐使用Nodejs的http-server，安装方法:
+        npm install -g http-server
+        运行：http-server &
+        然后会在当前目录启动一个 http://localhost:8080 的服务。
+2.简介
+        d3js是一个可以基于数据来操作文档的js库。可以帮助你使用html，css，SVG，canvas来展示数据。D3遵循现有的web标准，
+    可以不需要其他任何框架独立运行在现代浏览器中，它结合强大的可视化组件来驱动DOM操作。
+        D3可以将数据绑定到DOM上，然后根据数据来计算对应的DOM的属性值。如你可以根据一组数据生成一个表格，或者也可以生成
+    一个可以过渡和交互的SVG图形。
+        D3不是一个框架，因此也没有操作上的限制。没有框架的限制带来的好处就是你可以完全按照自己的意愿来表达数据，而不是
+    受限于条条框框，非常灵活。D3的运行速度很快，支持大数据集和动态交互以及动画。
+3.enter和exit操作
+        数据绑定的时候可以出现DOM元素与数据元素**个数不匹配**的问题，那么enter和exit就是用来处理这个问题的。
+    enter操作用来添加新的DOM元素，exit操作用来移除多余的DOM元素。
+        如果数据元素多于DOM个数时用enter，如果数据元素少于DOM元素则用exit。
+        在数据绑定时候存在三种情形：
+            》数据元素个数多于DOM元素个数
+                案例：如果文档中p标签的个数少于数组个数(6个)，则使用enter和append操作来补齐DOM元素
+                d3.select('body')
+                  .selectAll('p')
+                  .data([1,2,3,4,5,6])
+                  .enter().append('p')
+                  .text(function(d){
+                    return "I'm number"+ d +"!";
+                  });
+            》数据元素与DOM元素个数一样
+                如果这种情况在使用data来绑定数据，相当于是更新了每个DOM元素所对应的数据，此时不需要加入新的节点
+                也不需要删除多余的节点：
+                var p = d3.select('body')
+                          .selectAll('p')
+                          .data([1,2,3,4,5,6])
+                          .text(function(d){return d;});
+            》数据元素个数少于DOM元素个数
+                假设p的元素的个数多于6个，数据元素个数为6：
+                var p = d3.select('body')
+                          .selectAll('p')
+                          .data([1,2,3,4,5,6])
+                          .text(function(d){
+                            return d;
+                          });
+                     p.exit().remove();//移除多余的元素
+            》在实际应用中，不可能先去统计一下元素个数，因此这三种情形可以一起使用
+                //情形2
+                var p = d3.select('body')
+                          .selectAll('p')
+                          .data([1,2,3,4,5,6])
+                          .text(function(d){return d;});
+                //情形1
+                p.enter().append('p').text(function(d){return d;});
+                //情形3
+                p.exit().remove();
+4.D3不是一种新的表示
+    D3不引入新的视觉表示方法，而是借助于现有的web元素 html css svg等。可以使用D3创建SVG元素，并使用外部样式表进行样式化。
+    也可以使用复合过滤器效果，虚线和裁剪。这样在调试的时候可以方便的使用浏览器内置的调试工具来进行调试。
+5.过渡
+    D3支持动画效果，这种效果可以通过对样式属性的过渡实现。其补间插件支持多种方式，如线性、弹性等。
+    此外D3内置的多种插件方式，比如数值类型，字符类型路径数据以及颜色等。
+    比如对元素的背景颜色进行过滤：
+        d3.select('body').transition().style('background-color',"black");
+    此外还可以为一组元素设置不同的延迟：
+        d3.selectAll('circle').transition()
+          .duration(750)
+          .delay(function(d,i){return i * 10;})
+          .attr('r',function(d){return Math.sqrt( d * scale );});
+  /***********************文档分析*************************/
+  1.d3-array
+     》d3.min(array[,accessor]);//返回给定array中的最小值。
+            如果数组为空，则返回undefined。
+            如果指定了accessor则相当于在计算最小值之前调用了array.map(accessor);
+            //accessor 回调函数 function(value,index,array){}
+            注意：
+                与内置方法Math.min不同,d3.min忽略undefined, null and NaN 等值，在忽略缺失数据时有用.
+                此外，元素使用自然排序而不是数值排序，比如["20","3"]会返回"20"，而[20,3]则返回3.
+     》d3.max(array[,accessor]);//返回给定array的最大值
+            如果数组为空，则返回undefined。
+            如果指定了accessor则相当于在计算最小值之前调用了array.map(accessor)
+            注意：
+                与内置方法Math.max不同,d3.min忽略undefined, null and NaN 等值，在忽略缺失数据时有用.
+                此外，元素使用自然排序而不是数值排序，比如["20","3"]会返回"3"，而[20,3]则返回20.
+     》d3.extent(array[,accessor]);//根据指定的数组返回最小值和最大值 [min,max]
+            如果数组为空则返回[undefined, undefined].
+            如果指定了accessor，则相当于在计算极值之前调用了array.map(accessor).
+     》d3.sum(array[,accessor]);//根据指定的array计算和
+            如果数组为空则返回0.
+            如果指定了accessor则相当于在求和之前调用了array.map(accessor). 这个方法会忽略undefined 和 NaN.
+     》d3.mean(array[,accessor]);//根据指定的数组返回数组的均值
+            如果数组为空则返回undefined.
+            如果指定了accessor则相当于在计算之前调用了array.map(accessor). 这个方法会忽略undefined 和 NaN.
+     》d3.median(array[,accessor]);//根据指定的数组使用R-7返回数组的中位数。
+            如果数组为空则返回undefined.
+            如果指定了accessor则相当于在计算之前调用了array.map(accessor). 这个方法会忽略undefined 和 NaN.
+     》d3.quantile(array,p[,accessor]);//根据指定的数组返回p-分位数 p是[0,1]之间的小数
+            例如中位数相当于 p = 0.5, 使用p = 0.25计算第一个四分位数, p = 0.75表示第三个四分位数. 这个方法也使用R-7 方法.
+            如果指定了accessor则相当于在计算之前调用了array.map(accessor)。
+     》d3.variance(array[,accessor]);//返回指定数组的总体方差的无偏估计
+            如果数组中包含的元素个数小于2则返回undefined.
+            如果指定了accessor则相当于在计算之前调用了array.map(accessor). 这个方法忽略了undefined 和 NaN .
+     》d3.deviation(array[,accessor])//返回数组的标准差
+            如果数组中包含的元素个数小于2则返回undefined.
+            如果指定了accessor则相当于在计算之前调用了array.map(accessor). 这个方法忽略了undefined 和 NaN .
+     》d3.scan(array[,comparator]);//对指定的数组进行线性扫描，根据指定的比较操作返回最终元素的索引//得到最大值或最小值的索引
+            如果给定的数组不包含可比较的元素(比如比较操作返回NaN)则返回undefined,
+            如果没有指定比较操作，则默认ascending.
+            comparator：function(a,b){
+                    return a - b;//获取最小值
+                    return b - a;//获取最大值
+            }
+            //这个方法与min类似，但是这个方法是使用比较操作而不是访问器，并且这个方法返回的是索引而不是具体的值
+     》d3.bisectLeft(array,x[,lo[,hi]]);//返回x在数组中应该被插入的位置，并保证数组的有序性。
+            参数lo和hi被用来指定一个子集来限制插入的位置。默认情况下可能插入到数组中的任何位置.
+            如果数组中已经存在x，则插入点的位置位于这个已经存在的元素之前(要考虑从左到右还是从右到左)。
+            》d3.bisect(array, x[, lo[, hi]])
+            》d3.bisectRight(array, x[, lo[, hi]])//从右向左计算的
+     》d3.bisector(accessor | comparator);//使用指定的访问器或比较操作返回一个二等分对象
+            var data = [
+              {date: new Date(2011, 1, 1), value: 0.5},
+              {date: new Date(2011, 2, 1), value: 0.6},
+              {date: new Date(2011, 3, 1), value: 0.7},
+              {date: new Date(2011, 4, 1), value: 0.8}
+            ];
+            //使用访问器造二等分线对象
+            var bisectDate = d3.bisector(function(d) { return d.date; }).right;
+            //等价于使用比较操作器造二等分线对象
+            var bisectDate = d3.bisector(function(d, x) { return d.date - x; }).right;
+            //注意：使用比较操作时，要将第二个参数设置为x，这里的x相当于要插入的值
+            》然后使用类似于bisectDate(data, new Date(2011, 1, 2))的方法返回new Date(2011, 1, 2)
+            在data中插入的索引，以保证插入之后依然有序。
+            》bisector.left(array,x[,lo[,hi]]);//等价于bisectLeft，但是使用的是二等分法
+            》bisector.right(array,x[,lo[,hi]]);//等价于bisectRight，但是使用的是二等分法
+     》d3.ascending(a,b);
+            如果a 小于 b则返回 -1 ,如果a 大于 b则返回1, 否则返回 0.
+            这是自然数的一个比较操作，可以用于array.sort来进行升序排序，定义如下:
+                function ascending(a, b) {
+                  return a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
+                }
+     》d3.descending(a,b);
+            如果a 小于 b则返回 1 ,如果a 大于 b则返回-1, 否则返回 0.
+            这是自然数的一个比较操作，可以用于array.sort来进行降序排序，定义如下:
+                function descending(a, b) {
+                  return b < a ? -1 : b > a ? 1 : b >= a ? 0 : NaN;
+                }
+     》d3.cross(a,b[,reducer]);//返回a b两个数组的笛卡尔乘积
+            对于数组a中的每个元素i和数组b中的每个元素j，分别有序的调用传入reducer方法。
+            reducer方法的参数分别为i和j。如果没有指定reducer则**默认为i和j创建一个二维数组**：
+                即：reducer默认方式：
+                    function reducer(i,j){
+                        return [i,j];
+                    }
+     》d3.merge([arr1,arr2]);//将指定的数组合并为一个数组
+            如：d3.merge([[1], [2, 3]])
+     》d3.pairs(array);//将给定的数组的每个元素与它之前的一个元素结合为一对
+            d3.pairs([1,2,3,4]);//return [[1,2],[2,3].[3,4]]
+            //如果给定的数组中元素个数小于等于1，则返回空数组
+     》d3.permute(array,indexes);//根据指定的索引次序对数组进行排序，返回排序后的新数组。
+            d3.permute(['a','b','c'],[1,2,0])//['b','c','a'];
+            //如果数组长度和索引长度不同，则会重复或忽略某些元素
+            》这个方法也可以对对象进行操作，第一个参数为对象，第二个参数为属性列表，则会根据属性列表
+              返回对应的值数组。
+                var object = {yield: 27, variety: "Manchuria", year: 1931, site: "University Farm"},
+                    fields = ["site", "variety", "yield"];
+                d3.permute(object, fields); // returns ["University Farm", "Manchuria", 27]
+     》d3.shuffle(array[,lo[,hi]]);//使用Fisher–Yates shuffle算法对数组进行随机重排.
+     》d3.ticks(start,stop,count);//在start和stop之间计算出一个等间隔的、精确的刻度序列，count用于指定参考刻度个数。
+                //由于小数可能不精确，需使用d3-format进行格式化
+     》d3.tickStep(start,stop,count);//根据start和stop以及count返回刻度的间隔大小
+     》d3.range([start,] stop [,step]);//根据start(如果指定)和stop以及step(如果指定)返回生成的序列。
+                start默认0 step默认1.
+                返回的序列不包含stop
+                d3.range(0, 1, 0.2) // [0, 0.2, 0.4, 0.6000000000000001, 0.8]
+     》d3.transpose(matrix);//使用zip操作进行矩阵转置
+     》d3.zip(arrays...);//数组重合并
+            d3.zip([1, 2], [3, 4]); // returns [[1, 3], [2, 4]]
+     》Histograms 直方图可以将一些离散的样本统计映射到连续的空间，并且这种映射是非重叠的。直方图经常用来对一系列数值
+            分布空间进行可视化。
+            》d3.histogram() 使用默认的设置创建一个直方图生成器
+            》histogram(data) 根据给定的数据样品计算对应的直方图。返回一个bins(纵向柱子)数组，
+            每个bin都包含了与输入数据相关联的元素。bin的length属性表示这个bin里包含的元素个数，每个bin包含两个属性:
+                x0 - bin的下界 (包含).
+                x1 - bin的上界 (不包含,最后一个bin除外).
+            》histogram.value([value]);
+                //如果指定了value，则为直方图设置值访问器并返回直方图生成器。
+                //如果vlaue没有指定，则返回当前的值访问器
+            》histogram.domain([domain]);
+                如果指定了domain则设置直方图的输入范围，这个值是一个[min,max]数组，表示直方图可取的最小值和最大值，
+                如果生成数据某个元素的值超出这个范围，则忽略这个元素。
+                例如，如果直方图与线性比例尺 x 结合使用时，则需要进行如下设置:
+                    var histogram = d3.histogram()
+                        .domain(x.domain())
+                        .thresholds(x.ticks(20));
+                    然后使用如下方法计算bins:
+                    var bins = histogram(numbers);
+                    domian访问器是被生成后的bins数组调用，而不是原始数据。
+                    histogram.thresholds([count])
+                    histogram.thresholds([thresholds])
+                        如果指定了thresholds，则根据指定的数组或方法设置阈值生成器并返回直方图生成器。
+                    默认的阈值是使用Sturges’ formula方法. 阈值是以数组的形式定义的，比如 [x0, x1, …].
+                    任何比 x0 小的值被放置在第一个bin中。大于等于 x0 但是小于 x1 的被放置在第二个bin中;
+                    以此类推. 最终直方图生成器 将包含 thresholds.length + 1 个 bins.
+                        如果使用 count 来代替 thresholds, 则 domain 将被分割成 count 个 bins;
+                    》以下方法一般不直接使用，而是传递给histogram.thresholds使用.
+                        》d3.thresholdFreedmanDiaconis(values, min, max)
+                            //根据Freedman–Diaconis rule方法计算bins; values 必须为数值类型.
+                        》d3.thresholdScott(values, min, max)
+                            //根据Scott’s normal reference rule方法计算bins; values 必须为数值类型.
+                        》d3.thresholdSturges(values)//默认方式
+                            //根据Sturges’ formula方法计算bins; values 必须为数值类型.
+ /*********************************************/
+ 1.添加元素
+    [selection].append('p');
+        d3.select("body")//获取DOM
+          .append("p")//添加元素
+          .text("New paragraph!"); //添加文本
+ 2.数据绑定
+    》D3可以处理的数据类型
+        》js的数据类型
+            如：数字 时间 字符串 布尔值 数组 对象
+        》D3自定义的数据类型
+            如：集合 Set  映射 Map  嵌套 Nest 以及各种颜色空间 RGB HSL L*a*b HSV对象等。
+
+        最常用的是数组 JSON 特殊的有CSV GeoJSON数据等。
+    》如何绑定 -- 选择元素 绑定数据 追加元素
+        d3.selectAll('p')//查找p 没有存在将返回一个空的选择，这个选择为空，代表段落很快就会存在
+          .data([1,2,3,4])//计数和分析我们的数据值
+          .enter()//绑定数据和DOM元素 这个方法将数据传递到DOM中。如果数据值比相应的DOM元素多，就用enter()创建一个新元素的占位符。
+          .append('p')
+          .text('绑定数据')
+ 3.使用数据
+        d3.selectAll('p')
+          .data([1,2,3,4,5,6])
+          .enter()
+          .append('p')
+          .text(function(d){//d表示当前值
+            return "使用数据"+d;
+          })
+          .style('color',function(d){
+            if(d>4){
+                return 'red';
+            }else{
+                return 'blue';
+            }
+          })
+ 4.用层画条形图
+        div.bar {
+            display: inline-block;
+            width: 20px;
+            margin-right: 2px;//设置层之间间隔
+            background-color: teal;
+        }
+        d3.selectAll('div')
+          .data([1,2,3,4,5,6])
+          .enter()
+          .append('div')
+          .attr('class','bar')//设置属性
+          .style('height',function(d){//为每层设置特定的属性
+            return d * 10 +"px";
+          })
+ 5.生成测试数据
+        》使用随机数值
+            》使用原生js方式
+                var dataset = [];
+                for(var i = 0;i<25;i++){
+                    dataset.push(Math.round(Math.random() * 30));
+                }
+            》D3方式
+                var dataset = d3.range(25)//生成25个数字 对应数组[0-24],此处用作循环
+                                .map(function(){
+                                    return d3.format("d")(//四舍五入到整数
+                                            d3.randomNormal(15,8)()//生成一个满足期望是15 方差是8的正态分布的随机数
+                                    )
+                                });
+        》使用上面生成的data即可
+ 6.SVG
+    SVG标签包含一些基本的构图元素，包括矩形 圆形 椭圆形 线条 文字和路径等
+    SVG使用的是基于像素的坐标系统，其中浏览器的左上角是原点(0,0),x y的正方向分别是右 下
+    》矩形
+        x和y的指定左上角的坐标，width和height指定矩形的尺寸
+        <rect x="0" y="0" width="500" height="50"/>
+    》圆
+        cx和cy指定圆心的坐标 r表示半径大小
+        <circle cx='250' cy='25' r='25'/>
+    》椭圆
+        cx和cy指定圆心坐标，rx和ry分别指定横半轴 纵半轴长度
+        <ellipse cx='250' cy='25' rx='100' ry='25'/>
+    》线
+        用x1和y1到指定线的一端的坐标，x2和y2指定的另一端的坐标。stroke(颜色值)指定描边让线是可见的
+        <line x1='0' y1='0' x2='500' y2='50' stroke='black'/>
+    》文本
+        x和y指定文本的位置,并可以给文本设置样式
+        <text x="250" y="25" font-family="sans-serif" font-size="25" fill='gray'>Easy-peasy</text>
+    》SVG的样式
+        SVG的默认样式没有描边，并且是黑色填充。
+        属性              含义          可能值
+        fill              填充          颜色值
+        stroke            描边          颜色值
+        stroke-width      描边宽度      数字通常以像素为单位
+        opacity           不透明度      0完全透明 - 1完全不透明之间的数值
+        font-family       字体          text标签特有 css字体
+        font-size         字体大小      text标签特有 数字
+        text-anchor       对齐方式      text标签特有 left center right
+        其中颜色可以被指定为:
+            命名的颜色 green
+            十六进制值 #3388aa或#38A
+            RGB值 RGB(10,150,20)
+            RGB与Alpha透明 RGBA(10,150,20,0.5)
+ 7.D3绘制SVG
+    //创建SVG
+    var w = 500;
+    var h = 50;
+    var svg = d3.select('body')
+                .append('svg')//添加SVG
+                .attr('width',w)//设置宽高
+                .attr('height',h)
+    //数据驱动的SVG
+    var dataset = [5,10,15,20,25];
+    svg.selectAll('circle')
+       .data(dataset)
+       .enter()
+       .append('circle')
+       .attr('cx',function(d,i){//i 索引
+            return i * 50 +25;
+       })
+       .attr('cy',h/2)
+       .attr('r',function(d){
+            return d;
+       })
+ 8.D3的数据类型
+    》变量
+    》数组
+    》对象
+    》对象数组 //对应值为对象的数组
+    》JSON
+    》GeoJSON 是可以存储地理空间通常为经度纬度坐标点，形状(如线和多边形)和其他空间的Feature
+        var geodata = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [ 150.1282427, -24.471803 ]
+                    },
+                    "properties": {
+                        "type": "town"
+                    }
+                }
+            ]
+        };
+ 9.更自由的条形图
+    》准备数据 绘制条形图的输入数只需要一个表示每个条数据量的数组就行
+        var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13,11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
+    》创建SVG元素
+        var w = 500;
+        var h = 100;
+        var svg = d3.select('body')
+                    .append('svg')
+                    .attr('width',w)
+                    .attr('height',h)
+    》绘制矩形条
+        //D3经典的select-data-enter-append-attr/style的编程套路
+        svg.selectAll('rect')
+           .data(dataset)
+           .enter()
+           .append('rect')
+           //添加样式
+    》矩形条的属性和样式
+        //条宽 = 条实际宽度 + 间隙宽度 = w/dataset.length
+                 间隙宽度 = barPadding
+        //条高 = 条长 - 纵坐标(纵坐标是从上到下计算的) = h - ( d * 4(高度) )
+        svg.selectAll('rect')
+                   .data(dataset)
+                   .enter()
+                   .append('rect')
+                   .attr('x',function(d,i){
+                        return i * (w/dataset.length);
+                   })
+                   .attr('y',function(d){
+                        return h -( d * 4 );
+                   })
+                   .attr('width',w / dataset.length - barPadding)
+                   .attr('height',function(d){
+                        return d * 4;
+                   })
+                   .attr('fill',function(d){
+                        return "rgb(0,0,"+ (d * 10) +")"
+                   })
+    》文本标记
+        x坐标：i * (w / dataset.length) + (w / dataset.length - barPadding) / 2;
+        y坐标：h - (d * 4) + 14;
+        svg.selectAll('text')
+           .data(dataset)
+           .enter()
+           .append('text')
+           .text(function(d){
+                return d;
+           })
+           .attr('text-anchor','middle')
+           .attr('x',function(d,i){
+            return i * (w/dataset.length) + (w/dataset.length-barPadding)/2;
+           })
+           .attr('y',function(d){
+            return h - (d*4)+14;
+           })
+           .attr("font-family",'sans-serif')
+           .attr('font-size','11px')
+           .attr('fill','white')
+ 10.散点图
+    散点图的绘制思路：
+        》准备输入数据，用二维数组表示每个点的坐标
+        》绘制SVG 并绑定数据
+        》绘制圆元素 并用绑定的数据设置圆的属性
+        var w = 500,
+            h = 100,
+            dataset = [
+                [5, 20], [480, 90], [250, 50], [100, 33], [330, 95],
+                [410, 12], [475, 44], [25, 67], [85, 21], [220, 88]
+            ],
+            svg = d3.select('body')
+                    .append('svg')
+                    .attr('width',w)
+                    .attr('height',h);
+            svg.selectAll('circle')
+               .data(dataset)
+               .enter()
+               .append('circle')
+               .attr('cx',function(d){
+                    return d[0];
+               })
+               .attr('cy',function(d){
+                    return d[1];
+               })
+               .attr('r',function(d){
+                    return Math.sqrt(h-d[1]);//绘制上面大 下面小的圆
+               });
+            //点的文本
+            svg.selectAll("text")
+               .data(dataset)
+               .enter()
+               .append('text')
+               .text(function(d){
+                    return d[0] + "," + d[1];
+               })
+               .attr(x,function(d){
+                    return d[0];
+               })
+               .attr(y,function(d){
+                    return d[1];
+               })
+               .attr("font-family", "sans-serif")
+               .attr("font-size", "11px")
+               .attr("fill", "red");
+ 11.比例尺
+        比例尺就是一个数据映射函数，比如线性比例尺可以实现类似y=ax+b的变换。D3一共有三类九种比例尺。
+        》分类
+            》数量型
+                线性比例尺
+                恒等比例尺
+                乘方比例尺
+                对数比例尺
+                量化比例尺
+                分位数比例尺
+                临界值比例尺
+            》时间型
+                时间比例尺
+            》序数型
+                序数比例尺
+                颜色比例尺(特例)
+            //一般采用线性比例尺
+        》定义域 和 值域
+            比例尺有两个重要的函数：
+                》domain([100,500]) 定义域范围 对应轴的
+                》range([10,350]) 值域范围 相应轴的
+        》定义比例尺
+            //4.x版本 d3.scaleLinear() -- d3.scale.linear()
+            var scale = d3.scale.linear()
+                          .domain([100,500])
+                          .range([10,350]);
+            //比例尺最终都会对定义域执行相应的函数变换，然后再把这个中间数据线性变换到值域范围上
+        》坐标轴的缩放
+            //获取最大的X
+            d3.max(dataset,function(d){
+                return d[0];//返回每个子数组的第一个元素
+            })
+            //X轴缩放
+            var xScale = d3.scale.linear()
+                         .domain([0,d3.max(dataset),function(d){ return d[0];}])
+                         .range([0,w])
+            //Y轴缩放
+            var yScale = d3.scale.linear()
+                                 .domain([0,d3.max(dataset,function(d){ return d[1]; })])
+                                 .range([0,h])
+            //自定义半径比例尺
+            var rScale = d3.scale.linear()
+                           .domain([0,d3.max(dataset,function(d){ return d[1]; })])
+                           .range([2,5]);
+        》设定圆心的坐标
+            //需要使用和轴一致的比例尺
+            .attr('cx',function(d){
+                //return d[0];
+                //使用缩放后的坐标x值
+                return xScale(d[0]);
+            })
+            .attr('cy',function(d){
+                //return d[1];
+                //使用缩放后的坐标x值
+                return yScale(d[1]);
+            })
+        》设定文本坐标值
+            .attr('x',function(d){
+                return xScale(d[0]);
+            })
+            .attr('y',function(d){
+                return yScale(d[1]);
+            })
+        》设置半径
+            .attr('r',function(d){
+                return rScale(d[1]);
+            })
+ 12.坐标轴
+       》定义和创建X轴
+            //定义x轴 d3.axisBottom(xScale);//4.x版本
+            var xAxis = d3.svg.axis()
+                          .scale(xScale)//指定坐标轴的比例尺
+                          .orient('bottom');//制定坐标轴的方位  可取值：left  right  top  bottom
+            //创建x轴
+            svg.append('g').call(xAxis);//调用的时候任意选择器 call调用轴 或者xAxis选择器均可
+       》调整X轴的样式
+            .axis path,.axis line{
+                fill:none;
+                stroke:black;
+                shape-rendering: crispEdges;//这个属性用来显示轴
+            }
+            .axis text {
+                font-family:sans-serif;
+                font-size:11px;
+            }
+            //设置上面样式 并 把坐标轴平移到下面
+            svg.append('g')
+                .attr('class','axis')
+                .attr('transform','translate(0,'+(h-padding)+')')
+                .class(xAxis)
+       》设置刻度数
+            var xAxis = d3.svg.axis()
+                          .scale(xScale)
+                          .orient('bottom')
+                          .ticks(5);//设置刻度数
+            //注意这个ticks函数指定的数字只是一个大概的数量，具体生成多少D3会自动调整
+       》Y轴
+            //定义Y轴
+            var yAxis = d3.svg.axis()
+                          .scale(yScale)
+                          .orient('left')
+                          .ticks(5);
+            //同样设置样式
+            svg.append('g')
+                .attr('class','axis')
+                .attr('transform','translate('+padding+',0)')
+                .class(yAxis);
+       》设置刻度的格式
+            var format = d3.format('.1%');
+            xAxis.tickFormat(format);
+ 13.有路径的文字
+        》在svg中插入一个text
+            var svg = d3.select('body').append('svg');
+            var text = svg.append('text')
+                .attr('x',10)
+                .attr('y',20)
+                .style('fill','steelblue')
+                .style('font-size','24px')
+                .style('font-weight','bold')
+                .text('text加入文字测试！')
+        》添加文字路径
+            svg.append('path')//插入path
+                .attr({
+                    id:"mypath",
+                    d:'M50 100Q350 50 350 250Q250 50 50 250'
+                })
+                .style({
+                    fill:"none",
+                    stroke:"green",
+                    'stroke-width':10
+                })
+            //引用路径
+            text.append('textPath').attr({
+                'xlink:href':"#mypath"
+            });
+ 14.SVG基本图形绘制
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
