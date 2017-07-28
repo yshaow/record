@@ -607,6 +607,158 @@
                 'xlink:href':"#mypath"
             });
  14.SVG基本图形绘制
+        svg的path标签被称为"可以组成任何形状的形状"，SVG的path可以绘制任何形状的图形包括矩形 圆形 椭圆 折线
+    多边形 直线 曲线等。
+        SVG的路径代表一个形状的轮廓，可以描边 填充 用作剪切路径或任何三者的结合。
+    》SVG Path案例
+        svg path元素的形状被一个属性所定义：d
+            d这个属性包含一系列的方法与参数，因此我们可以把这个属性称作一个"微语言"。这些方法与参数其实就是
+        告诉电脑如果在"纸上移动你的钢笔"。
+        //绘制一个三角形
+        <svg width="100" height="100">
+            <path d="
+                M 10 25//定义起点
+                L 10 75//绘制起点到 10，75的直线
+                L 60 75//绘制10，75到60，75的直线
+                L 10 25//绘制60，75到10，25的直线
+            " stroke="red" stroke-width="2" fill="none"></path>
+        </svg>
+        <svg width="100" height="100">
+                    <path d="
+                        M 10 25//定义起点
+                        L 10 75//绘制起点到 10，75的直线
+                        L 60 75//绘制10，75到60，75的直线
+                        L 10 25//绘制60，75到10，25的直线
+                    " stroke="blue" stroke-width="2" fill="none"></path>
+
+                    <path d="
+                                m 50 25
+                                l 0  50
+                                l 50 0
+                                l -50 -50
+                            " fill="none" stroke-width="2" stroke="blue"></path>
+                </svg>
+        //注意：M，L是大写的，表示绝对位置(相对于画布左上角)。当使用相对位置(相对于上一个点的位置)时，要小写。
+    》SVG Path微语言
+        命令          参数          能否重复            备注
+        M/m           x，y           不能               把笔尖移动到新位置，但因为没有落笔，不会"描绘图形"。所有的path都需要以M/m开始
+        L/l           x,y             能                从当前点画一条直线到坐标x,y
+        H/h            x              能                画水平线，从当前点画一条水平线，到横坐标x处
+        V/v            y              能                画垂直线，从当前点画一条垂线，到纵坐标为y处
+        C/c     x1 y1 x2 y2 x y       能                绘制一条曲线 起点为当前点，终点为x,y
+                                                        使用x1,y1作为开始阶段曲线的控制点
+                                                        使用x2,y2作为结束阶段曲线的控制点
+        S/s         x2 y2 x y         能                绘制一条平滑的曲线。 绘制一条以当前点为起点,x,y为终点绘制一条三次方贝塞尔曲线。
+                                                        注意这是一个简写，这条曲线同样也有两个控制点，但此时x1 y1跟x2,y2是对称的，
+                                                        可以直接写x2y2这一个。
+        Q/q         x1 y1 x y         能                二次方贝塞尔曲线，绘制一条以当前点为起点 x,y为终点的二次方贝塞尔曲线 x1 y1为控制点
+        T/t            x y            能                绘制二次方贝塞尔曲线的简写。绘制一条以当前点为起点,x,y为终点的二次方贝塞尔曲线。
+                                                        控制点假定为前一个命令的控制点相对于当前点的反射。
+                                                        如果前一个命令不存在，或者前一个命令不是二次贝塞尔曲线命令或平滑的二次贝塞尔曲线命令，则此控制点就是当前点。
+        A/a    rx ry x-axis-rotation large-arc-flag sweep-flag x y  能  椭圆弧线命令在当前点与指定的终点 (x, y)之间创建一条椭圆弧线。
+                                                                     rx ，ry 是椭圆弧的半长轴，半短轴长度
+                                                                     x-axis-rotation 是此段弧所在的椭圆的 x 轴与水平方向的夹角，即 x 轴的旋转角度
+                                                                     large-arc-flag 和 sweep-flag 决定了椭圆弧的绘制方向，值是 0 或 1
+                                                                     x,y 是椭圆弧终端坐标
+                                                                     椭圆圆心是计算出来的，不需要指定
+                                                                     large-arc-flag 为1 表示大角度弧线，0 代表小角度弧线
+                                                                     sweep-flag , 1 代表从起点到终点弧线绕椭圆中心顺时针方向，0 代表逆时针方向
+        Z/z             none          不能             闭合路径 会有一条线链接路径最后一个点与起点
+    》路径
+        var svg = d3.select('body').append('svg')
+        svg.append('path').attr(
+            "d":"M50 150Q300 50 300 150T450 150"
+        ).style('fill','none').style('stroke',"purple").style('stroke-width',5);
+    》折线
+        <polyline
+            points:"x1,y1 x2,y2 ...."//折线组成的坐标点
+            fill//填充颜色 none--无
+            stroke//边框颜色
+            stroke-width//边框宽度
+            fill-opacity//透明度
+            stroke-opacity//边框的透明度
+        ></polyline>
+
+        svg.append('polyline')
+                .attr('points',"100,10 40,180 190,60 10,60 160,180 100,10")
+                .style('fill','blue')
+                .style('stroke','red')
+                .style('stroke-width',5)
+                .style('fill-opacity',.5)
+                .style('stroke-opacity',.4);
+    》多边形
+        <polygon
+            points//多边形组成的坐标点
+            fill
+            stroke
+            stroke-width
+            fill-opacity
+            stroke-opacity
+            fill-rule://属性值nonzero(默认值) evenodd
+                //nonzero:本规则决定一个点是否在图形内部的方法是从该点向任意方向画直线，然后检查直线与图形的交叉。
+                          如果该点左右与图形交叉点数相同，则该点在图形外，否则在图形内。
+                  evenodd:本规则通过从一点向任意方向画直线然后计算该直线与图形的交叉电的数量来决定该点是否在图形内。
+                          如果交叉点数为奇数，则该点在图形内，否则在图形外。
+        ></polygon>
+
+        svg.append('polygon')
+                    .attr('points',"100,10 40,180 190,60 10,60 160,180 100,10")
+                    .style('fill','yellow')
+                    .style('stroke','red')
+                    .style('stroke-width',5)
+                    .style('fill-opacity',.5)
+                    .style('stroke-opacity',.4)
+                    .style('fill-rule',"evenodd");
+    》直线
+        <line
+            x1
+            y1
+            x2
+            y2
+        ></line>
+
+        svg.append('line')
+                .attr('x1',50)
+                .attr('y1',50)
+                .attr('x2',100)
+                .attr('y2',200)
+                .style('stroke','red');
+    》圆
+        <circle
+            cx
+            cy
+            r
+        ></circle>
+
+        svg.append('circle')
+                .attr('cx',0)
+                .attr('cy',0)
+                .attr('r',100)
+                .style('fill','none')
+                .style('stroke','red')
+                .style('stroke-width','5');
+    》椭圆
+        <ellipse
+            cx//中心x坐标
+            cy//中心y坐标
+            rx//水平半径
+            ry//垂直半径
+        ></ellipse>
+
+        svg.append('ellipse')
+                .attr('cx',100)
+                .attr('cy',60)
+                .attr('rx',30)
+                .attr('ry',50)
+                .style('fill','block')
+                .style('stroke','red')
+                .style('fill-opacity',.5)
+                .style('stroke-width',5);
+ 15.更新、过渡和动画
+	http://blog.csdn.net/tianxuzhang/article/details/18456701
+
+
+
 
 
 

@@ -39,6 +39,8 @@
     </style>
 </head>
 <body>
+<button class="delete">删除</button>
+<button class="add">添加</button>
 <div id="app">
     <!--<svg width="500" height="960">-->
         <!--<rect x="0" y="0" width="500" height="50"></rect>-->
@@ -64,8 +66,247 @@
         <!--<circle cx="65" cy="625" r="20" fill="green" stroke="blue" stroke-width="10" opacity=".5"></circle>-->
         <!--<circle cx="105" cy="625" r="20" fill="yellow" stroke="red" stroke-width="10" opacity=".1"></circle>-->
     <!--</svg>-->
+    <!--<svg width="100" height="100">-->
+        <!--&lt;!&ndash;<path d="&ndash;&gt;-->
+            <!--&lt;!&ndash;M 10 25&ndash;&gt;-->
+            <!--&lt;!&ndash;L 10 75&ndash;&gt;-->
+            <!--&lt;!&ndash;L 60 75&ndash;&gt;-->
+            <!--&lt;!&ndash;L 10 25&ndash;&gt;-->
+        <!--&lt;!&ndash;" fill="none" stroke-width="2" stroke="red"></path>&ndash;&gt;-->
+        <!--&lt;!&ndash;<path d="&ndash;&gt;-->
+            <!--&lt;!&ndash;m 50 25&ndash;&gt;-->
+            <!--&lt;!&ndash;l 0  50&ndash;&gt;-->
+            <!--&lt;!&ndash;l 50 0&ndash;&gt;-->
+            <!--&lt;!&ndash;l -50 -50&ndash;&gt;-->
+        <!--&lt;!&ndash;" fill="none" stroke-width="2" stroke="blue"></path>&ndash;&gt;-->
+        <!--&lt;!&ndash;<path fill="none" stroke-width="2" stroke="blue" d="&ndash;&gt;-->
+            <!--&lt;!&ndash;M 25 40&ndash;&gt;-->
+            <!--&lt;!&ndash;C 50 30 50 50 80 90&ndash;&gt;-->
+        <!--&lt;!&ndash;"></path>&ndash;&gt;-->
+        <!--&lt;!&ndash;<path fill="none" stroke-width="2" stroke="blue" d="&ndash;&gt;-->
+            <!--&lt;!&ndash;M 25 40&ndash;&gt;-->
+            <!--&lt;!&ndash;S 50 50 60 90&ndash;&gt;-->
+        <!--&lt;!&ndash;"></path>&ndash;&gt;-->
+        <!--<path fill="none" stroke-width="2" stroke="blue" d="-->
+            <!--M 25 40-->
+            <!--Q 50 50 60 90-->
+        <!--"></path>-->
+    <!--</svg>-->
 </div>
 <script>
+    //更新 过渡 和 动画
+    var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13, 11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ],//准备数据
+        w = 600,
+        h = 250,
+        barPadding = 1,
+        xScale = d3.scaleLinear()//序数比例尺
+                    .domain([0,d3.max(dataset)])
+                    .range([0,h]),
+        yScale = d3.scaleLinear()//线性比例尺
+                    .domain([0,d3.max(dataset)])
+                    .range([0,h]),
+        svg = d3.select('#app')
+                    .append('svg')
+                    .attr('width',w)
+                    .attr('height',h);
+    //添加条形
+    svg.selectAll('rect')
+        .data(dataset)
+        .enter()//添加占位符
+        .append('rect')//添加rect
+        .attr('x',function(d,i){
+            return i * w/dataset.length;//从0开始每次右移元素宽那么长
+            //return xScale(i);//这里使用序数比例尺，自己去找刚才划分好的档位
+        })
+        .attr('y',function(d){
+            return h - yScale(d);
+        })
+        .attr('width',function(d){
+            //console.log(xScale);
+            return w/dataset.length - barPadding;//设置元素宽 留出间隙barPadding
+            //return xScale.rangeBand();//xScale比例尺已经设置间距了
+        })
+        .attr('height',function(d){
+            return yScale(d);
+        })
+        .attr('fill',function(d){
+            return "rgb(0,0,"+( d * 10 )+")";
+        })
+
+    //添加数值
+    svg.selectAll('text')
+        .data(dataset)
+        .enter()
+        .append('text')
+        .text(function(d){
+            return d;
+        })
+        .attr('text-anchor','middle')
+        .attr('x',function(d,i){
+            return i * w/dataset.length +15;
+        })
+        .attr('y',function(d){
+            return h - yScale(d) + 12;
+        })
+        .attr('font-size','11px')
+        .attr('fill','white')
+        .attr('font-family','sans-serif')
+//删除一条
+    d3.select('.delete')
+        .on('click',function(){
+            console.log(dataset);
+            dataset.shift();//删除一条
+            console.log(dataset);
+            //更新比例尺
+//            xScale.domain(d3.range(dataset.length));
+//            yScale.domain(d3.range(dataset.length));
+            xScale.domain([0,d3.max(dataset)]);
+            yScale.domain([0,d3.max(dataset)]);
+            //更新rect
+            var bars = svg.selectAll('rect').data(dataset);
+            //更新text
+            //svg.selectAll('text').data(dataset);
+            bars.exit()
+                .transition()
+                .duration(500)
+                .attr('y',h)
+                .remove()
+        })
+    //添加一条
+    d3.select('.add').on('click',function(){
+        //数据集最后添加数值
+        var maxValue = 25;
+        var newNumber = Math.floor(Math.random() * maxValue);
+        dataset.push(newNumber);
+        //console.log(dataset);
+
+        //更新x轴比例尺
+        xScale.domain(d3.range(dataset.length));
+
+        //选择所有条
+        var bars = svg.selectAll('rect').data(dataset);//绑定数据到元素集 返回更新的元素集
+
+        //更新文本
+        var texts = svg.selectAll('text').data(dataset);
+
+        //添加条形元素到最右边
+        bars.enter()
+            .append('rect')
+            .attr('x',w);//在svg最右边  不可见
+
+        //添加文本
+        texts.enter()
+            .append('text');
+
+        //更新新矩形到可见范围内
+        bars.transition()
+            .duration(500)
+            .attr('x',function(d,i){
+                console.log(dataset);
+                return i * w/dataset.length;
+            })
+            .attr('y',function(d){
+                return h - yScale(d);
+            })
+            .attr('width',function(d){
+                return w/dataset.length - barPadding;
+            })
+            .attr('height',function(d){
+                return yScale(d);
+            })
+            .attr("fill", function(d) {//设置RGB颜色与数值的关系
+                return "rgb(0, 0, " + (d * 10) + ")";
+            });
+
+        //更新新矩形的内容
+        texts.transition()
+            .duration(500)
+            .text(function(d){
+                return d;
+            })
+            .attr('text-anchor','middle')
+            .attr('x',function(d,i){
+                return i * w/dataset.length +15;
+            })
+            .attr('y',function(d){
+                return h - yScale(d) + 12;
+            })
+            .attr('font-size','11px')
+            .attr('fill','white')
+            .attr('font-family','sans-serif')
+
+
+    })
+</script>
+<script>
+//    var svg = d3.select('#app').append('svg').attr('width',600).attr('height',600);
+//
+//    svg.append('ellipse')
+//        .attr('cx',100)
+//        .attr('cy',60)
+//        .attr('rx',30)
+//        .attr('ry',50)
+//        .style('fill','block')
+//        .style('stroke','red')
+//        .style('fill-opacity',.5)
+//        .style('stroke-width',5)
+//
+//    svg.append('ellipse')
+//        .attr('cx',200)
+//        .attr('cy',60)
+//        .attr('rx',30)
+//        .attr('ry',50)
+//        .style('fill','block')
+//        .style('stroke','red')
+//        .style('fill-opacity',.5)
+//        .style('stroke-width',5)
+//
+//    svg.append('ellipse')
+//        .attr('cx',150)
+//        .attr('cy',200)
+//        .attr('rx',100)
+//        .attr('ry',50)
+//        .style('fill','block')
+//        .style('stroke','grey')
+//        .style('fill-opacity',.5)
+//        .style('stroke-width',5)
+
+//    svg.append('circle')
+//        .attr('cx',0)
+//        .attr('cy',0)
+//        .attr('r',100)
+//        .style('fill','none')
+//        .style('stroke','red')
+//        .style('stroke-width','5')
+
+//    svg.append('line')
+//        .attr('x1',50)
+//        .attr('y1',50)
+//        .attr('x2',100)
+//        .attr('y2',200)
+//        .style('stroke','red')
+//    svg.append('polygon').attr('points',"100,10 40,180 190,60 10,60 160,180 100,10")
+//            .style('fill','yellow')
+//            .style('stroke','red')
+//            .style('stroke-width',5)
+//            .style('fill-opacity',.5)
+//            .style('stroke-opacity',.4)
+//            .style('fill-rule',"evenodd")
+
+//    svg.append('polyline').attr('points',"100,10 40,180 190,60 10,60 160,180 100,10")
+//        .style('fill','blue')
+//        .style('stroke','red')
+//        .style('stroke-width',5)
+//        .style('fill-opacity',.5)
+//        .style('stroke-opacity',.4)
+
+
+//    svg.append('path')
+//        .style('fill','none')
+//        .style('stroke','red')
+//        .style('stroke-width',5)
+//        .attr('d','M50 150Q300 50 300 150T450 150')
+
 //    var w = 500,
 //        h = 50;
 //    d3.select('#app')
@@ -234,25 +475,25 @@
 //        .attr('class','axis')
 //        .attr('transform','translate('+30+',12) rotate(0)')
 //        .call(yAxis);
-    var svg = d3.select('#app')
-                 .append('svg')
-                .attr('width',500)
-                .attr('height',400);
-    //定义path
-    svg.append('path')
-        .attr("id","mypath")
-        .attr('d','M0 100Q350 50 350 250Q250 50 50 250')
-        .style("fill","none")
-        .style('stroke',"red")
-        .style("stroke-width",5);
-    svg.append('text')
-        .attr('x',10)
-        .attr('y',20)
-        .style('fill','blue')
-        .style('font-size','24px')
-        .append('textPath')
-        .attr('xlink:href',"#mypath")
-        .text('text测试文字！哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈')
+//    var svg = d3.select('#app')
+//                 .append('svg')
+//                .attr('width',500)
+//                .attr('height',400);
+//    //定义path
+//    svg.append('path')
+//        .attr("id","mypath")
+//        .attr('d','M0 100Q350 50 350 250Q250 50 50 250')
+//        .style("fill","none")
+//        .style('stroke',"red")
+//        .style("stroke-width",5);
+//    svg.append('text')
+//        .attr('x',10)
+//        .attr('y',20)
+//        .style('fill','blue')
+//        .style('font-size','24px')
+//        .append('textPath')
+//        .attr('xlink:href',"#mypath")
+//        .text('text测试文字！哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈')
 </script>
 <script>
 //    d3.select('#app')
