@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <meta name="author" content="yangshao">
+    <meta name="robots" content="index,follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+    <meta http-equiv="x-ua-compatible" content="IE=Edge">
+    <meta name="renderer" content="webkit">
+    <link rel="icon" href="static/#" type="image/x-icon"/>
+    <script src="d3.js"></script>
+    <style>
+        .axis path,.axis line{
+            fill: none;
+            stroke: black;
+            shape-rendering: crispEdges;
+        }
+        .axis text {
+            font-family: sans-serif;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!--<p>哈哈</p>-->
+    <!--<p>嘻嘻</p>-->
+    <!--<p>呵呵</p>-->
+</div>
+<script>
+//    d3.select('#app').selectAll('p').datum('这是test').text(function(d,i){
+//        return i + " : " + d;
+//    })
+//    d3.select('#app').selectAll('p').data(["a","b","c"]).text(function(d,i){
+//        return i + " : " + d;
+//    })
+//      d3.select('#app').append('p').text('append p')
+//    d3.select('#app').insert('p','p:first-child').text('insert p')
+//    d3.select('#app').select('p:first-child').remove()
+    //添加画布
+    var w = 300,
+        h = 300,
+        svg = d3.select('#app')
+                .append('svg')
+                .attr('width',w)
+                .attr('height',h);
+
+//    //移动x坐标
+//    svg.append('circle')
+//        .attr('cx',100)
+//        .attr('cy',100)
+//        .attr('r',45)
+//        .style('fill','green')
+//        .transition()
+//        .duration(1000)
+//        .attr('cx',300)
+
+//移动x坐标 又改变颜色 半径
+    svg.append('circle')
+        .attr('cx',100)
+        .attr('r',45)
+        .attr('cy',100)
+        .style('fill','green')
+        .transition()
+        .duration(2000)
+        .ease(d3.easeBounce)
+        .attr('r',25)
+        .attr('cx',300)
+        .style('fill','red')
+    //绘制矩形
+//    var dataset = [250,210,170,130,90];
+//    //var dataset = [100];
+//    var linear = d3.scaleLinear()
+//                    .domain([0,d3.max(dataset)])
+//                    .range([0,250]);
+//    //定义坐标轴
+//   var axis = d3.axisBottom(linear).ticks(dataset.length);
+//   //使用坐标轴
+//  svg.append('g')
+//      .attr('class','axis')
+//      .attr('transform','translate(20,130)')
+//      .call(axis);
+//    console.log(linear(.9));
+//    console.log(linear(2.3));
+//    console.log(linear(3.3));
+//    var index = [0,1,2,3,4];
+//    var color = ["red","blue","green","yellow","black"];
+//    var ordinal = d3.scaleOrdinal(color).domain(index);
+//    console.log(ordinal(0));
+//    console.log(ordinal(1));
+//    console.log(ordinal(4));
+//    svg.selectAll('rect')
+//        .data(dataset)
+//        .enter()
+//        .append('rect')
+//        .attr('x',20)
+//        .attr('y',function(d,i){
+//            return i * 25;//25 rect height
+//        })
+//        .attr('width',function(d){
+//            return linear(d);//使用比例尺
+//        })
+//        .attr('height',25 - 2)
+//        .attr('fill','steelblue');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>
