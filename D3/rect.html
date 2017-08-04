@@ -15,6 +15,9 @@
         .rect{
             fill: steelblue;
         }
+        .active{
+            fill:yellow;
+        }
         .text {
             fill: white;
             text-anchor: middle;
@@ -60,6 +63,16 @@
                     .attr('height',function(d){
                         return h - padding.top - padding.bottom - yScale(d);
                     })
+                    .on('mouseover',function(){
+                        d3.select(this)//当前元素
+                            .attr('class','active');
+                    })
+                    .on('mouseout',function(d,i){
+                        d3.select(this)
+                            .transition()
+                            .duration(500)
+                            .attr('class','rect');
+                    })
                     .transition()
                     .duration(1000)
                     .ease(d3.easeBounce)
@@ -69,6 +82,7 @@
                     .attr('y',function(d){
                         return yScale(d) + padding.top - reactPadding/2;
                     });
+
     //添加文字元素
     var texts = svg.selectAll('text')
         .data(dataset)

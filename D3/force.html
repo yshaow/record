@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>力导向图</title>
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <meta name="author" content="yangshao">
+    <meta name="robots" content="index,follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+    <meta http-equiv="x-ua-compatible" content="IE=Edge">
+    <meta name="renderer" content="webkit">
+    <link rel="icon" href="static/#" type="image/x-icon"/>
+    <script src="d3.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<script>
+    //初始化数据
+    var nodes = [ { name: "桂林" }, { name: "广州" },
+        { name: "厦门" }, { name: "杭州" },
+        { name: "上海" }, { name: "青岛" },
+        { name: "天津" } ];
+
+    var edges = [ { source : 0 , target: 1 } , { source : 0 , target: 2 } ,
+        { source : 0 , target: 3 } , { source : 1 , target: 4 } ,
+        { source : 1 , target: 5 } , { source : 1 , target: 6 } ];
+    //添加svg
+    var width = 400;
+    var height = 400;
+    var svg = d3.select('#app')
+                .append('svg')
+                .attr('width',width)
+                .attr('height',height);
+    //定义力导向图
+    var force = d3.forceSimulation()//创建一个没有作用力的仿真
+                    .nodes(nodes)//指定node节点
+                    //通过force为仿真系统设置力的作用
+                    .force('charge',d3.forceManyBody())//节点间的作用力 forceManyBody构建一个多体作用力
+                    .force('link',d3.forceLink(edges).distance(150))//连线作用力 forceLink创建link作用力 distance表示连线距离
+                    .force('center',d3.forceCenter(width/2,height/2))//重力，布局有一个参数位置 不会跑偏 //创建centering作用力
+    //绘制
+        //添加连线
+        var svg_edges = svg.selectAll('line')
+                            .data(edges)
+                            .enter()
+                            .append('line')
+                            .style('stroke','#ccc')
+                            .style('stroke-width',1);
+        //添加节点
+        var color = d3.scaleOrdinal(d3.schemeCategory20).domain(d3.range(nodes.length));
+        var svg_nodes = svg.selectAll('circle')
+            .data(nodes)
+            .enter()
+            .append('circle')
+            .attr('r',20)
+            .style('fill',function(d,i){
+                return color(i);
+            }).call(d3.drag()
+                .on("start",dragstarted)
+                .on("drag",dragged)
+                .on("end",dragended));
+
+        //添加描述节点的文字
+        var svg_texts = svg.selectAll('text')
+                            .data(nodes)
+                            .enter()
+                            .append('text')
+                            .style('fill','black')
+                            .attr('dx',20)
+                            .attr('dy',8)
+                            .text(function(d){
+                                return d.name;
+                            })
+
+    force.on('tick',function(){ //力导向图布局 force 有一个事件 tick，每进行到一个时刻，都要调用它，
+        //更新连线坐标
+        svg_edges.attr('x1',function(d){
+                return d.source.x;
+            })
+            .attr('y1',function(d){
+                return d.source.y
+            })
+            .attr('x2',function(d){
+                return d.target.x;
+            })
+            .attr('y2',function(d){
+                return d.target.y;
+            });
+        //更新节点坐标
+        svg_nodes.attr('cx',function(d){
+                return d.x;
+            })
+            .attr('cy',function(d){
+                return d.y;
+            })
+        //更新文字坐标
+        svg_texts.attr('x',function(d){
+                return d.x;
+            })
+            .attr('y',function(d){
+                return d.y;
+            });
+    })
+    //拖动节点的三个过程
+    function dragstarted(d){
+        //未激活 重启
+        if (!d3.event.active) force.alphaTarget(0.3).restart();
+        d.fx=d.x;
+        d.fy=d.y;
+    }
+
+    function dragged(d){
+        d.fx=d3.event.x;
+        d.fy=d3.event.y;
+    }
+
+    function dragended(d){
+        if(!d3.event.active) force.alphaTarget(0);
+        d.fx=null;
+        d.fy=null;
+    }
+</script>
+</body>
+</html>

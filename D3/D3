@@ -1,4 +1,4 @@
-/********************D3*******************/
+ /********************D3*******************/
 1.链接 https://d3js.org/
     》安装
         npm安装：npm install d3;
@@ -1134,6 +1134,350 @@
                             return yScale(d) + padding.top;
                         });
     4.9 理解update enter exit的使用
+            update enter exit处理的是当选择集和数据的数量关系不确定的情况
+            》什么是update enter exit
+                如果数组为 [3, 6, 9, 12, 15]，将此数组绑定到三个 p 元素的选择集上。可以想象，
+                会有两个数据没有元素与之对应，这时候 D3 会建立两个空的元素与数据对应，这一部分就称为 Enter。
+                而有元素与数据对应的部分称为 Update。如果数组为 [3]，则会有两个元素没有数据绑定，那么没有数据
+                绑定的部分被称为 Exit。
+            》update 和 enter的使用
+                当绑定数据数量 > 对应元素时 ，需要添加元素 append
+                案例：body中有三个p元素 要绑定一个长度大于3的数组到p的选择集上，然后分别处理update 和 enter两部分
+                var dataset = [1,2,3,4,5]
+                //选择p元素
+                var p = d3.select('body').selectAll('p');
+                //获取update部分
+                var update = p.data(dataset);
+                //获取enter部分
+                var enter = update.enter();
+                //update部分处理 更新属性值
+                update.text(function(d){
+                    return 'update'+d;
+                })
+                //enter部分的处理 添加元素后赋予属性值
+                enter.append('p').text(function(d){
+                    return 'enter'+d;
+                })
+                //update 部分的处理办法一般是：更新属性值
+                //enter 部分的处理办法一般是：添加元素后 赋予属性值
+            》update 和 exit的使用
+                当绑定数据数量 < 对应元素，需要删除多余的元素
+                案例：现在 body 中有三个 p 元素，要绑定一个长度小于 3 的数组到 p 的选择集上，
+                然后分别处理 update 和 exit 两部分。
+                    var dataset = [1];
+                    var p = d3.select('body').selectAll('p');
+                    //获取update部分
+                    var update = p.data(dataset);
+                    //获取exit部分
+                    var exit = update.exit();
+                    //update部分的处理：更新属性值
+                    update.text(function(d){
+                        return 'update' + d;
+                    })
+                    //exit部分的处理：删除元素
+                    exit.remove();
+                    //exit部分的处理办法一般是删除元素 remove
+            》enter update exit
+                    var dataset = [1,2,3,3]
+                    var update = d3.selectAll('p')
+                        .data(dataset)
+                        .text(function(d){
+                            return 'update'+d;
+                        });
+                        update.enter()
+                        .append('p')
+                        .text(function(d){
+                            return 'enter'+d;
+                        })
+                        update.exit().remove();
+    4.10 交互式操作
+            与图表的交互，指再图形元素上设置一个或多个监听器，当事件发生时，做出相应的反应。
+            》什么是交互
+                交互指的是用户输入了某个指令，程序接受到指令之后必须做出某个响应。对可视化图表来说
+                交互能使图表更加生动，能表现更多内容。如：拖动图表中某些图形，鼠标滑到图形上出现提示框
+                用触屏放大或缩小图形等等。
+                用户用于交互的工具一般有三种：鼠标、键盘、触屏。
+            》如何添加交互
+                对某个元素添加交互操作十分简单，代码如下：
+                svg.append('circle')
+                    .on('click',function(){
+                        console.log(d3.event);
+                        //事件内容
+                    })
+                //在D3中，每一个选择集都有on()函数，用于添加事件监听器
+                on()的第一个参数是监听的事件，第二个参数是监听到事件后响应的内容，一个函数
+                》鼠标常用的事件
+                    click：鼠标单击某元素时，相当于 mousedown 和 mouseup 组合在一起。
+                    mouseover：光标放在某元素上。
+                    mouseout：光标从某元素上移出来时。
+                    mousemove：鼠标被移动的时候。
+                    mousedown：鼠标按钮被按下。
+                    mouseup：鼠标按钮被松开。
+                    dblclick：鼠标双击。
+                》键盘常用事件
+                    keydown：当用户按下任意键时触发，按住不放会重复触发此事件。该事件不会区分字母的大小写，
+                             例如“A”和“a”被视为一致。
+                    keypress：当用户按下字符键（大小写字母、数字、加号、等号、回车等）时触发，
+                              按住不放会重复触发此事件。该事件区分字母的大小写。
+                    keyup：当用户释放键时触发，不区分字母的大小写。
+                》触屏常用的事件
+                    touchstart：当触摸点被放在触摸屏上时。
+                    touchmove：当触摸点在触摸屏上移动时。
+                    touchend：当触摸点从触摸屏上拿开时。
+            》带有交互的柱形图
+                    var rects = svg.selectAll('rect')
+                                        .data(dataset)
+                                        .enter()
+                                        .append('rect')
+                                        .attr('class','rect')
+                                        .attr('x',function(d,i){
+                                            return xScale.step() * i + padding.left +reactPadding/2;
+                                        })
+                                        .attr('y',function(d){
+                                            return yScale(yScale.domain()[0]) + 2 * padding.top;
+                                        })
+                                        .attr('width',xScale.step() - reactPadding)
+                                        .attr('height',function(d){
+                                            return h - padding.top - padding.bottom - yScale(d);
+                                        })
+                                        .on('mouseover',function(){
+                                            d3.select(this)//当前元素
+                                                .attr('class','active');
+                                        })
+                                        .on('mouseout',function(d,i){
+                                            d3.select(this)
+                                                .transition()
+                                                .duration(500)
+                                                .attr('class','rect');
+                                        })
+                                        .transition()
+                                        .duration(1000)
+                                        .ease(d3.easeBounce)
+                                        .delay(function(d,i){
+                                            return 100 * i;
+                                        })
+                                        .attr('y',function(d){
+                                            return yScale(d) + padding.top - reactPadding/2;
+                                        });
+    4.11 布局
+            布局，可以理解成"制作常见图形的函数"。
+            》布局是什么
+                布局 layout 。D3与其他很多可视化工具不同，相对来说较底层。
+                D3与其他可视化工具的区别：
+                        大部分可视化工具            D3
+                               |                     |
+                             数据                   数据
+                               |                     |
+                            绘图函数                布局
+                               |                      |
+                             图表                获取绘图所需要数据
+                                                       |
+                                               在画布上添加相应的图形
+                                                       |
+                                                     图表
+                        //选择D3 -- 绘制任意想象的图表
+                        //选择Highcharts Echarts等 -- 开发几种固定种类的，大众化的图表
+            》理解布局
+                布局的作用是：将不适合用于绘图的数据转换成了适合用于绘图的数据 -- 数据转换
+            》D3的布局 12个布局
+                》饼状图 Pie
+                》力导向图 Force
+                》弦图 Chord
+                》树状图 Tree -- 由层级图扩展来的
+                》集群图 Cluster -- 由层级图扩展来的
+                》捆图 Bundle
+                》打包图 Pack -- 由层级图扩展来的
+                》直方图 Histogram
+                》分区图 Partition -- 由层级图扩展来的
+                》堆栈图 Stack
+                》矩阵树图 Treemap -- 由层级图扩展来的
+                》层级图 Hierarchy -- 不能直接使用
+                //这些布局的作用都是将某种数据转换成另一种数据，而转换后的数据是利于可视化的
+    4.12 饼状图的制作
+            》数据
+                var dataset = [30,10,43,55,13];
+                //这些值是不能直接绘图的，例如绘制饼状图的一个部分，需要知道一段圆弧的起始角度和终止角度，这些
+                //值都不存在于数组dataset中，因此需要用到布局，布局的作用就是*计算出适合于作图的数据*
+            》布局 -- 数据转换
+                //定义饼状图布局
+                var pie = d3.pie();
+                //数据转换
+                var piedata = pie(dataset);
+                //布局不是要直接绘图 而是为了得到绘图所需的数据
+            》绘制图形
+                为了根据转换后的数据piedata来作图，还需要一样工具：生成器。
+                //这里要用到弧生成器，能够生成弧的路径。
+                var outerRadius = 150 ;//外半径
+                var innerRadius = 0 ;//内半径 0表示中间没有空白
+                var arc = d3.arc()//弧生成器
+                            .innerRadius(innerRadius)
+                            .outerRadius(outerRadius);
+                //arc可以当做一个函数使用，把piedata作为参数传入即可得到路径值(path的)
+                //如：arc(piedata[0])
+
+                //在SVG中添加图形元素
+               var color = d3.scaleOrdinal(d3.schemeCategory10)
+                             .domain(d3.range(piedata.length));//d3.schemeCategory10 有十种颜色的颜色比例尺
+                   var arcs = d3.select('#app')
+                                   .append('svg')
+                                   .attr('width',600)
+                                   .attr('height',600)
+                                   .selectAll('g')
+                                   .data(piedata)
+                                   .enter()
+                                   .append('g')
+                                   .attr('transform','translate(300,300)');
+                   arcs.append('path')
+                       .attr('fill',function(d,i){
+                           return color(i);//设置填充颜色
+                       })
+                       .attr('d',function(d){
+                           return arc(d);//使用生成器 生成path路径
+                       })
+                   arcs.append('text')
+                       .attr('transform',function(d){
+                           return 'translate('+arc.centroid(d)+')';//弧线的中心
+                       })
+                       .attr('text-anchor','middle')
+                       .text(function(d){
+                           return d.data;//获取原始数据
+                       })
+    4.13 力导向图的制作
+            力导向图中每一个节点都受到力的作用而运动，这种是一种非常绚丽的图表。
+            力导向图 Force-Directed-Graph 是绘图的一种算法，在二维或三维空间里配置节点，节点之间用线连接，称为连线。
+            各连线的长度几乎相等，且尽可能不相交。节点和连线都被施加了力的作用，力是根据节点和连线的相对位置计算的。
+            根据力的作用，来计算节点和连线的运动轨迹，并不断降低它们的能量，最终达到一种能量很低的安定状态。
+
+            力导向图能表示**节点之间的多对多的关系**
+            》初始化数据
+                var nodes = [ { name: "桂林" }, { name: "广州" },
+                              { name: "厦门" }, { name: "杭州" },
+                              { name: "上海" }, { name: "青岛" },
+                              { name: "天津" } ];
+
+                 var edges = [ { source : 0 , target: 1 } , { source : 0 , target: 2 } ,
+                               { source : 0 , target: 3 } , { source : 1 , target: 4 } ,
+                               { source : 1 , target: 5 } , { source : 1 , target: 6 } ]
+                 //节点nodes 和 连线edges的数组，节点是城市名 连线的两端是节点的序号 从0开始
+            》布局 -- 数据转换
+                //定义一个力导向图的布局
+                     //添加svg
+                        var width = 400;
+                        var height = 400;
+                        var svg = d3.select('#app')
+                                    .append('svg')
+                                    .attr('width',width)
+                                    .attr('height',height);
+                        //定义力导向图
+                        var force = d3.forceSimulation()//创建一个没有作用力的仿真
+                                        .nodes(nodes)//指定node节点
+                                        //通过force为仿真系统设置力的作用
+                                        .force('charge',d3.forceManyBody())//节点间的作用力 forceManyBody构建一个多体作用力
+                                        .force('link',d3.forceLink(edges).distance(150))//连线作用力 forceLink创建link作用力 distance表示连线距离
+                                        .force('center',d3.forceCenter(width/2,height/2))//重力，布局有一个参数位置 不会跑偏 //创建centering作用力
+                        //绘制
+                            //添加连线
+                            var svg_edges = svg.selectAll('line')
+                                                .data(edges)
+                                                .enter()
+                                                .append('line')
+                                                .style('stroke','#ccc')
+                                                .style('stroke-width',1);
+                            //添加节点
+                            var color = d3.scaleOrdinal(d3.schemeCategory20).domain(d3.range(nodes.length));
+                            var svg_nodes = svg.selectAll('circle')
+                                .data(nodes)
+                                .enter()
+                                .append('circle')
+                                .attr('r',20)
+                                .style('fill',function(d,i){
+                                    return color(i);
+                                }).call(d3.drag()
+                                    .on("start",dragstarted)
+                                    .on("drag",dragged)
+                                    .on("end",dragended));
+
+                            //添加描述节点的文字
+                            var svg_texts = svg.selectAll('text')
+                                                .data(nodes)
+                                                .enter()
+                                                .append('text')
+                                                .style('fill','black')
+                                                .attr('dx',20)
+                                                .attr('dy',8)
+                                                .text(function(d){
+                                                    return d.name;
+                                                })
+
+                        force.on('tick',function(){ //力导向图布局 force 有一个事件 tick，每进行到一个时刻，都要调用它，
+                            //更新连线坐标
+                            svg_edges.attr('x1',function(d){
+                                    return d.source.x;
+                                })
+                                .attr('y1',function(d){
+                                    return d.source.y
+                                })
+                                .attr('x2',function(d){
+                                    return d.target.x;
+                                })
+                                .attr('y2',function(d){
+                                    return d.target.y;
+                                });
+                            //更新节点坐标
+                            svg_nodes.attr('cx',function(d){
+                                    return d.x;
+                                })
+                                .attr('cy',function(d){
+                                    return d.y;
+                                })
+                            //更新文字坐标
+                            svg_texts.attr('x',function(d){
+                                    return d.x;
+                                })
+                                .attr('y',function(d){
+                                    return d.y;
+                                });
+                        })
+                        //拖动节点的三个过程
+                        function dragstarted(d){
+                            //未激活 重启
+                            if (!d3.event.active) force.alphaTarget(0.3).restart();
+                            d.fx=d.x;
+                            d.fy=d.y;
+                        }
+
+                        function dragged(d){
+                            d.fx=d3.event.x;
+                            d.fy=d3.event.y;
+                        }
+
+                        function dragended(d){
+                            if(!d3.event.active) force.alphaTarget(0);
+                            d.fx=null;
+                            d.fy=null;
+                        }
+    4.14 弦图的制作
+            弦图 Chord -- 主要用于表示两个节点之间的联系 ，两点之间的连线，表示谁和谁具有联系。线的粗细表示权重
+            》数据
+                var city_name = [ "北京" , "上海" , "广州" , "深圳" , "香港"  ];
+                var population = [
+                  [ 1000,  3045　 , 4567　, 1234 , 3714 ],
+                  [ 3214,  2000　 , 2060　, 124  , 3234 ],
+                  [ 8761,  6545　 , 3000　, 8045 , 647  ],
+                  [ 3211,  1067  , 3214 , 4000  , 1006 ],
+                  [ 2146,  1034　 , 6745 , 4764  , 5000 ]
+                ];
+                //数据是一些城市名和一些数字，数字表示城市人口的来源
+                被统计人口城市\被统计的来源城市   北京       上海      ....
+                       北京                       1000        3045
+                       上海                       3214        2000
+                        ...
+                        //北京市的人口有 1000 个人来自本地，有 3045 人是来自上海的移民，总人口为 1000 + 3045 +...。
+            》布局 -- 数据转换
+                //定义弦图布局
+                http://www.ourd3js.com/wordpress/213/
+
+
 
 
 

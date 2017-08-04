@@ -26,11 +26,52 @@
 </head>
 <body>
 <div id="app">
-    <!--<p>哈哈</p>-->
-    <!--<p>嘻嘻</p>-->
-    <!--<p>呵呵</p>-->
+    <p>哈哈</p>
+    <p>嘻嘻</p>
+    <p>呵呵</p>
 </div>
 <script>
+    // enter update
+//    var dataset = [1,2,3,4,5];
+//    var p =d3.select('#app').selectAll('p');
+//    var update = p.data(dataset);
+//    //update
+//    update.text(function(d){
+//        return 'update'+ d;
+//    })
+//    //enter
+//    var enter = update.enter();
+//    enter.append('p').text(function(d){
+//        return 'enter' + d;
+//    })
+
+    //update exit
+    //var dataset = [1];
+
+//    var p = d3.selectAll('p');
+//    var update = p.data(dataset);
+//    //update
+//    update.text(function(d){
+//        return 'update' + d;
+//    })
+//    var exit = update.exit();
+//    exit.remove();
+
+    // update enter exit
+    var dataset = [1,2,3,3]
+    var update = d3.selectAll('p')
+        .data(dataset)
+        .text(function(d){
+            return 'update'+d;
+        });
+        update.enter()
+        .append('p')
+        .text(function(d){
+            return 'enter'+d;
+        })
+        update.exit().remove();
+//        .exit()
+//        .remove();
 //    d3.select('#app').selectAll('p').datum('这是test').text(function(d,i){
 //        return i + " : " + d;
 //    })
@@ -59,17 +100,17 @@
 //        .attr('cx',300)
 
 //移动x坐标 又改变颜色 半径
-    svg.append('circle')
-        .attr('cx',100)
-        .attr('r',45)
-        .attr('cy',100)
-        .style('fill','green')
-        .transition()
-        .duration(2000)
-        .ease(d3.easeBounce)
-        .attr('r',25)
-        .attr('cx',300)
-        .style('fill','red')
+//    svg.append('circle')
+//        .attr('cx',100)
+//        .attr('r',45)
+//        .attr('cy',100)
+//        .style('fill','green')
+//        .transition()
+//        .duration(2000)
+//        .ease(d3.easeBounce)
+//        .attr('r',25)
+//        .attr('cx',300)
+//        .style('fill','red')
     //绘制矩形
 //    var dataset = [250,210,170,130,90];
 //    //var dataset = [100];

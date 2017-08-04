@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>饼状图</title>
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <meta name="author" content="yangshao">
+    <meta name="robots" content="index,follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+    <meta http-equiv="x-ua-compatible" content="IE=Edge">
+    <meta name="renderer" content="webkit">
+    <link rel="icon" href="static/#" type="image/x-icon"/>
+    <script src="d3.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<!-- built files will be auto injected -->
+<script>
+    var dataset = [ 30 , 10 , 43 , 55 , 13 ];
+    //定义饼状图布局
+    var pie = d3.pie();
+    //数据转换
+    var piedata = pie(dataset);
+
+    //绘制图形
+    var outerRadius = 150;//外半径
+    var innerRadius = 100;//内半径
+    var arc = d3.arc()//弧生成器
+                     .innerRadius(innerRadius)
+                     .outerRadius(outerRadius);
+    var color = d3.scaleOrdinal(d3.schemeCategory10).domain(d3.range(piedata.length));//d3.schemeCategory10 有十种颜色的颜色比例尺
+    var arcs = d3.select('#app')
+                    .append('svg')
+                    .attr('width',600)
+                    .attr('height',600)
+                    .selectAll('p')
+                    .data(piedata)
+                    .enter()
+                    .append('g')
+                    .attr('transform','translate(300,300)');
+    arcs.append('path')
+        .attr('fill',function(d,i){
+            return color(i);
+        })
+        .attr('d',function(d){
+            return arc(d);
+        })
+    arcs.append('text')
+        .attr('transform',function(d){
+            return 'translate('+arc.centroid(d)+')';//弧线的中心
+        })
+        .attr('text-anchor','middle')
+        .text(function(d){
+            return d.data;//获取原始数据
+        })
+</script>
+</body>
+</html>
