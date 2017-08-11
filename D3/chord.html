@@ -12,10 +12,18 @@
     <meta name="renderer" content="webkit">
     <link rel="icon" href="static/#" type="image/x-icon"/>
     <script src="d3.js"></script>
+    <style>
+         path {
+            fill-opacity: 0.67;
+            stroke: #000;
+            stroke-width: 0.5px;
+        }
+    </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
+    //初始化数据
     var city_name = [ "北京" , "上海" , "广州" , "深圳" , "香港"  ];
     var population = [
         [ 1000,  3045　 , 4567　, 1234 , 3714 ],
@@ -24,6 +32,85 @@
         [ 3211,  1067  , 3214 , 4000  , 1006 ],
         [ 2146,  1034　 , 6745 , 4764  , 5000 ]
     ];
+    //布局
+    var chord = d3.chord()//创建弦图生成器 传入矩阵 数据
+                    .sortChords(d3.descending)//设置弦的排序规则
+                    .padAngle(.03)//相邻分组之间的间隔
+
+    var populationResult = chord(population);
+            //populationResult.groups -- 表示节点
+            // 其他数据表示连线 即弦 source target即连线的两端
+
+    //定义相关变量 添加svg
+    var width = 800,
+        height = 800,
+        innerRadius = width/2 * .6,
+        outerRadius = height/2 * .9,
+        color = d3.scaleOrdinal(d3.schemeCategory20).domain(d3.range(populationResult.length)),
+        svg = d3.select('#app')
+            .append('svg')
+            .attr('width',width)
+            .attr('height',height)
+            .append('g')
+            .attr('transform','translate('+width/2+','+height/2+')');
+
+    //绘制节点 -- 即分组 多少城市对应多少弧形 以及绘制城市名称
+    var outer_arc = d3.arc()//获取path路径
+                            .innerRadius(innerRadius)
+                            .outerRadius(outerRadius);
+
+    //分组
+    var g_outer = svg.append('g');
+    //添加节点
+    g_outer.selectAll('path')
+        .data(populationResult.groups)
+        .enter()
+        .append('path')
+        .style('fill',function(d){return color(d.index)})
+        .style('stroke',function(d){return color(d.index)})
+        .attr('d',function(d){
+            return outer_arc(d);
+        });//设置path路径
+    //添加文本
+    g_outer.selectAll('text')
+        .data(populationResult.groups)
+        .enter()
+        .append('text')
+        .each(function(d,i){//设置文本信息
+            d.angle = (d.startAngle + d.endAngle) / 2;
+            d.name = city_name[i];
+        })
+        .attr('dy','.5em')
+        .attr('transform',function(d){
+            return "rotate("+(d.angle * 180 /Math.PI)+")"+
+                    "translate(0,"+(-1.0 * (outerRadius+10))+")"+
+                    (( d.angle > Math.PI*3/4 && d.angle < Math.PI*5/4 ) ? "rotate(180)":"");
+        })
+        .text(function(d){
+            return d.name;
+        })
+
+    //绘制连线 -- 所有城市人口的来源 即 5*5=25条弧
+    svg.append('g')
+        .selectAll('path')
+        .data(populationResult)
+        .enter()
+        .append('path')
+        .attr('d',function(d){
+            return d3.ribbon()
+                      .radius(innerRadius)
+                      (d);//生成path
+        })
+        .style('fill',function(d){return color(d.source.index)})
+        .on('mouseover',function(){
+            d3.select(this).style('fill','yellow')
+        })
+        .on('mouseout',function(d,i){
+            d3.select(this)
+                .transition()
+                .duration(1000)
+                .style('fill',color(d.source.index));
+        })
 </script>
 </body>
 </html>

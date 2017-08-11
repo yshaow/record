@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>可拖动地图</title>
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <meta name="author" content="yangshao">
+    <meta name="robots" content="index,follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+    <meta http-equiv="x-ua-compatible" content="IE=Edge">
+    <meta name="renderer" content="webkit">
+    <link rel="icon" href="static/#" type="image/x-icon"/>
+    <script src="d3.js"></script>
+    <style>
+        .link {
+            stroke: #ccc;
+            stroke-width: 1;
+        }
+    </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+    //添加画布
+    var width = 800,
+        height = 800,
+        svg = d3.select('#app')
+                .append('svg')
+                .attr('width',width)
+                .attr('height',height)
+                .append('g')
+                .attr('transform','translate(0,0)');
+
+    //定义投影函数--将三维地图经纬度坐标投影到二维所用的坐标
+    var projection = d3.geoMercator()
+                        .center([107,31])//定义中心
+                        .scale(600)//定义缩放比例
+                        .translate([width/2,height/2]);//定义偏移量
+
+    //定义地理路径生成器
+    var path = d3.geoPath().projection(projection);
+
+    //定义力导图
+    var force = d3.forceSimulation();
+
+    //定义颜色生成器
+    var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+    //读取数据
+    d3.json('china.geojson',function(err,data){
+        if(err)return console.error(err);
+
+        //转换数据
+        var nodes = [],
+            links = [];
+        data.features.forEach(function(d,i){
+            var centroid = path.centroid(d);//返回GeoJson对象投影面的几何中心
+            centroid.x = centroid[0];
+            centroid.y = centroid[1];
+            centroid.feature = d;
+            nodes.push(centroid);
+        });
+        //对nodes中的顶点进行三角剖分，即用三角形来连接各个顶点
+        var triangles = d3.voronoi()
+                            .triangles(nodes);
+        function edge(a,b){
+            var dx = a[0] - b[0],dy = a[1] -b[1];
+            return {
+                source:a,
+                target:b,
+                distance:Math.sqrt(dx*dx+dy*dy)
+            }
+        }
+        //将三角形各边存到links变量中
+        triangles.forEach(function(d,i){
+            links.push(edge(d[0],d[1]));
+            links.push(edge(d[1],d[2]));
+            links.push(edge(d[2],d[0]));
+        });
+
+        //绘制地图
+        force.nodes(nodes)
+            .force('charge',d3.forceManyBody())
+            .force('link',d3.forceLink(links).distance(function(d){return d.distance;}))
+            .force('center',d3.forceCenter(width/2,height/2));
+        var node = svg.selectAll('g')
+            .data(nodes)
+            .enter()
+            .append('g')
+            .attr('transform',function(d){return "translate("+(-d.x)+","+(-d.y)+")"})
+            .call(d3.drag()
+                .on("start",dragstarted)
+                .on("drag",dragged)
+                .on("end",dragended)
+            )
+            .append('path')
+            .attr('transform',function(d){return "translate("+d.x+","+d.y+")"})
+            .attr('stroke','#000')
+            .attr('stroke-width',1)
+            .attr('fill',function(d,i){
+                return color.domain(d3.range(nodes.length))(i);
+            })
+            .attr('d',function(d){
+                return path(d.feature);
+            })
+        var link = svg.selectAll('line')
+            .data(links)
+            .enter()
+            .append('line')
+            .attr('class','link')
+            .attr('x1',function(d){return d.source.x})
+            .attr('y1',function(d){return d.source.y})
+            .attr('x2',function(d){return d.target.x})
+            .attr('y2',function(d){return d.target.y});
+
+        //力学图的结合
+        force.on('tick',function(){
+            link.attr('x1',function(d){return d.source.x})
+                .attr('y1',function(d){return d.source.y})
+                .attr('x2',function(d){return d.target.x})
+                .attr('y2',function(d){return d.target.y});
+
+            node.attr('transform',function(d){
+                return 'translate('+ d.x +','+ d.y +')';
+            })
+        })
+    });
+    //拖动节点的三个过程
+    function dragstarted(d){
+        //未激活 重启
+        if (!d3.event.active) force.alphaTarget(0.3).restart();
+        d.fx=d.x;
+        d.fy=d.y;
+    }
+
+    function dragged(d){
+        d.fx=d3.event.x;
+        d.fy=d3.event.y;
+    }
+
+    function dragended(d){
+        if(!d3.event.active) force.alphaTarget(0);
+        d.fx=null;
+        d.fy=null;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

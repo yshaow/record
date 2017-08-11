@@ -31,6 +31,43 @@
     <p>呵呵</p>
 </div>
 <script>
+    //csv测试
+//    d3.csv('csvtest.csv',function(err,data){
+//        if(err)return console.error(err);
+//        //处理数据
+//        console.log(data);
+//        //转换为字符串
+//        var str = d3.csvFormat(data);
+//        console.log(str);
+//    })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // enter update
 //    var dataset = [1,2,3,4,5];
 //    var p =d3.select('#app').selectAll('p');
@@ -58,18 +95,18 @@
 //    exit.remove();
 
     // update enter exit
-    var dataset = [1,2,3,3]
-    var update = d3.selectAll('p')
-        .data(dataset)
-        .text(function(d){
-            return 'update'+d;
-        });
-        update.enter()
-        .append('p')
-        .text(function(d){
-            return 'enter'+d;
-        })
-        update.exit().remove();
+//    var dataset = [1,2,3,3]
+//    var update = d3.selectAll('p')
+//        .data(dataset)
+//        .text(function(d){
+//            return 'update'+d;
+//        });
+//        update.enter()
+//        .append('p')
+//        .text(function(d){
+//            return 'enter'+d;
+//        })
+//        update.exit().remove();
 //        .exit()
 //        .remove();
 //    d3.select('#app').selectAll('p').datum('这是test').text(function(d,i){
@@ -82,12 +119,12 @@
 //    d3.select('#app').insert('p','p:first-child').text('insert p')
 //    d3.select('#app').select('p:first-child').remove()
     //添加画布
-    var w = 300,
-        h = 300,
-        svg = d3.select('#app')
-                .append('svg')
-                .attr('width',w)
-                .attr('height',h);
+//    var w = 300,
+//        h = 300,
+//        svg = d3.select('#app')
+//                .append('svg')
+//                .attr('width',w)
+//                .attr('height',h);
 
 //    //移动x坐标
 //    svg.append('circle')

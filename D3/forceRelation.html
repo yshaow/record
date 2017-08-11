@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>力导图+人物关系图</title>
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <meta name="author" content="yangshao">
+    <meta name="robots" content="index,follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+    <meta http-equiv="x-ua-compatible" content="IE=Edge">
+    <meta name="renderer" content="webkit">
+    <link rel="icon" href="static/#" type="image/x-icon"/>
+    <script src="d3.js"></script>
+    <style>
+        .node-text {
+            font-size: 12px ;
+            font-family: SimSun;
+            fill:#000000;
+        }
+        .line-text {
+            font-size: 12px ;
+            font-family: SimSun;
+            fill:#0000FF;
+            fill-opacity:0.0;
+        }
+    </style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+    //添加画布
+    var width = 800,
+        height = 800,
+        img_w = 77,
+        img_h = 100,
+        svg = d3.select('#app')
+                .append('svg')
+                .attr('width',width)
+                .attr('height',height)
+                .append('g')
+                .attr('transform','translate(0,0)');
+    //初始化数据
+    d3.json('forceRelation.json',function(err,data){
+        if(err)return console.error(err);
+
+        //定义力导图的布局
+        var force = d3.forceSimulation()
+                        .nodes(data.nodes)
+                        .force('charge',d3.forceManyBody()
+                            .strength(-1500)//正--吸引 负--相互排斥 值越大越强
+                        )
+                        .force('link',d3.forceLink(data.edges)
+                                         .distance(200)//节点间的距离
+                        )
+                        .force('center',d3.forceCenter(width/2,height/2));
+
+        //绘制连接线
+        var links = svg.selectAll('line')
+                        .data(data.edges)
+                        .enter()
+                        .append('line')
+                        .style('stroke','#ccc')
+                        .style('stroke-width',1);
+
+        //绘制连线文本
+        var lineText = svg.selectAll('.line-text')
+                        .data(data.edges)
+                        .enter()
+                        .append('text')
+                        .attr('class','line-text')
+                        .text(function(d){return d.relation;});
+
+        //绘制节点
+        var nodes = svg.selectAll('image')
+                        .data(data.nodes)
+                        .enter()
+                        .append('image')
+                        .attr('width',img_w)
+                        .attr('height',img_h)
+                        .attr('xlink:href',function(d){
+                            return 'images/'+d.image;
+                        })
+                        .on('mouseover',function(d,i){
+                            //显示连线文字
+                            lineText.style('fill-opacity',function(edge){
+                                if(data.source === d || edge.target === d){
+                                    return 1.0;
+                                }
+                            })
+                        })
+                        .on('mouseout',function(d,i){
+                            //隐藏连线文字
+                            lineText.style('fill-opacity',function(edge){
+                                if(edge.source === d || edge.target === d){
+                                    return 0.0;
+                                }
+                            })
+                        })
+                        .call(
+                            d3.drag()
+                                .on("start",dragstarted)
+                                .on("drag",dragged)
+                                .on("end",dragended)
+                        );
+        
+        //绘制节点文本
+        var nodesText = svg.selectAll('.node-text')
+                            .data(data.nodes)
+                            .enter()
+                            .append('text')
+                            .attr('class','node-text')
+                            .attr('dx',-20)
+                            .attr('dy',20)
+                            .text(function(d){
+                                return d.name;
+                            });
+
+        //更新--图形位置,每一步更新都调用function函数
+        force.on('tick',function(){
+            //限制节点的边界
+            data.nodes.forEach(function(d,i){
+               d.x = d.x - img_w/2 < 0 ? img_w/2 : d.x;
+               d.x = d.x + img_w/2 > width ? width - img_w/2 : d.x;
+               d.y = d.y - img_h/2 < 0 ? img_h/2 : d.y;
+               d.y = d.y + img_h/2 + 20 > height ? height - img_h/2 - 20 : d.y;
+            });
+            //更新连接线的位置
+            links.attr('x1',function(d){return d.source.x;})
+                 .attr('y1',function(d){return d.source.y;})
+                 .attr('x2',function(d){return d.target.x;})
+                 .attr('y2',function(d){return d.target.y;});
+            //更新连接线上文字的位置
+            lineText.attr('x',function(d){return (d.source.x + d.target.x) / 2;})
+                    .attr('y',function(d){return (d.source.y + d.target.y) / 2;});
+            //更新节点位置
+            nodes.attr('x',function(d){return d.x - img_w/2;})
+                 .attr('y',function(d){return d.y - img_h/2;});
+            //更新节点文字
+            nodesText.attr('x',function(d){return d.x;})
+                     .attr('y',function(d){return d.y + img_h /2;});
+        })
+        //拖动节点的三个过程
+        function dragstarted(d){
+            //未激活 重启
+            if (!d3.event.active) force.alphaTarget(0.3).restart();
+            d.fx=d.x;
+            d.fy=d.y;
+        }
+
+        function dragged(d){
+            d.fx=d3.event.x;
+            d.fy=d3.event.y;
+        }
+
+        function dragended(d){
+            if(!d3.event.active) force.alphaTarget(0);
+            d.fx=null;
+            d.fy=null;
+        }
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

@@ -756,7 +756,7 @@
                 .style('stroke-width',5);
  15.更新、过渡和动画
 	http://blog.csdn.net/tianxuzhang/article/details/18456701
-/*******************************************************/
+/***************************入门****************************/
    http://www.ourd3js.com/wordpress/2209/#more-2209
 1.数据可视化
     数据可视化的目的是要对数据进行可视化处理，以使得能够 明确地 有效地 传递信息
@@ -1475,7 +1475,645 @@
                         //北京市的人口有 1000 个人来自本地，有 3045 人是来自上海的移民，总人口为 1000 + 3045 +...。
             》布局 -- 数据转换
                 //定义弦图布局
-                http://www.ourd3js.com/wordpress/213/
+                //布局
+                    var chord = d3.chord()//创建弦图生成器 传入矩阵 数据
+                                    .sortChords(d3.descending)//设置弦的排序规则
+                                    .padAngle(.03)//相邻分组之间的间隔
+
+                    var populationResult = chord(population);
+                            //populationResult.groups -- 表示节点
+                            // 其他数据表示连线 即弦 source target即连线的两端
+
+                    //定义相关变量 添加svg
+                    var width = 800,
+                        height = 800,
+                        innerRadius = width/2 * .6,
+                        outerRadius = height/2 * .9,
+                        color = d3.scaleOrdinal(d3.schemeCategory20).domain(d3.range(populationResult.length)),
+                        svg = d3.select('#app')
+                            .append('svg')
+                            .attr('width',width)
+                            .attr('height',height)
+                            .append('g')
+                            .attr('transform','translate('+width/2+','+height/2+')');
+
+                    //绘制节点 -- 即分组 多少城市对应多少弧形 以及绘制城市名称
+                    var outer_arc = d3.arc()//获取path路径
+                                            .innerRadius(innerRadius)
+                                            .outerRadius(outerRadius);
+
+                    //分组
+                    var g_outer = svg.append('g');
+                    //添加节点
+                    g_outer.selectAll('path')
+                        .data(populationResult.groups)
+                        .enter()
+                        .append('path')
+                        .style('fill',function(d){return color(d.index)})
+                        .style('stroke',function(d){return color(d.index)})
+                        .attr('d',function(d){
+                            return outer_arc(d);
+                        });//设置path路径
+                    //添加文本
+                    g_outer.selectAll('text')
+                        .data(populationResult.groups)
+                        .enter()
+                        .append('text')
+                        .each(function(d,i){//设置文本信息
+                            d.angle = (d.startAngle + d.endAngle) / 2;
+                            d.name = city_name[i];
+                        })
+                        .attr('dy','.5em')
+                        .attr('transform',function(d){
+                            return "rotate("+(d.angle * 180 /Math.PI)+")"+
+                                    "translate(0,"+(-1.0 * (outerRadius+10))+")"+
+                                    (( d.angle > Math.PI*3/4 && d.angle < Math.PI*5/4 ) ? "rotate(180)":"");
+                        })
+                        .text(function(d){
+                            return d.name;
+                        })
+
+                    //绘制连线 -- 所有城市人口的来源 即 5*5=25条弧
+                    svg.append('g')
+                        .selectAll('path')
+                        .data(populationResult)
+                        .enter()
+                        .append('path')
+                        .attr('d',function(d){
+                            return d3.ribbon()
+                                      .radius(innerRadius)
+                                      (d);//生成path
+                        })
+                        .style('fill',function(d){return color(d.source.index)})
+                        .on('mouseover',function(){
+                            d3.select(this).style('fill','yellow')
+                        })
+                        .on('mouseout',function(d,i){
+                            d3.select(this)
+                                .transition()
+                                .duration(1000)
+                                .style('fill',color(d.source.index));
+                        });
+    4.15 集群图的制作
+            集群图是一种用于表示包含与被包含关系的图表。
+            》数据
+                通过D3读取json文件中的初始化数据
+                {
+                "name":"中国",
+                "children":
+                [
+                    {
+                      "name":"浙江" ,
+                      "children":
+                      [
+                            {"name":"杭州" },
+                            {"name":"宁波" },
+                            {"name":"温州" },
+                            {"name":"绍兴" }
+                      ]
+                    },
+
+                    {
+                        "name":"广西" ,
+                        "children":
+                        [
+                            {"name":"桂林"},
+                            {"name":"南宁"},
+                            {"name":"柳州"},
+                            {"name":"防城港"}
+                        ]
+                    },
+
+                    {
+                        "name":"黑龙江",
+                        "children":
+                        [
+                            {"name":"哈尔滨"},
+                            {"name":"齐齐哈尔"},
+                            {"name":"牡丹江"},
+                            {"name":"大庆"}
+                        ]
+                    },
+
+                    {
+                        "name":"新疆" ,
+                        "children":
+                        [
+                            {"name":"乌鲁木齐"},
+                            {"name":"克拉玛依"},
+                            {"name":"吐鲁番"},
+                            {"name":"哈密"}
+                        ]
+                    }
+                ]
+                }
+            》布局 -- 数据转换
+                //定义集群图布局
+                var width = 600,
+                        height = 600,
+                        svg = d3.select('#app')
+                                .append('svg')
+                                .attr('width',width)
+                                .attr('height',height)
+                                .append('g')
+                                .attr('transform','translate(300,300)');
+                    //构建一个默认的群集布局
+                    var cluster = d3.cluster().size([360,.4*width]);
+                    //获取数据
+                    d3.json('cluster.json?a=a',function(error,data){
+                        //转换数据
+                            //获取根节点
+                        var node = d3.hierarchy(data);
+                            //获取连线
+                        //var links = node.links();
+                        //传入根节点 集群布局
+                        cluster(node);
+                        //绘制
+                        //D3准备好的绘制函数d3.svg.diagonal()，这是一个对角线生成器，只需要输入两个顶点坐标即可生成一条贝塞尔曲线
+                //        //创建对角线生成器
+                //        var link = d3.linkHorizontal()
+                //                            .x(function(d) { return d.x; })
+                //                            .y(function(d) { return d.y; });
+                        function project(x, y) {
+                            var angle = (x - 90) / 180 * Math.PI, radius = y;
+                            return [radius * Math.cos(angle), radius * Math.sin(angle)];
+                        }
+                        //绘制连线
+                        var lk = svg.selectAll('.link')
+                                    .data(node.descendants().slice(1))
+                                    .enter()
+                                    .append('path')
+                                    .attr('class','link')
+                                    .attr('d',function(d){
+                                        return "M" + project(d.x, d.y)
+                                            + "C" + project(d.x, (d.y + d.parent.y) / 2)
+                                            + " " + project(d.parent.x, (d.y + d.parent.y) / 2)
+                                            + " " + project(d.parent.x, d.parent.y);
+                                    });
+                        //绘制节点组
+                        var nodeG = svg.selectAll('g')
+                                        .data(node.descendants())
+                                        .enter()
+                                        .append('g')
+                                        .attr('class',function(d) {;return "node" + (d.children ? " node--internal" : " node--leaf"); })
+                                        .attr('transform',function(d){
+                                            return "translate("+project(d.x,d.y)+")";
+                                        });
+                //        //绘制节点
+                        nodeG.append('circle')
+                            .attr('r',4.5);
+                //        //绘制文本
+                        nodeG.append('text')
+                            .attr("dx", function(d) { return d.children ? -8 : 8; })
+                            .attr("dy", ".31em")
+                            .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+                            .attr("transform", function(d) { return "rotate(" + (d.x < 180 ? d.x - 90 : d.x + 90) + ")"; })
+                            .text(function(d) { return d.data.name; });
+                    })
+    4.16 树状图的制作
+            树状图Tree用于表示层级、上下级、包含与被包含的关系
+            树状图与集群图的区别：
+                树状图更突出层级关系，即同级节点之间的对齐方式不同。
+            //树状图的绘制与集群图的绘制一样的，只需要改变cluster与tree的生成器构造函数即可
+    4.17 打包图的制作
+            打包图Pack用于表示包含与被包含的关系，也可以表示各对象的权重，通常用一圆套一圆来表示前者，用圆的大小来表示后者。
+            》初始化数据
+                使用cluster.json中的数据--各城市所属关系的数据
+            》布局 -- 数据转换
+                //添加svg
+                    var width = 500,
+                        height = 500,
+                        svg = d3.select('#app')
+                                .append('svg')
+                                .attr('width',width)
+                                .attr('height',height)
+                                .append('g')
+                                .attr('transform','translate(1,1)');
+                    //创建pack生成器
+                    var pack = d3.pack()
+                                    .size([width,height])//设置转换数据的范围即[x,y]都在该范围之类
+                                    .radius(function(d){
+                                        return 8;//最低层级圆的半径
+                                    })
+                                    .padding(3);//节点之间的距离
+                    //获取数据
+                    d3.json('cluster.json?a=a',function(err,data){
+                        //格式化数据
+                        var node = d3.hierarchy(data);
+                //        node.sum(function(d){return d.value;})//计算总和
+                //            .sort(function(a, b) { return b.value - a.value; });//排序
+                        //获取pack对应的数据
+                        pack(node)
+                        //获取连线数据
+                        var links = node.links();//此处用不到该数据
+                        console.log(links);
+                        /********************绘制图形********************/
+                        var a = svg.selectAll('g')
+                            .data(
+                                node.descendants()//生成所有的节点
+                            )
+                            .enter()
+                            .append('g')
+                            .attr('transform',function(d){return 'translate('+d.x+','+d.y+')'})
+                            .append('circle')
+                            .attr('fill','rgb(31,119,180)')
+                            .attr('fill-opacity',.4)
+                //            .attr('cx',function(d){
+                //                //console.log(d);
+                //                return d.x;
+                //            })
+                //            .attr('cy',function(d){
+                //                return d.y;
+                //            })
+                            .attr('r',function(d){
+                                return d.r;
+                            })
+                            .on('mouseover',function(d,i){
+                                d3.select(this)
+                                    .attr('fill','yellow');
+                            })
+                            .on('mouseout',function(d,i){
+                                d3.select(this)
+                                    .attr('fill','rgb(31,119,180)');
+                            })
+                    })
+    4.18 地图的制作
+        》地图数据的获取
+            制作地图需要JSON文件，将JSON的格式应用于地理上的文件叫做GeoJSON文件。本文就是用这种文件绘制地图。
+            》获取中国地图的GeoJSON文件
+                参照https://github.com/clemsos/d3-china-map进行制作，这不仅需要安装一些东西，还要研究一下制作方法，
+                对想直接下载获取中国地图的GeoJSON文件的朋友可能不爽。
+                //china.geojson
+        》绘制
+            //添加画布
+                var width = 600,
+                    height = 600,
+                    svg = d3.select('#app')
+                        .append('svg')
+                        .attr('width',width)
+                        .attr('height',height);
+
+                //投影函数
+                var projection = d3.geoMercator()//由于GeoJson文件中的地图数据，都是经纬度的信息，它们都是三维的，
+                                                 // 而要在网页上显示的是二维的，所以要设定一个投影函数来转换经纬度
+                                    .center([107,31])//设定地图的中心位置,[107,31]指的是经度 纬度
+                                    .scale(500)//设定放大的比例
+                                    .translate([width/2,height/2]);//设定平移
+
+                //地理路径生成器
+                    //为了根据地图的地理数据生成svg中path元素的路径值，需要用到d3.geoPath -- 地理路径生成器
+                    var path = d3.geoPath()
+                                    .projection(projection);//设定投影函数
+
+                //获取json数据并绘制地图
+                d3.json('china.geojson',function(err,data){
+                    if(err) return console.error(err);
+
+                    //定义省份颜色生成器
+                    var color = d3.scaleOrdinal(d3.schemeCategory20).domain(d3.range(data.features.length));
+
+                    //绘制地图
+                    svg.selectAll('path')
+                        .data(data.features)
+                        .enter()
+                        .append('path')
+                        .attr('stroke','#000')
+                        .attr('stroke-width',1)
+                        .attr('fill',function(d,i){
+                            return color(i);
+                        })
+                        .attr('d',path)//使用地理路径生成器 function(d){return path(d);} //每个path表示一个省份
+                        .on('mouseover',function(d,i){
+                            d3.select(this)
+                                .attr('fill','yellow');
+                        })
+                        .on('mouseout',function(d,i){
+                            d3.select(this)
+                                .attr('fill',color(i));
+                        })
+                })
+    4.19 简化GeoJSON文件
+            GeoJson文件有时候太大，读取很费时间，如果我们不需要那么精确，可以将其简化。
+            》转换方法
+                》http://mapshaper.org/
+                》选择文件 select
+                》缩小比例
+                    simplify
+                》输出模式  export -》 GeoJson自动下载
+    4.20 可拖动的地图
+            通过地图 和 力学图制作可拖动的地图，可通过鼠标拖动各个省份
+            //添加画布
+                var width = 800,
+                    height = 800,
+                    svg = d3.select('#app')
+                            .append('svg')
+                            .attr('width',width)
+                            .attr('height',height)
+                            .append('g')
+                            .attr('transform','translate(0,0)');
+
+                //定义投影函数--将三维地图经纬度坐标投影到二维所用的坐标
+                var projection = d3.geoMercator()
+                                    .center([107,31])//定义中心
+                                    .scale(600)//定义缩放比例
+                                    .translate([width/2,height/2]);//定义偏移量
+
+                //定义地理路径生成器
+                var path = d3.geoPath().projection(projection);
+
+                //定义力导图
+                var force = d3.forceSimulation();
+
+                //定义颜色生成器
+                var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+                //读取数据
+                d3.json('china.geojson',function(err,data){
+                    if(err)return console.error(err);
+
+                    //转换数据
+                    var nodes = [],
+                        links = [];
+                    data.features.forEach(function(d,i){
+                        var centroid = path.centroid(d);//返回GeoJson对象投影面的几何中心
+                        centroid.x = centroid[0];
+                        centroid.y = centroid[1];
+                        centroid.feature = d;
+                        nodes.push(centroid);
+                    });
+                    //对nodes中的顶点进行三角剖分，即用三角形来连接各个顶点
+                    var triangles = d3.voronoi()
+                                        .triangles(nodes);
+                    function edge(a,b){
+                        var dx = a[0] - b[0],dy = a[1] -b[1];
+                        return {
+                            source:a,
+                            target:b,
+                            distance:Math.sqrt(dx*dx+dy*dy)
+                        }
+                    }
+                    //将三角形各边存到links变量中
+                    triangles.forEach(function(d,i){
+                        links.push(edge(d[0],d[1]));
+                        links.push(edge(d[1],d[2]));
+                        links.push(edge(d[2],d[0]));
+                    });
+
+                    //绘制地图
+                    force.nodes(nodes)
+                        .force('charge',d3.forceManyBody())
+                        .force('link',d3.forceLink(links).distance(function(d){return d.distance;}))
+                        .force('center',d3.forceCenter(width/2,height/2));
+                    var node = svg.selectAll('g')
+                        .data(nodes)
+                        .enter()
+                        .append('g')
+                        .attr('transform',function(d){return "translate("+(-d.x)+","+(-d.y)+")"})
+                        .call(d3.drag()
+                            .on("start",dragstarted)
+                            .on("drag",dragged)
+                            .on("end",dragended)
+                        )
+                        .append('path')
+                        .attr('transform',function(d){return "translate("+d.x+","+d.y+")"})
+                        .attr('stroke','#000')
+                        .attr('stroke-width',1)
+                        .attr('fill',function(d,i){
+                            return color.domain(d3.range(nodes.length))(i);
+                        })
+                        .attr('d',function(d){
+                            return path(d.feature);
+                        })
+                    var link = svg.selectAll('line')
+                        .data(links)
+                        .enter()
+                        .append('line')
+                        .attr('class','link')
+                        .attr('x1',function(d){return d.source.x})
+                        .attr('y1',function(d){return d.source.y})
+                        .attr('x2',function(d){return d.target.x})
+                        .attr('y2',function(d){return d.target.y});
+
+                    //力学图的结合
+                    force.on('tick',function(){
+                        link.attr('x1',function(d){return d.source.x})
+                            .attr('y1',function(d){return d.source.y})
+                            .attr('x2',function(d){return d.target.x})
+                            .attr('y2',function(d){return d.target.y});
+
+                        node.attr('transform',function(d){
+                            return 'translate('+ d.x +','+ d.y +')';
+                        })
+                    })
+                });
+                //拖动节点的三个过程
+                function dragstarted(d){
+                    //未激活 重启
+                    if (!d3.event.active) force.alphaTarget(0.3).restart();
+                    d.fx=d.x;
+                    d.fy=d.y;
+                }
+
+                function dragged(d){
+                    d.fx=d3.event.x;
+                    d.fy=d3.event.y;
+                }
+
+                function dragended(d){
+                    if(!d3.event.active) force.alphaTarget(0);
+                    d.fx=null;
+                    d.fy=null;
+                }
+    4.21 GeoJSON 与 TopoJSON文件的区别
+            GeoJson与TopoJson文件都是描述地理信息的文件。
+            》json格式
+                json javascript object notation是一种轻量级的数据交换语言，以文字为基础，易于阅读。
+                尽管json是javascript的一个子集，但json是独立于语言的文本格式。
+
+                物件 object 一个物件的数据写在一组大括号内{...}
+
+                名称/值 collection 每个物件都由一系列的名称/值collection组成，名称/值用逗号分隔。
+                                    一个名称可以是字符串，值可以是字符串 数值 布尔值 有序列表 或null值
+                值的有序列表 Array 列表写在[...]之间 [collection,...]
+            》Geojson格式
+                GeoJson是一种对地理数据格式进行编码的格式，它只是一个采用上述json格式的用于描述地理信息的格式，它的
+                语法和json是一样，只是对各个名称做了规范
+                如：
+                {   "type": "FeatureCollection",
+                    "features": [
+                      { "type": "Feature",
+                        "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+                        "properties": {"prop0": "value0"}
+                        },
+                      { "type": "Feature",
+                        "geometry": {
+                          "type": "LineString",
+                          "coordinates": [
+                            [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+                            ]
+                          },
+                        "properties": {
+                          "prop0": "value0",
+                          "prop1": 0.0
+                          }
+                        },
+                      { "type": "Feature",
+                         "geometry": {
+                           "type": "Polygon",
+                           "coordinates": [
+                             [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+                               [100.0, 1.0], [100.0, 0.0] ]
+                             ]
+                         },
+                         "properties": {
+                           "prop0": "value0",
+                           "prop1": {"this": "that"}
+                           }
+                         }
+                       ]
+                    }
+            》TopoJson格式
+                    TopoJson是GeoJson简化后的版本，可以说是GeoJson的小孩。D3的作者认为GeoJson不太好，推荐TopoJson格式。
+                    TopoJson与GeoJson相比，文件大小缩小了80%因为：
+                        》边界线只记录一次 如：广西和广东的交界线只记录一次
+                        》不使用浮点数，只使用整数值
+                        不过TopoJson似乎只在d3中比较广泛的使用，还不是世界范围内认可的格式。
+                    注意：无论Geojson还是Topojson，它本质上都是json格式的文件，都遵循json的语法，只不过对变量的名称做了
+                          不同的规范。
+                     http://mapshaper.org/ 可以转换GeoJson与TopoJson的数据。
+   /***************************进阶****************************/
+5.1 csv表格文件的读取
+    在入门系列的教程中，我们常用 d3.json() 函数来读取 json 格式的文件。json 格式很强大，但对于普通用户可能不太适合，
+    普通用户更喜欢的是用 Microsoft Excel 或 OpenOffice Calc 等生成的表格文件，因为简单易懂，容易编辑。Microsoft Excel
+    通常会保存为 xls 格式， OpenOffice Calc 通常会保存为 ods 格式。这些格式作为表格文件来说都很强大，但要读取它们是有些
+    麻烦的，D3 中也没有提供这样的方法。但是表格软件都会支持生成 csv 格式，它是一种非常基本的、通用的、简单的表格文件。
+    本文将会说明在 D3 中怎么读取和使用 csv 文件。
+
+    》csv格式
+        CSV Comma Separated Values，逗号分隔值，它是以纯文本形式存储表格数据的，每个单元格之间用逗号 Comma分隔。CSV格式没有
+        一个通用的标准，通常使用RFC 4180 中所示的描述。
+        如：
+        省份,人口,GDP
+        山东,9000,50000
+        浙江,5000,20000
+        //每个单元格之间用逗号隔开，如果想在单元格里面输入逗号需要用双引号框起来
+        省份,人口,GDP
+        山东,"9,000","50,000"
+        浙江,"5,000","20,000"
+        //有些软件保存CSV格式时，会选择使用什么符号来分隔单元格 尽量选择逗号。
+
+    》读取CSV文件
+        D3中，读取CSV文件的函数只支持用逗号分隔单元格
+        d3.csv('csvtest.csv',function(err,data){
+                if(err)return console.error(err);
+                //处理数据
+                console.log(data);
+        })
+    》将读入的数据转换为字符串
+        d3.csv('csvtest.csv',function(err,data){
+                if(err)return console.error(err);
+                //处理数据
+                console.log(data);
+                //转换为字符串
+                var str = d3.csvFormat(data);
+                console.log(str);
+        })
+5.2 其他表格文件的读取
+    CSV 表格文件是以逗号作为单元分隔符的，其他还有以制表符 Tab 作为单元分隔符的 TSV 文件，
+    还有人为定义的其它分隔符的表格文件。本文将说明在 D3 中如何读取它们。
+    》TSV 表格文件
+        TSV Tab Separated Values ，制表分隔值，它和CSV文件仅仅是分隔符不一致。
+        如：
+        name	age
+        张三	22
+        李四	24
+    》读取TSV文件
+        d3.tsv("table.tsv",function(error,tsvdata){
+                console.log(tsvdata);
+                var str = d3.tsv.format( tsvdata );
+                console.log(str.length);
+                console.log(str);
+        });
+    》D3读取CSV与TSV的本质 -- 都是同一个函数 dsv
+        //dsv可以读取以任意字符或字符串作为分隔符的表格文件
+        d3.csv = d3.dsv(",", "text/csv");
+        d3.tsv = d3.dsv("	", "text/tab-separated-values");
+        如：
+        name;age
+        张三;22
+        李四;24
+            //定义分隔符为分号
+			var dsv = d3.dsv(";", "text/plain");
+			//调用函数读取文件
+			dsv("table.dsv",function(error,dsvdata){
+				if(error)
+					console.log(error);
+				console.log(dsvdata);
+			});
+5.3 读取CSV文件时乱码的解决方法
+        个人认为尽量使用 UTF-8 编码，可以在同一编码内使用各国文字。如果需要保存excel等制表工具打开不会乱码，需以gb2312编码保存。
+        》解决方式
+            var csv = d3.dsv(",", "text/csv;charset=gb2312");
+            var tsv = d3.dsv("	", "text/tab-separated-values;charset=gb2312");
+            //使用自己定义的函数读取文件即可
+            csv("xxx.csv",function(error,csvdata){
+
+            }
+
+            tsv("xxx.tsv",function(error,tsvdata){
+
+            }
+5.4 力学图 + 人物关系图
+        阐述在力学图中如何插入外部图片和文字
+        》SVG 图片
+            <image
+                xlink:href="image.png"//图片名称或图片网址
+                x="200"//图片左上角x
+                y="200"//图片左上角y
+                width="100"//图片宽度
+                height="100"//图片高度
+            ></image>
+            //在D3中插入图片
+            svg.selectAll('image')
+                .data(dataset)
+                .enter()
+                .append('image')
+                .attr('x',200)
+                .attr('y',200)
+                .attr('width',100)
+                .attr('height',100)
+                .attr('xlink:href','image.png');
+        》SVG文本
+            <text
+                x="250"
+                y="150"
+                dx="10"//x轴方向的文本平移量
+                dy="10"//y轴方向的文本平移量
+                font-family="Verdana"//字体
+                font-size="55"
+                fill="blue"//字体颜色
+                >Hello</text>
+                //d3中插入文本
+                svg.selectAll("text")
+                    .data(dataset)
+                    .enter()
+                    .append("text")
+                    .attr("x",250)
+                    .attr("y",150)
+                    .attr("dx",10)
+                    .attr("dy",10)
+                    .text("Hello");
+        》绘制图形
+            forceRelation.html
+5.5 力学图的事件 + 顶点的固定
+
+
+
+
+
+
+
+
 
 
 

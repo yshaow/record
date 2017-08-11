@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>地图</title>
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <meta name="author" content="yangshao">
+    <meta name="robots" content="index,follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"/>
+    <meta http-equiv="x-ua-compatible" content="IE=Edge">
+    <meta name="renderer" content="webkit">
+    <link rel="icon" href="static/#" type="image/x-icon"/>
+    <script src="d3.js"></script>
+</head>
+<body>
+<div id="app"></div>
+<!-- built files will be auto injected -->
+<script>
+    //添加画布
+    var width = 600,
+        height = 600,
+        svg = d3.select('#app')
+            .append('svg')
+            .attr('width',width)
+            .attr('height',height);
+
+    //投影函数
+    var projection = d3.geoMercator()//由于GeoJson文件中的地图数据，都是经纬度的信息，它们都是三维的，
+                                     // 而要在网页上显示的是二维的，所以要设定一个投影函数来转换经纬度
+                        .center([107,31])//设定地图的中心位置,[107,31]指的是经度 纬度
+                        .scale(500)//设定放大的比例
+                        .translate([width/2,height/2]);//设定平移
+
+    //地理路径生成器
+        //为了根据地图的地理数据生成svg中path元素的路径值，需要用到d3.geoPath -- 地理路径生成器
+        var path = d3.geoPath()
+                        .projection(projection);//设定投影函数
+
+    //获取json数据并绘制地图
+    d3.json('china.geojson',function(err,data){
+        if(err) return console.error(err);
+
+        //定义省份颜色生成器
+        var color = d3.scaleOrdinal(d3.schemeCategory20).domain(d3.range(data.features.length));
+
+        //绘制地图
+        svg.selectAll('path')
+            .data(data.features)
+            .enter()
+            .append('path')
+            .attr('stroke','#000')
+            .attr('stroke-width',1)
+            .attr('fill',function(d,i){
+                return color(i);
+            })
+            .attr('d',path)//使用地理路径生成器 function(d){return path(d);} //每个path表示一个省份
+            .on('mouseover',function(d,i){
+                d3.select(this)
+                    .attr('fill','yellow');
+            })
+            .on('mouseout',function(d,i){
+                d3.select(this)
+                    .attr('fill',color(i));
+            })
+    })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>
