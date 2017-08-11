@@ -15,11 +15,11 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="D3" pinned="false" current-in-tab="false">
+      <file leaf-file-name="D3" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/D3">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="83">
-              <caret line="2108" column="0" lean-forward="false" selection-start-line="2108" selection-start-column="0" selection-end-line="2108" selection-end-column="0" />
+            <state relative-caret-position="46">
+              <caret line="2101" column="34" lean-forward="true" selection-start-line="2101" selection-start-column="34" selection-end-line="2101" selection-end-column="34" />
               <folding />
             </state>
           </provider>
@@ -35,11 +35,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="forceRelation.html" pinned="false" current-in-tab="true">
+      <file leaf-file-name="forceRelation.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/forceRelation.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1227">
-              <caret line="105" column="8" lean-forward="false" selection-start-line="105" selection-start-column="8" selection-end-line="105" selection-end-column="8" />
+            <state relative-caret-position="561">
+              <caret line="105" column="0" lean-forward="false" selection-start-line="105" selection-start-column="0" selection-end-line="105" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -145,8 +145,8 @@
         <option value="$PROJECT_DIR$/geomin.html" />
         <option value="$PROJECT_DIR$/geoForce.html" />
         <option value="$PROJECT_DIR$/test.html" />
-        <option value="$PROJECT_DIR$/D3" />
         <option value="$PROJECT_DIR$/forceRelation.html" />
+        <option value="$PROJECT_DIR$/D3" />
       </list>
     </option>
   </component>
@@ -323,15 +323,15 @@
       <workItem from="1502326525311" duration="14099000" />
       <workItem from="1502413655753" duration="658000" />
       <workItem from="1502421882077" duration="13016000" />
-      <workItem from="1502443590595" duration="619000" />
+      <workItem from="1502443590595" duration="629000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="87269000" />
+    <option name="totallyTimeSpent" value="87279000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1056" extended-state="7" />
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18335089" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -715,18 +715,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/D3">
+    <entry file="file://$PROJECT_DIR$/forceRelation.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="83">
-          <caret line="2108" column="0" lean-forward="false" selection-start-line="2108" selection-start-column="0" selection-end-line="2108" selection-end-column="0" />
+        <state relative-caret-position="561">
+          <caret line="105" column="0" lean-forward="false" selection-start-line="105" selection-start-column="0" selection-end-line="105" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/forceRelation.html">
+    <entry file="file://$PROJECT_DIR$/D3">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1227">
-          <caret line="105" column="8" lean-forward="false" selection-start-line="105" selection-start-column="8" selection-end-line="105" selection-end-column="8" />
+        <state relative-caret-position="46">
+          <caret line="2101" column="34" lean-forward="true" selection-start-line="2101" selection-start-column="34" selection-end-line="2101" selection-end-column="34" />
           <folding />
         </state>
       </provider>
