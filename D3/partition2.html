@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>圆形分区图</title>
+    <script src="d3.js"></script>
+</head>
+<body>
+    <div class="app">
+
+    </div>
+    <script>
+        //圆形分区图
+        var width = 800,
+            height = 600,
+            radius = 300,
+             svg = d3.select(".app")
+                     .append("svg")
+                     .attr("width",width)
+                     .attr("height",height)
+                     .append("g")
+                     .attr("transform","translate("+width/2+","+height/2+")");
+
+        //创建颜色生成器
+        var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+        //创建分区布局
+        var partition = d3.partition()
+                            .round(false)//不要四舍五入  否则数据不准确 有些图形无法显示
+                            .size([2*Math.PI,radius]);
+
+        //获取数据
+        d3.json("cluster.json",function(err,data){
+            if(err) return console.error(err);
+
+            //转换数据
+            var root = d3.hierarchy(data)
+                            .sum(function(d){return d.value ? d.value : 1;})
+                            .sort(function(a,b){return b.height - a.height || b.value - a.value});
+            partition(root);
+
+            /****************绘制***************/
+            //生成path路径
+            var arc = d3.arc()
+                        .startAngle(function(d){return d.x0})
+                        .endAngle(function(d){return d.x1})
+                        .innerRadius(function(d){return d.y0})
+                        .outerRadius(function(d){return d.y1})
+                        .padAngle(.01)
+
+            //绘制圆弧
+            var arcs = svg.selectAll("g")
+                            .data(root.descendants())
+                            .enter().append('g');
+
+            arcs.append('path')
+                //.attr("display",function(d){return d.depth ? null : "none"})
+                .attr("d",arc)
+                .style("stroke","#fff")
+                .style("fill",function(d){ return color((d.children ? d : d.parent).data.name);})
+                .on("mouseover",function(d){
+                    d3.select(this).style("fill","yellow");
+                })
+                .on("mouseout",function(d){
+                    d3.select(this)
+                        .transition()
+                        .duration(200)
+                        .style('fill',function(d){
+                            return color((d.children ? d : d.parent).data.name);
+                        })
+                });
+
+            //添加文本
+            arcs.append("text")
+                .style("font-size","12px")
+                .style("font-family","simsun")
+                .attr("text-anchor","middle")
+                .attr("transform",function(d,i){
+                    //第一个元素 最中间的 只平移
+                    if(i===0) return "translate("+arc.centroid(d)+")";
+
+                    //其他的元素 即平移也旋转
+                    var r = 0;
+                    if(d.x1 / Math.PI * 180 < 180) r = 180 * (d.x1 + d.x0 - Math.PI)/ (2 * Math.PI);
+                    else r = 180 * (d.x1 + d.x0 + Math.PI)/(2 * Math.PI);
+
+                    return "translate("+ arc.centroid(d)+") rotate("+ r +")";
+                })
+                .text(function(d){return d.data.name;});
+        })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>

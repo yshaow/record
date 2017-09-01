@@ -101,7 +101,7 @@
                             d3.drag()
                                 .on("start",dragstarted)
                                 .on("drag",dragged)
-                                .on("end",dragended)
+                                //.on("end",dragended)//固定顶点
                         );
 
         //绘制节点文本
@@ -155,8 +155,8 @@
 
         function dragended(d){
             if(!d3.event.active) force.alphaTarget(0);
-            d.fx=null;
-            d.fy=null;
+            //d.fx=null;
+            //d.fy=null;
         }
     });
 

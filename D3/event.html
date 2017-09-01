@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>布局的事件</title>
+    <script src="d3.js"></script>
+</head>
+<body>
+
+<script>
+    var force = d3.forceSimulation()
+                    .force("charge",d3.forceManyBody().strength(-1500))
+                    .force("link",d3.forceLink().distance(200))
+                    .force('center',d3.forceCenter());
+
+    //力学图布局force本身的事件：start  end  tick
+        //力学图运动开始时
+        force.on("start",function(){
+            console.log("开始");
+        });
+        //力学图运动结束时
+        force.on("end",function(){
+            console.log("结束");
+        });
+        //力学图每一帧
+        force.on("tick",function(){
+            console.log("进行中");
+        });
+    //拖拽事件 start  end drag
+        var drag = d3.drag()
+            .on("start",function(){
+                console.log("拖拽开始");
+            })
+            .on("end",function(){
+                console.log("结束");
+            })
+            .on("drag",function(){
+                console.log("进行中");
+            });
+        //分别定义了三种事件后，将此拖拽函数赋值给变量drag,在调用时，只需要使用
+            X.call(drag);
+    //顶点的固定
+        //使用布局转换数据之后顶点有一个属性fixed 当这个值为true时，顶点就是固定不动的，为false时，它就是运动的，默认false
+        //当拖拽开始时，被拖拽顶点设定为固定的
+        var drag = d3.drag()
+            .on("start",function(d){
+                d.fixed = true;//被拖拽对象固定
+            });
+        //当鼠标双击顶点时，对顶点解锁
+            nodes_img.on("dblclick",function(d){
+                d.fixed = false;
+            });
+        //v4.x  通过fx fy属性固定顶点
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

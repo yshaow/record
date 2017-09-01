@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>方形分区图</title>
+    <script src="d3.js"></script>
+    <style>
+        .node-text{
+            font-size: 10px;
+            text-anchor: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="app"></div>
+    <script>
+        var width = 1000,
+            height=800,
+            svg = d3.select(".app")
+                .append("svg")
+                .attr("width",width)
+                .attr('height',height);
+
+        //颜色生成器
+        var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+        //创建分区布局
+        var partition = d3.partition()
+                            .size([width,height])
+                            .padding(1)
+                            .round(true);
+
+        //获取数据
+        d3.json("cluster.json",function(err,data){
+            if(err) return console.error(err);
+
+            //转换数据
+            var root = d3.hierarchy(data)
+                        .sum(function(d){return d.value ? d.value : 1})//要生成正确的坐标 这是必须的
+                        .sort(function(a,b){return b.height - a.height || b.value - a.value});
+            partition(root);
+
+            console.log(root.descendants());
+            /************绘制************/
+            var cell = svg.selectAll("g")
+                            .data(root.descendants())
+                            .enter().append('g')
+                            .attr("transform",function(d){
+                                return "translate("+d.x0+","+d.y0+")";
+                            });
+
+            //绘制矩形
+            cell.append('rect')
+                .attr('width',function(d){ return d.x1 - d.x0;})
+                .attr('height',function(d){return d.y1 -d.y0})
+                .attr("id",function(d,i){return "rect-"+i})
+                .style('stroke',"#fff")
+                .style('fill',function(d){ return color((d.children ? d : d.parent).data.name)})
+                .on("mouseover",function(d){
+                    d3.select(this).style("fill",'yellow');
+                })
+                .on("mouseout",function(d){
+                    d3.select(this)
+                        .transition()
+                        .duration(200)
+                        .style('fill',function(d){ return color((d.children ? d : d.parent).data.name)});
+                });
+
+            cell.append("clipPath")
+                .attr("id",function(d,i){return "clip-"+i})
+                .append('use').attr("xlink:href",function(d,i){return "#rect-"+i;});
+            //绘制文本
+            cell.append('text')
+                .attr('class','node-text')
+                .attr("clipPath",function(d,i){return "url(#clip-"+ i +")"})//引用裁剪路径
+                .attr('x',10)
+                .attr('y',10)
+                .text(function(d){
+                    return d.data.name;
+                });
+        });
+
+    </script>
+</body>
+</html>

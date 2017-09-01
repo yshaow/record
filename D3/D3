@@ -2106,7 +2106,311 @@
         》绘制图形
             forceRelation.html
 5.5 力学图的事件 + 顶点的固定
+        force//定义的布局layout
+            .on("tick",//表示当运动进行中每更新一帧时的如何更新
+              function(){}
+            )；
+        》布局的事件
+            var force = d3.forceSimulation()
+                                .force("charge",d3.forceManyBody().strength(-1500))
+                                .force("link",d3.forceLink().distance(200))
+                                .force('center',d3.forceCenter());
+
+                //力学图布局force本身的事件：start  end  tick
+                    //力学图运动开始时
+                    force.on("start",function(){
+                        console.log("开始");
+                    });
+                    //力学图运动结束时
+                    force.on("end",function(){
+                        console.log("结束");
+                    });
+                    //力学图每一帧
+                    force.on("tick",function(){
+                        console.log("进行中");
+                    });
+                //拖拽事件 start  end drag
+                    var drag = d3.drag()
+                        .on("start",function(){
+                            console.log("拖拽开始");
+                        })
+                        .on("end",function(){
+                            console.log("结束");
+                        })
+                        .on("drag",function(){
+                            console.log("进行中");
+                        });
+                    //分别定义了三种事件后，将此拖拽函数赋值给变量drag,在调用时，只需要使用
+                        X.call(drag);
+                //顶点的固定
+                    //使用布局转换数据之后顶点有一个属性fixed 当这个值为true时，顶点就是固定不动的，为false时，它就是运动的，默认false
+                    //当拖拽开始时，被拖拽顶点设定为固定的
+                    var drag = d3.drag()
+                        .on("start",function(d){
+                            d.fixed = true;//被拖拽对象固定
+                        });
+                    //当鼠标双击顶点时，对顶点解锁
+                        nodes_img.on("dblclick",function(d){
+                            d.fixed = false;
+                        });
+                    //v4.x  通过fx fy属性固定顶点
+5.6 力学图的参数
+        D3的力学图布局是使用 韦尔莱积分法 计算的，这是一种用于求解牛顿运动方程的数值方法，被广泛应用于分子动力学模拟以及视频游戏中。
+        //定义布局
+        var force = d3.forceSimulation();
+
+        link.distance()//指定节点连线的距离 默认30 如果距离是一个常数，那么各连接线的长度总是固定的，如果是一个函数，那么这个函数是作用于
+                       //各连接线 source target的。
+        link.strength() //指定连接线的坚硬度 值越大越坚硬 值的范围[0,1]
+                        // 值 1 拖动一个顶点A 与之相连的顶点会与A保持link.distance设定的距离运动
+                        // 值 0 拖动一个顶点A 与之相连的顶点不会运动，连线会被拉长
+        force.alphaDecay() //设置衰减系数 决定从当前alpha值到alphaTarget值的过渡快慢 ，系数越大 仿真过程越短 效果会越差，越小 仿真越长 效果越好。
+                           // 想要仿真永远运行 设置为0 此时仿真的alpha保持不变。
+        forceManyBody.strength() //设定顶点的电荷数 该参数决定是排斥(负数 绝对值越大 排斥力越大)还是吸引(正数 绝对值越大吸引力越大) 默认-30
+        manyBody.distanceMax()//设置最大引力距离 超过这个距离 则没有引用的作用 默认无穷大
+
+        d3.forceCenter(x, y)//围绕着 x y 创建中心作用力模拟重力，默认(0,0)
+
+        manyBody.theta([theta]) //顶点数如果过多 计算的时间就会加大 该函数就是为了限制这个计算而存在的 值越小 计算限制的越紧 默认.9
+        simulation.alpha([alpha]) //区间[0,1] 默认为1  设定动画的冷却系数，运动过程中该系数会不断减少 直到为0 动画就停止。
+        simulation.restart()//等价于alpha(.1) 重启仿真内部的计时器
+        simulation.stop();//等价于alpha(0) 停止仿真内部的计时器
+5.7 分区图--表示包含与被包含的关系
+    分区图Partition 也是D3的布局，这个布局可以做成方形的也可以做成圆形。
+    》方形分区图
+         var width = 1000,
+                    height=800,
+                    svg = d3.select(".app")
+                        .append("svg")
+                        .attr("width",width)
+                        .attr('height',height);
+
+                //颜色生成器
+                var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+                //创建分区布局
+                var partition = d3.partition()
+                                    .size([width,height])
+                                    .padding(1)
+                                    .round(true);
+
+                //获取数据
+                d3.json("cluster.json",function(err,data){
+                    if(err) return console.error(err);
+
+                    //转换数据
+                    var root = d3.hierarchy(data)
+                                .sum(function(d){return d.value ? d.value : 1})//要生成正确的坐标 这是必须的
+                                .sort(function(a,b){return b.height - a.height || b.value - a.value});
+                    partition(root);
+
+                    /************绘制************/
+                    var cell = svg.selectAll("g")
+                                    .data(root.descendants())
+                                    .enter().append('g')
+                                    .attr("transform",function(d){
+                                        return "translate("+d.x0+","+d.y0+")";
+                                    });
+
+                    //绘制矩形
+                    cell.append('rect')
+                        .attr('width',function(d){ return d.x1 - d.x0;})
+                        .attr('height',function(d){return d.y1 -d.y0})
+                        .attr("id",function(d,i){return "rect-"+i})
+                        .style('stroke',"#fff")
+                        .style('fill',function(d){ return color((d.children ? d : d.parent).data.name)})
+                        .on("mouseover",function(d){
+                            d3.select(this).style("fill",'yellow');
+                        })
+                        .on("mouseout",function(d){
+                            d3.select(this)
+                                .transition()
+                                .duration(200)
+                                .style('fill',function(d){ return color((d.children ? d : d.parent).name)});
+                        });
+
+                    cell.append("clipPath")
+                        .attr("id",function(d,i){return "clip-"+i})
+                        .append('use').attr("xlink:href",function(d,i){return "#rect-"+i;});
+                    //绘制文本
+                    cell.append('text')
+                        .attr('class','node-text')
+                        .attr("clipPath",function(d,i){return "url(#clip-"+ i +")"})//引用裁剪路径
+                        .attr('x',10)
+                        .attr('y',10)
+                        .text(function(d){
+                            return d.data.name;
+                        });
+                });
+    》圆形分区图
+            分区图布局的size函数 即可用于制作矩形分区图 也可以用于制作圆形分区图。
+             //圆形分区图
+                    var width = 800,
+                        height = 600,
+                        radius = 300,
+                         svg = d3.select(".app")
+                                 .append("svg")
+                                 .attr("width",width)
+                                 .attr("height",height)
+                                 .append("g")
+                                 .attr("transform","translate("+width/2+","+height/2+")");
+
+                    //创建颜色生成器
+                    var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+                    //创建分区布局
+                    var partition = d3.partition()
+                                        .round(false)//不要四舍五入  否则数据不准确 有些图形无法显示
+                                        .size([2*Math.PI,radius]);
+
+                    //获取数据
+                    d3.json("cluster.json",function(err,data){
+                        if(err) return console.error(err);
+
+                        //转换数据
+                        var root = d3.hierarchy(data)
+                                        .sum(function(d){return d.value ? d.value : 1;})
+                                        .sort(function(a,b){return b.height - a.height || b.value - a.value});
+                        partition(root);
+
+                        /****************绘制***************/
+                        //生成path路径
+                        var arc = d3.arc()
+                                    .startAngle(function(d){return d.x0})
+                                    .endAngle(function(d){return d.x1})
+                                    .innerRadius(function(d){return d.y0})
+                                    .outerRadius(function(d){return d.y1})
+                                    .padAngle(.01)
+
+                        //绘制圆弧
+                        var arcs = svg.selectAll("g")
+                                        .data(root.descendants())
+                                        .enter().append('g');
+
+                        arcs.append('path')
+                            //.attr("display",function(d){return d.depth ? null : "none"})
+                            .attr("d",arc)
+                            .style("stroke","#fff")
+                            .style("fill",function(d){ return color((d.children ? d : d.parent).data.name);})
+                            .on("mouseover",function(d){
+                                d3.select(this).style("fill","yellow");
+                            })
+                            .on("mouseout",function(d){
+                                d3.select(this)
+                                    .transition()
+                                    .duration(200)
+                                    .style('fill',function(d){
+                                        return color((d.children ? d : d.parent).data.name);
+                                    })
+                            });
+
+                        //添加文本
+                        arcs.append("text")
+                            .style("font-size","12px")
+                            .style("font-family","simsun")
+                            .attr("text-anchor","middle")
+                            .attr("transform",function(d,i){
+                                //第一个元素 最中间的 只平移
+                                if(i===0) return "translate("+arc.centroid(d)+")";
+
+                                //其他的元素 即平移也旋转
+                                var r = 0;
+                                if(d.x1 / Math.PI * 180 < 180) r = 180 * (d.x1 + d.x0 - Math.PI)/ (2 * Math.PI);
+                                else r = 180 * (d.x1 + d.x0 + Math.PI)/(2 * Math.PI);
+
+                                return "translate("+ arc.centroid(d)+") rotate("+ r +")";
+                            })
+                            .text(function(d){return d.data.name;});
+                    })
+5.8 分区图的函数
+        》分区图布局
+            var partition = d3.partition()
+        》转换数据
+            partition(data);
+        》获取当前节点所有的后代节点
+            node.descendants()
+        》获取所有的连接
+            node.links()
+        》子节点数组
+            node.children
+        》sort()指定同深度的节点进行排序的函数，如果不排序按照默认顺序显示
+        》sum()  计算所有节点的总值 以及每个节点所占有的权值
+        》size() 设置分区图的范围
+            方形 size([width,height])
+            圆形 size([2*Math.PI,radius])
+5.9 绘制箭头
+        》SVG中定义箭头的标识
+            <defs>
+                <marker
+                    viewBox  //坐标系的区域
+                    refX,refY //在viewBox内的基准点 绘制时此点在直线端点上
+                    markerUnits //标识大小的基准 有两个值：strokeWidth(线宽度) userSpaceOnUse(图形最前端的大小)
+                    markerWidth，markerHeight//标识的大小
+                    orient //绘制方向 可设定为：auto(自动确认方向) 和 角度值
+                    id  //标识的id号
+                ></marker>
+            </defs>
+
+            <!--在直线上绘制-->
+            <line x1="0" y1="0" x2="200" y2="50" stroke="red" stroke-width="2" marker-end="url(#arrow)"></line>
+            <!--在曲线上绘制-->
+            <path d="M20,70 T80,100 T160,80 T200,90" fill="white" stroke="red" stroke-width="2"
+                 <!--路径起点处绘制箭头-->
+                  marker-start="url(#arrow)"
+                  <!--路径中间端点处绘制箭头-->
+                  marker-mid="url(#arrow)"
+                  <!--路径终点处绘制箭头-->
+                  marker-end="url(#arrow)"
+            ></path>
+
+        》使用D3绘制箭头
+                    var width = 600,
+                        height = 500,
+                        svg = d3.select('.app2')
+                                .append('svg')
+                                .attr('width',width)
+                                .attr('height',height);
+
+                    //定义箭头
+                    var defs = svg.append('defs');
+                    var arrow = defs.append('marker')
+                                    .attr('id','arrow2')
+                                    .attr('markerUnits','strokeWidth')
+                                    .attr('markerWidth','12')
+                                    .attr('markerHeight','12')
+                                    .attr('viewBox','0 0 12 12')
+                                    .attr('refX','6')
+                                    .attr('refY','6')
+                                    .attr('orient','auto')
+                                    .append('path')
+                                    .attr('d','M2,2 L10,6 L2,10 L6,6 L2,2')
+                                    .attr('fill','#000');
+
+                    //绘制直线
+                    var line = svg.append('line')
+                                    .attr('x1',10)
+                                    .attr('y1',10)
+                                    .attr('x2',200)
+                                    .attr('y2',50)
+                                    .attr('stroke','red')
+                                    .attr('stroke-width',2)
+                                    .attr('marker-start','url(#arrow2)')
+                                    .attr('marker-end','url(#arrow2)');
+
+                    //绘制曲线
+                    var curve = svg.append('path')
+                                    .attr('d',"M20,70 T80,100 T160,80 T200,90")
+                                    .attr('fill','white')
+                                    .attr('stroke','red')
+                                    .attr('stroke-width',2)
+                                    .attr('marker-start','url(#arrow2)')
+                                    .attr('marker-mid','url(#arrow2)')
+                                    .attr('marker-end','url(#arrow2)');
+5.10 直方图
+        直方图用于描述概率分布，D3提供了直方图的布局Histogram用于转换数据。
         http://www.ourd3js.com/wordpress/2209/#more-2209
+
+
 
 
 

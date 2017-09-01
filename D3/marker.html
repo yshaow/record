@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>绘制箭头</title>
+    <script src="d3.js"></script>
+</head>
+<body>
+    <!--svg绘制箭头-->
+    <div class="app1">
+        <svg width="600" height="500">
+            <!--定义箭头-->
+            <defs>
+                <marker
+                        id="arrow"
+                        markerUnits="strokeWidth"
+                        markerWidth = '12'
+                        markerHeight = '12'
+                        viewBox="0 0 12 12"
+                        refX="6"
+                        refY="6"
+                        orient="auto"
+                >
+                    <path d="M2,2 L10,6 L2,10 L6,6 L2,2" style="fill: #000000;" />
+                </marker>
+            </defs>
+            <!--在直线上绘制-->
+            <line x1="0" y1="0" x2="200" y2="50" stroke="red" stroke-width="2" marker-end="url(#arrow)"></line>
+            <!--在曲线上绘制-->
+            <path d="M20,70 T80,100 T160,80 T200,90" fill="white" stroke="red" stroke-width="2"
+                 <!--路径起点处绘制箭头-->
+                  marker-start="url(#arrow)"
+                  <!--路径中间端点处绘制箭头-->
+                  marker-mid="url(#arrow)"
+                  <!--路径终点处绘制箭头-->
+                  marker-end="url(#arrow)"
+            ></path>
+        </svg>
+    </div>
+
+    <!--使用D3绘制箭头-->
+    <div class="app2">
+
+    </div>
+    <script>
+        //使用D3绘制箭头
+        var width = 600,
+            height = 500,
+            svg = d3.select('.app2')
+                    .append('svg')
+                    .attr('width',width)
+                    .attr('height',height);
+
+        //定义箭头
+        var defs = svg.append('defs');
+        var arrow = defs.append('marker')
+                        .attr('id','arrow2')
+                        .attr('markerUnits','strokeWidth')
+                        .attr('markerWidth','12')
+                        .attr('markerHeight','12')
+                        .attr('viewBox','0 0 12 12')
+                        .attr('refX','6')
+                        .attr('refY','6')
+                        .attr('orient','auto')
+                        .append('path')
+                        .attr('d','M2,2 L10,6 L2,10 L6,6 L2,2')
+                        .attr('fill','#000');
+
+        //绘制直线
+        var line = svg.append('line')
+                        .attr('x1',10)
+                        .attr('y1',10)
+                        .attr('x2',200)
+                        .attr('y2',50)
+                        .attr('stroke','red')
+                        .attr('stroke-width',2)
+                        .attr('marker-start','url(#arrow2)')
+                        .attr('marker-end','url(#arrow2)');
+
+        //绘制曲线
+        var curve = svg.append('path')
+                        .attr('d',"M20,70 T80,100 T160,80 T200,90")
+                        .attr('fill','white')
+                        .attr('stroke','red')
+                        .attr('stroke-width',2)
+                        .attr('marker-start','url(#arrow2)')
+                        .attr('marker-mid','url(#arrow2)')
+                        .attr('marker-end','url(#arrow2)');
+    </script>
+</body>
+</html>

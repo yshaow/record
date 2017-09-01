@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>方形分区图</title>
+    <style>
+        .node rect{
+            fill:#ddd;
+        }
+        .node text{
+            font:10px sans-serif;
+        }
+        .node tspan:last-child{
+            font-size:9px;
+            fill-opacity: .8;
+        }
+        .node-internal text{
+            font-weight:bold;
+        }
+        .node-leaf rect{
+            fill-opacity: .6;
+        }
+    </style>
+    <script src="d3.js"></script>
+</head>
+<body>
+<div class="app">
+    <svg width="960" height="4980"></svg>
+</div>
+<script>
+    //方形分区图
+
+    //获取svg
+    var svg = d3.select("svg"),
+        width = +svg.attr("width"),//string --> number
+        height = +svg.attr("height");
+
+    //格式化数据
+    var format = d3.format(",d");
+
+    //颜色生成器
+    var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    //把存储在CSV文件中的数据转成表示层级结构的数据结构
+    var stratify = d3.stratify()
+                        .parentId(function(d){ return d.id.substring(0,d.id.lastIndexOf("."))});//设置父节点id
+
+    //创建分区图布局
+    var partition = d3.partition()
+                        .size([height,width])//设置布局的尺寸
+                        .padding(1)//分区间隔
+                        .round(true);//取整
+
+    //获取数据
+    d3.csv("flare.csv",function(err,data){
+        if(err) console.error(err);
+
+        //转换数据
+        var root = stratify(data)//转成hierarchy数据
+            .sum(function(d){return d.value;})//计算当前节点为父节点的子树中某个值的总和
+            .sort(function(a,b){return b.height - a.height || b.value - a.value});//排序
+           partition(root);//转成分区图的数据
+
+        /****************绘制*************/
+        var cell = svg.selectAll('.node')
+                        .data(root.descendants())//root.descendants()把所有节点放在同级数组中
+                        .enter().append('g')
+                        .attr("class",function(d){ return "node " + (d.children ? "node-internal" : "node-leaf")})
+                        .attr("transform",function(d){return "translate("+d.y0+","+d.x0+")"});
+
+        //绘制矩形
+        cell.append("rect")
+            .attr("id",function(d){return "rect-"+d.id})
+            .attr("width",function(d){return d.y1 - d.y0})
+            .attr("height",function(d){return d.x1 - d.x0})
+            .filter(function(d){ return !d.children})//过滤
+            .style("fill",function(d){ while(d.depth > 1) d=d.parent; return color(d.id)});
+
+        cell.append("clipPath")//定义裁剪路径
+            .attr("id",function(d){return "clip-"+d.id;})
+            .append("use").attr("xlink:href",function(d){return "#rect-"+d.id;});//使用url引用一个具有唯一id属性和重复的图像元素 并复制该元素
+
+        //绘制文本
+        cell.append("text")
+            .attr("clipPath",function(d){return "url(#clip-"+d.id+")"})//引用裁剪路径
+            .attr("x",4)
+            .selectAll('tspan')
+            .data(function(d){return [d.id.substring(d.id.lastIndexOf(".")+1)," "+format(d.value)]})
+            .enter().append("tspan")//tspan 使一行文本相对于另一行文本本来定位
+            .attr("y",13)
+            .text(function(d){return d;});
+
+        //绘制title
+        //svg title标签 对SVG中的元素的纯文本描述，并不作为图形的一部分来显示 当鼠标悬停在对象上面时 显示出来
+        cell.append("title").text(function(d){return d.id+ '\n' + format(d.value)});
+    });
+</script>
+<script>
+//    var width = 800,
+//        height = 600,
+//        svg = d3.select(".app")
+//                .append('svg')
+//                .attr('width',width)
+//                .attr('height',height)
+//            .append("g").attr("transform","translate(400,300)"),
+//        color = d3.scaleOrdinal(d3.schemeCategory20).domain(30),
+//        radius = 300;
+//
+//    var arc = d3.arc()
+//        .startAngle(function(d){return d.x0;})
+//        .endAngle(function(d){return d.x0+d.x1;})
+//        .padAngle(.01)
+//        .padRadius(radius /4)
+//        .innerRadius(function(d){return radius/4*d.depth})
+//        .outerRadius(function(d){return radius/4*(d.depth+1)-1})
+//    //创建分区图布局
+//    var partition = d3.partition()
+//                        .size([2*Math.PI,radius]);//设置布局的尺寸
+//
+//
+//    //获取数据
+//    d3.json("cluster.json",function(err,data){
+//       if(err) console.error(err);
+//
+//       //转换数据
+//        var nodes = d3.hierarchy(data)
+//                        .sum(function(d){return 1})//设置value属性值
+//                        .sort(function(a,b){return b.height - a.height || b.value - a.value;});
+//        nodes = partition(nodes).descendants();
+//
+//        //绘制
+//        var path = svg.selectAll("path")
+//            .data(nodes)
+//            .enter().append("path")
+//            .attr("d",arc)
+//            .style("fill",function(d,i){
+//                return color(i);
+//            });
+//        //填充文本
+//        var text = svg.selectAll("text")
+//            .data(nodes)
+//            .enter()
+//            .append("text")
+//            .text(function(d){
+//                return d.data.name;
+//            })
+//            .attr("font-size","11px")
+//            .attr("stoke","#000")
+//            .attr("x",function(d){return radius/4*d.depth;})
+//            .attr("y",function(d){return (d.x0+d.x1)/2});
+
+
+
+    //});
+</script>
+</body>
+</html>

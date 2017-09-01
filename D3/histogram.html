@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>直方图</title>
+    <script src="d3.js"></script>
+    <style>
+        .bar rect{
+            fill:steelblue;
+        }
+        .bar text {
+            fill:#fff;
+            font:10px sans-serify;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+
+</div>
+<script>
+    var  width = 960,
+          height = 500,
+          svg = d3.select('.app')
+                    .append('svg')
+                    .attr('width',width)
+                    .attr('height',height);
+
+    //生成数据
+    var data = d3.range(1000)//生成[0~1000]
+                    .map(
+                        d3.randomBates(10)//返回一个自变量10服从Bates distribution分布的随机数生成器
+                    );
+
+    //格式化数据
+    var format = d3.format(',.0f');// of -- 0个小数
+
+    //定义组
+    var svg = d3.select('svg'),
+        margin = {top:10,right:30,bottom:30,left:30},
+        w = + svg.attr("width") - margin.left - margin.right,
+        h = + svg.attr('height') - margin.top - margin.bottom,
+        g = svg.append('g').attr('transform','translate('+margin.left+','+margin.top+')');
+
+    //定义线性比例尺
+    var x = d3.scaleLinear()
+                .rangeRound([0,w]);
+
+    //定义直方图生成器
+    var histogram = d3.histogram()
+                    .domain(x.domain())//指定输入范围
+                    .thresholds(x.ticks(20));
+
+    //转换数据
+    var bins = histogram(data);
+
+    //定义y轴线性比例尺
+    var y = d3.scaleLinear()
+                .domain([0,d3.max(bins,function(d){return d.length;})])//获取bins中length最大的值
+                .range([h,0]);
+
+    /*************绘制***********/
+    var bar = g.selectAll('.bar')
+                .data(bins)
+                .enter().append('g')
+                .attr('class','bar')
+                .attr('transform',function(d){return 'translate('+ x(d.x0) +','+ y(d.length) +')'});
+
+    //绘制矩形
+    bar.append('rect')
+        .attr('x',1)
+        .attr('width',x(bins[0].x1) - x(bins[0].x0) - 1)
+        .attr('height',function(d){ return h - y(d.length);});
+
+    //绘制文本
+    bar.append('text')
+        .attr('dy','.75em')
+        .attr('y',6)
+        .attr('x',(x(bins[0].x1 - x(bins[0].x0))/2))
+        .attr('text-anchor','middle')
+        .text(function(d){return format(d.length)});
+
+    //绘制坐标系
+    g.append('g')
+        .attr('class','axis axis-x')
+        .attr('transform','translate(0,'+ h +')')
+        .call(d3.axisBottom(x));
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
