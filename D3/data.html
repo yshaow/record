@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据的排序</title>
+    <script src="d3.js"></script>
+</head>
+<body>
+    <p>A</p>
+    <p>B</p>
+    <p>C</p>
+    <script>
+        var p = d3.selectAll("p"),
+            data = [{id:1,name:"a"},{id:2,name:"b"},{id:3,name:"c"}];
+        p.data(data).text(function(d){return d.name});
+
+        //更新数据
+        dt = [{id:3,name:"cc"},{id:1,name:"aa"},{id:2,name:"bb"}]
+        p.data(dt,
+            function(d){return d.id}//表示使用数组项的id属性作为键
+        ).text(function(d){return d.name});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>

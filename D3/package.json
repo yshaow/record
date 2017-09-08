@@ -1,12 +1,14 @@
 {
-  "name": "test_d3",
+  "name": "d3",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "d3.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
-    "server":"http-server &"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "ogr2ogr": "^1.2.1"
+  }
 }

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>拖拽的应用</title>
+    <script src="d3.js"></script>
+</head>
+<body>
+
+<script>
+    //drag的定义
+    var drag = d3.drag()//创建一个新的拖拽操作，返回一个drag(对象方法) 一般通过selection.call将其应用到指定的选择集上。
+                    .on("drag",dragmove);//指定监听
+    function dragmove (d){
+        d3.select(this)
+            .attr('cx',d.cx = d3.event.x)//d3.event.x d3.event.y 鼠标当前的位置
+            .attr('cy',d.cy = d3.event.y);
+    }
+
+    /***绘制圆*******/
+    var circles = [
+        {cx:150,cy:200,r:30},
+        {cx:250,cy:200,r:30}
+    ]
+    var svg = d3.select('body').append('svg')
+                .attr('width',500)
+                .attr('height',400);
+    svg.selectAll('circle')
+        .data(circles)
+        .enter()
+        .append('circle')
+        .attr('cx',function(d){return d.cx;})
+        .attr('cy',function(d){return d.cy})
+        .attr('r',function(d){return d.r;})
+        .attr('fill','black')
+        .call(drag);//即选择集自身作为参数传递给drag函数。
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

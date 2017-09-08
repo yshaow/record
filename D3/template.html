@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>模版应用</title>
+    <script src="d3.js"></script>
+</head>
+<body>
+
+<button onclick="mysort()">排序</button>
+<button onclick="myadd()">添加</button>
+<script>
+    function draw(){
+        //获取矩形的update部分
+        var updateRect = svg.selectAll('rect').data(dataset);
+        //获取矩形的enter部分
+        var enterRect = updateRect.enter();
+        //获取矩形的exit部分
+        var exitRect = updateRect.exit();
+        //会矩形的update enter exit的处理
+        updateRect.attr("fill",'steelblue')
+            .attr('x',function(d,i){return padding.left + i*rectStep;})
+            .attr('y',function(d){return height - padding.bottom -d;})
+            .attr('width',rectWidth)
+            .attr('height',function(d){return d;});
+        enterRect.append("rect")
+            .attr("fill",'steelblue')
+            .attr('x',function(d,i){return padding.left + i*rectStep;})
+            .attr('y',function(d){return height - padding.bottom -d;})
+            .attr('width',rectWidth)
+            .attr('height',function(d){return d;});
+        exitRect.remove();
+        //获取文字的update部分
+        var updateText = svg.selectAll('text').data(dataset);
+        //文字的enter部分
+        var enterText = updateText.enter();
+        //文字的exit部分
+        var exitText = updateText.exit();
+        //文字update enter exit的处理
+        updateText.attr('fill','white')
+            .attr('font-size','14px')
+            .attr('text-anchor','middle')
+            .attr('x',function(d,i){
+                return padding.left + i*rectStep;
+            })
+            .attr('y',function(d){return height - padding.bottom -d})
+            .attr('dx',rectWidth/2)
+            .attr('dy','1em')
+            .text(function(d){return d;});
+        enterText.append('text')
+            .attr('fill','white')
+            .attr('font-size','14px')
+            .attr('text-anchor','middle')
+            .attr('x',function(d,i){
+                return padding.left + i*rectStep;
+            })
+            .attr('y',function(d){return height - padding.bottom -d})
+            .attr('dx',rectWidth/2)
+            .attr('dy','1em')
+            .text(function(d){return d;});
+        exitText.remove();
+    }
+    var dataset = [50,43,120,87,99,167,147];
+    var width = 400;
+    var height = 400;
+    var svg = d3.select('body').append('svg').attr("width",width).attr('height',height);
+    var padding = {top:20,bottom:20,right:20,left:20};
+    var rectStep = 35;//矩形宽度 包括空白区域
+    var rectWidth = 30;//矩形宽度 不包括空白区域
+    function mysort(){
+        dataset.sort(d3.ascending);
+        draw();
+    }
+    function myadd(){
+        dataset.push(Math.floor(Math.random()*100));
+        draw();
+    }
+    draw();
+</script>
+
+
+
+</body>
+</html>

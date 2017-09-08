@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>颜色插值</title>
+    <script src="d3.js"></script>
+</head>
+<body>
+<svg width="400" height="600"></svg>
+<svg width="600" height="600">
+    <defs>
+        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#f00"></stop>
+            <stop offset="100%" stop-color="#0f0"></stop>
+        </linearGradient>
+    </defs>
+    <rect x="10" y="10" width="400" height="300" fill="url(#gradient)"></rect>
+</svg>
+<svg class="linear-gradient" width="600" height="600"></svg>
+<script>
+    //颜色插值
+    var a = d3.rgb(255,0,0);
+    var b = d3.rgb(0,255,0);
+    var compute = d3.interpolate(a,b);
+    console.log(compute(.5));//参数的范围[0,1]//0返回开始值即a //1返回结束值即b //0~1返回a~b之间的插值颜色
+    //当某个值域的饭我并不在0到1之间，需要用到线性比例尺 如：0~150;
+    var linear = d3.scaleLinear().domain([0,150]).range([0,1]);
+    //在计算颜色值时，只要compute(linear(x))即可，x的范围是0到150
+
+    //下面绘制150个矩形，分为10行，每行15个，用颜色插值函数分别计算每个矩形的填充色。
+    var svg = d3.select('svg');
+    var rects = svg.selectAll('rect')
+        .data(d3.range(150))
+        .enter().append('rect')
+        .attr('x',function(d,i){
+            return i%15*15;
+        })
+        .attr('y',function(d,i){
+            return Math.floor(i/15)*15;
+        })
+        .attr('width',15)
+        .attr('height',15)
+        .style('fill',function(d){
+            return compute(linear(d));
+        });
+
+    /***************d3线性渐变**************/
+    //定义线性渐变
+    var linearGradient = d3.select('.linear-gradient')
+                            .append('defs')
+                            .append('linearGradient')
+                            .attr('id','linearColor')
+                            .attr('x1','0%')
+                            .attr('y1','0%')
+                            .attr('x2','100%')
+                            .attr('y2','0%');
+    linearGradient.append('stop')
+                    .attr('offset','0%')
+                    .attr('stop-color',a.toString());
+    linearGradient.append('stop')
+                    .attr('offset','100%')
+                    .attr('stop-color',b.toString());
+    //使用渐变
+    d3.select('.linear-gradient').append('rect')
+        .attr('x',10)
+        .attr('y',10)
+        .attr('width',400)
+        .attr('height',300)
+        .style('fill','url(#'+ linearGradient.attr('id') +')');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

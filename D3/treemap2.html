@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>矩阵树图</title>
+    <script src="d3.js"></script>
+    <style>
+
+        .nodeRect {
+            stroke: white;
+            stroke-width: 2px;
+        }
+
+        .nodeName {
+            fill: white;
+            font-size: 12px;
+            font-family: simsun;
+        }
+
+    </style>
+</head>
+<body>
+<svg width="1100" height="800"></svg>
+<script>
+    var svg = d3.select('svg'),
+        margin = {top:20,bottom:20,left:20,right:20},
+        width =+svg.attr('width') - margin.left -margin.right,
+        height =+svg.attr('height') - margin.top -margin.bottom,
+        g = svg.append('g').attr('transform','translate(' + margin.left + ','+ margin.top +')');
+    //定义矩阵树布局
+    var treemap = d3.treemap()
+                    .size([width,height])
+                    .padding(2)
+                    .round(true);
+
+    //颜色生成器
+    var color = d3.scaleOrdinal(d3.schemeCategory20);
+    //获取数据
+    d3.json('citygdp.json',function(err,data){
+        if(err) return console.error(err);
+
+        //数据转换
+        var root = d3.hierarchy(data)
+            .sum(function(d){return d.gdp;})
+            .sort(function(a,b){return b.height - a.height || b.value - a.value;});
+        treemap(root);
+
+        /****************绘制****************/
+        var groups = g.selectAll('g')
+                        .data(root.leaves())
+                        .enter()
+                        .append('g');
+
+        var rects = groups.append('rect')
+                            .attr('class','nodeRect')
+                            .attr('x',function(d){return d.x0;})
+                            .attr('y',function(d){return d.y0;})
+                            .attr('width',function(d){return d.x1 - d.x0;})
+                            .attr('height',function(d){return d.y1 - d.y0})
+                            .style('fill',function(d,i){return color(d.parent.data.name)});
+
+        var texts = groups.append('text')
+                            .attr('class','nodeName')
+                            .attr('x',function(d){return d.x0;})
+                            .attr('y',function(d){return d.y0})
+                            .attr('dx','.5em')
+                            .attr('dy','1.5em')
+                            .text(function(d){return d.data.name + " " + d.data.gdp;});
+    })
+</script>
+</body>
+</html>

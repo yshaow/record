@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>矩阵树图</title>
+    <script src="d3.js"></script>
+    <style>
+        body{
+            font:10px sans-serif;
+            position: relative;
+        }
+        .node{
+            box-sizing: border-box;
+            position: absolute;
+            overflow: hidden;
+        }
+        .node-label{
+            padding: 4px;
+            line-height: 1em;
+            white-space: pre;
+        }
+        .node-value{
+            color:rgba(0,0,0,.8);
+            font-size:9px;
+            margin-top: 1px;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+    var width = 1000,
+        height = 900;
+    var format = d3.format(',d');
+
+    var color = d3.scaleOrdinal()
+                    .range(
+                        d3.schemeCategory10.map(function(c){
+                            c = d3.rgb(c);//返回color的RGB表示,如果color为RGB，则返回自身。
+                            c.opacity = .6;//设置color的透明度，范围[0,1].
+                            return c;
+                        })
+                    );
+
+    var stratify = d3.stratify()
+                        .parentId(function(d){ return d.id.substring(0,d.id.lastIndexOf('.'));});
+
+    //创建矩阵树图布局
+    var treemap = d3.treemap()//使用默认的设置构建treemap生成器
+                        .size([width,height])//设置布局尺寸
+                        .padding(2)//设置间隔
+                        .round(true);//是否启用取整
+
+    //获取数据
+    d3.csv('treemap.csv',function(d){
+        d.value = +d.value;//string ->number
+        return d;
+    },function(err,data){
+        if(err) return console.error(err);
+
+        //转换数据
+        var root = stratify(data)
+                    .sum(function(d){return d.value})
+                    .sort(function(a,b){return b.height - a.height || b.value - a.value;});
+        treemap(root);
+
+        /***************绘制*************/
+        d3.select('body')
+            .selectAll('.node')
+            .data(root.leaves())
+            .enter().append('div')
+            .attr('class','node')
+            .attr('title',function(d){ return d.id + '\n' + format(d.value)})
+            .style('left',function(d){return d.x0 +'px'})
+            .style('top',function(d){return d.y0 + 'px'})
+            .style('width',function(d){return d.x1 - d.x0 +'px'})
+            .style('height',function(d){return d.y1 - d.y0 +'px'})
+            .style('background',function(d){ while( d.depth >1) d= d.parent; return color(d.id)})
+            .append('div')
+            .attr('class','node-label')
+            .text(function(d){return d.id.substring(d.id.lastIndexOf(".")+1).split(/(?=[A-Z][^A-Z])/g).join('\n')})
+            .append('div')
+            .attr('class','node-value')
+            .text(function(d){return format(d.value)});
+    });
+</script>
+</body>
+</html>

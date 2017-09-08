@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>颜色测试</title>
+    <script src="d3.js"></script>
+</head>
+<body>
+<script>
+    //创建颜色对象
+    var color1 = d3.rgb(40,80,0);
+    var color2 = d3.rgb('red');
+    var color3 = d3.rgb("rgb(0,255,255)");
+   // console.log(color1,color2,color3);
+    //将color1变亮
+    //console.log(color1.brighter(2));//返回新值：Rgb {r: 81.63265306122449, g: 163.26530612244898, b: 0, opacity: 1}
+    //console.log(color1);//原值未改变 Rgb {r: 40, g: 80, b: 0, opacity: 1}
+    //将color2颜色变暗
+    //console.log(color2.darker(2))//返回新值：{r: 124.94999999999999, g: 0, b: 0, opacity: 1}
+   // console.log(color2);//原值不变：Rgb {r: 255, g: 0, b: 0, opacity: 1}
+    //输出color3颜色的hsl值
+    //console.log(d3.hsl(color3));
+    //console.log(color3.toString());
+    var hsl = d3.hsl(120,1,.5);
+    //console.log(hsl);
+    //console.log(hsl.brighter(2));
+   // console.log(hsl.darker(2));
+   // console.log(hsl.rgb());
+    //console.log(hsl.toString());
+    var a = d3.rgb(255,0,0);
+    var b = d3.rgb(0,255,0);
+    var compute = d3.interpolate(a,b);
+    console.log(compute(0));
+    console.log(compute(.5));
+    console.log(compute(1));
+    console.log(compute(-1));
+    console.log(compute(2));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

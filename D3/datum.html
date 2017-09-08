@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>数据绑定1</title>
+    <script src="d3.js"></script>
+</head>
+<body>
+    <p>A</p>
+    <p>B</p>
+    <p>C</p>
+    <script>
+        var p = d3.selectAll('p');
+        p.datum("a")
+            .append('span')
+            .text(function(d,i){
+            return d + " "+i;
+        })
+        console.log(p);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </script>
+</body>
+</html>

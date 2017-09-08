@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>堆叠图</title>
+    <script src="d3.js"></script>
+</head>
+<body>
+<svg width="800" height="700"></svg>
+<script>
+    //数据
+    var dataset = [
+        {   name: "PC" ,
+            sales: [
+                { year:2005, profit: 3000 },
+                { year:2006, profit: 1300 },
+                { year:2007, profit: 3700 },
+                { year:2008, profit: 4900 },
+                { year:2009, profit: 700 }
+                ]
+        },
+        {   name: "SmartPhone" ,
+            sales: [
+                { year:2005, profit: 2000 },
+                { year:2006, profit: 4000 },
+                { year:2007, profit: 1810 },
+                { year:2008, profit: 6540 },
+                { year:2009, profit: 2820 }
+                ]
+        },
+        { name: "Software" ,
+            sales: [
+                { year:2005, profit: 1100 },
+                { year:2006, profit: 1700 },
+                { year:2007, profit: 1680 },
+                { year:2008, profit: 4000 },
+                { year:2009, profit: 4900 }
+                ]
+        }
+    ];
+    function dataFormat(data){
+        var resultData = [];
+        data[0].sales.forEach(function(curr){
+            resultData.push({
+                year:curr.year
+            });
+        });
+        resultData.forEach(function(curr){
+            var year = curr.year;
+            data.forEach(function(d){
+                d.sales.forEach(function(s){
+                    if(s.year === year){
+                        curr[d.name] = s.profit;
+                        return false;
+                    }
+                })
+            })
+        });
+        resultData.forEach(function(curr){
+            curr.total = curr.PC + curr.SmartPhone + curr.Software;
+        })
+        return resultData;
+    }
+    var data = dataFormat(dataset);
+    var svg = d3.select('svg'),
+        margin = {top:20,bottom:20,left:60,right:20},
+        width = +svg.attr('width') - margin.left - margin.right,
+        height = +svg.attr('height') - margin.top - margin.bottom,
+        g = svg.append('g').attr('transform','translate('+ margin.left +','+ margin.top +')')
+    //获取keys
+    var keys = [];
+    dataset.forEach(function(curr){
+        keys.push(curr.name);
+    });
+    /************定义比例尺*************/
+    //定义x轴比例尺
+    var x = d3.scaleBand()
+            .rangeRound([0,width])
+            .align(1)
+            .paddingInner(.2)
+            .paddingOuter(.1)
+            .domain(data.map(function(d){return d.year}));
+    //定义y轴比例尺
+    var y = d3.scaleLinear()
+                .rangeRound([height,0])
+                .domain([0,d3.max(data,function(d){return d.total})]);
+    //定义颜色生成器
+    var color = d3.scaleOrdinal()
+                    .range(["#1F77B4", "#FF7F0E", "#31A231"])
+                    .domain(keys);
+    //定义堆叠图布局
+    var stack = d3.stack()
+                    .keys(keys);
+    //数据转换
+    var root = stack(data);
+    /************绘制************/
+    //绘制矩形
+    g.append('g')
+        .selectAll('g')
+        .data(root)
+        .enter().append('g')
+        .attr('fill',function(d){return color(d.key)})
+        .selectAll('rect')
+        .data(function(d){return d;})
+        .enter().append('rect')
+        .attr('x',function(d){return x(d.data.year)})
+        .attr('y',function(d){return y(d[1])})
+        .attr('width',x.bandwidth())
+        .attr('height',function(d){return y(d[0]) - y(d[1])});
+    //绘制坐标轴
+    g.append('g')
+        .attr('transform','translate(0,'+ height +')')
+        .call(d3.axisBottom(x))
+        .append('text')
+        .text('年')
+        .attr('x',x.range()[1])
+        .attr('fill','#000')
+        .attr('dy','1.2em')
+        .attr('dx','-.5em')
+        .attr('font-weight','bold')
+        .attr('text-anchor','start')
+        .attr('font-size','14px')
+    g.append('g')
+        .call(d3.axisLeft(y))
+        .append('text')
+        .attr('x',-36)
+        .attr('y',0)
+        .text('利润')
+        .attr('fill','#000')
+        .attr('dy','.36em')
+        .attr('font-weight','bold')
+        .attr('text-anchor','start')
+        .attr('font-size','14px')
+
+    //绘制注释
+    var legend = g.append('g')
+        .attr('font-size','10px')
+        .attr('text-anchor','end')
+        .selectAll('g')
+        .data(keys)
+        .enter()
+        .append('g')
+        .attr('transform',function(d,i){return 'translate('+ (width-20) +','+ 40*i +')'});
+    legend.append('rect')
+        .attr('width',19)
+        .attr('height',39)
+        .attr('fill',color);
+    legend.append('text')
+            .text(function(d){return d;})
+            .attr('dy','2.4em')
+            .attr('dx','-.5em');
+
+
+</script>
+</body>
+</html>

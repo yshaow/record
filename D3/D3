@@ -2408,7 +2408,935 @@
                                     .attr('marker-end','url(#arrow2)');
 5.10 直方图
         直方图用于描述概率分布，D3提供了直方图的布局Histogram用于转换数据。
-        http://www.ourd3js.com/wordpress/2209/#more-2209
+        var  width = 960,
+                  height = 500,
+                  svg = d3.select('.app')
+                            .append('svg')
+                            .attr('width',width)
+                            .attr('height',height);
+
+            //生成数据
+            var data = d3.range(1000)//生成[0~1000]
+                            .map(
+                                d3.randomBates(10)//返回一个自变量10服从Bates distribution分布的随机数生成器
+                            );
+
+            //格式化数据
+            var format = d3.format(',.0f');// of -- 0个小数
+
+            //定义组
+            var svg = d3.select('svg'),
+                margin = {top:10,right:30,bottom:30,left:30},
+                w = + svg.attr("width") - margin.left - margin.right,
+                h = + svg.attr('height') - margin.top - margin.bottom,
+                g = svg.append('g').attr('transform','translate('+margin.left+','+margin.top+')');
+
+            //定义线性比例尺
+            var x = d3.scaleLinear()
+                        .rangeRound([0,w]);
+
+            //定义直方图生成器
+            var histogram = d3.histogram()
+                            .domain(x.domain())//指定输入范围
+                            .thresholds(x.ticks(20));
+
+            //转换数据
+            var bins = histogram(data);
+
+            //定义y轴线性比例尺
+            var y = d3.scaleLinear()
+                        .domain([0,d3.max(bins,function(d){return d.length;})])//获取bins中length最大的值
+                        .range([h,0]);
+
+            /*************绘制***********/
+            var bar = g.selectAll('.bar')
+                        .data(bins)
+                        .enter().append('g')
+                        .attr('class','bar')
+                        .attr('transform',function(d){return 'translate('+ x(d.x0) +','+ y(d.length) +')'});
+
+            //绘制矩形
+            bar.append('rect')
+                .attr('x',1)
+                .attr('width',x(bins[0].x1) - x(bins[0].x0) - 1)
+                .attr('height',function(d){ return h - y(d.length);});
+
+            //绘制文本
+            bar.append('text')
+                .attr('dy','.75em')
+                .attr('y',6)
+                .attr('x',(x(bins[0].x1 - x(bins[0].x0))/2))
+                .attr('text-anchor','middle')
+                .text(function(d){return format(d.length)});
+
+            //绘制坐标系
+            g.append('g')
+                .attr('class','axis axis-x')
+                .attr('transform','translate(0,'+ h +')')
+                .call(d3.axisBottom(x));
+5.11 拖拽的应用 Drag
+             //drag的定义
+                var drag = d3.drag()//创建一个新的拖拽操作，返回一个drag(对象方法) 一般通过selection.call将其应用到指定的选择集上。
+                                .on("drag",dragmove);//指定监听
+                function dragmove (d){
+                    d3.select(this)
+                        .attr('cx',d.cx = d3.event.x)//d3.event.x d3.event.y 鼠标当前的位置
+                        .attr('cy',d.cy = d3.event.y);
+                }
+
+                /***绘制圆*******/
+                var circles = [
+                    {cx:150,cy:200,r:30},
+                    {cx:250,cy:200,r:30}
+                ]
+                var svg = d3.select('body').append('svg')
+                            .attr('width',500)
+                            .attr('height',400);
+                svg.selectAll('circle')
+                    .data(circles)
+                    .enter()
+                    .append('circle')
+                    .attr('cx',function(d){return d.cx;})
+                    .attr('cy',function(d){return d.cy})
+                    .attr('r',function(d){return d.r;})
+                    .attr('fill','black')
+                    .call(drag);//即选择集自身作为参数传递给drag函数。
+5.12 缩放的应用Zoom
+            缩放Zoom是另一种重要的可视化操作，主要是使用鼠标的滚轮进行。
+            //zoom的定义
+                var zoom = d3.zoom()//创建一个zoom操作，返回一个zoom对象方法 通常被传递给selection.call来调用
+                                .scaleExtent([1,10])//设置缩放范围
+                                .on('zoom',zoomed);//设置监听
+                function zoomed(){
+                    d3.select(this)
+                        .attr('transform',
+                            'translate('+
+                                d3.event.transform.x//平移的坐标值
+                            +','+
+                                d3.event.transform.y
+                            +') scale('+
+                                d3.event.transform.k//缩放的值
+                            +')');
+                }
+
+                /****************绘制圆*******************/
+                var svg = d3.select('body').append('svg').attr('width',500).attr('height',400),
+                    circles = [
+                    {cx:150,cy:200,r:30},
+                    {cx:250,cy:200,r:30}
+                    ];
+
+                var circles_group = svg.append('g').call(zoom);
+                circles_group.selectAll('circle')
+                    .data(circles)
+                    .enter().append('circle')
+                    .attr('cx',function(d){return d.cx})
+                    .attr('cy',function(d){return d.cy})
+                    .attr('r',function(d){return d.r})
+                    .attr('fill','black');
+5.13 饼状图的拖拽
+                var width = 500,
+                        height = 500,
+                        dataset = [30,10,43,55,13],
+                        svg = d3.select('body').append('svg').attr('width',width).attr('height',height),
+                        innerRadius = width/8,
+                        outerRadius = width/4,
+                        arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
+
+                    //定义饼状图布局
+                    var pie = d3.pie(),
+                        data = pie(dataset);//数据转换
+                    //定义颜色生成器
+                    var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+                    //绘制
+                    var gAll = svg.append('g').attr('transform','translate('+outerRadius+','+outerRadius+')');
+                    var arcs = gAll.selectAll('.arcs-g')
+                                    .data(data)
+                                    .enter()
+                                    .append('g')
+                                    .each(function(d){
+                                        d.dx = 0;
+                                        d.dy = 0;
+                                    })
+                                    .call(//调用拖拽
+                                        d3.drag().on('drag',dragmove)
+                                    );
+                    arcs.append('path')
+                        .attr('fill',function(d,i){return color(i)})
+                        .attr('d',arc);
+                    arcs.append('text')
+                        .attr('transform',function(d){return 'translate('+arc.centroid(d)+')'})
+                        .attr('text-anchor','middle')
+                        .text(function(d){return d.value});
+
+                    function dragmove(d){
+                        d.dx += d3.event.dx;
+                        d.dy += d3.event.dy;
+                        d3.select(this).attr('transform','translate('+d.dx+','+d.dy+')');
+                    }
+5.14 使用datum()绑定数据
+            D3最大的特色是能够将数据绑定到DOM上。使用select或selectAll选择元素后，被选择的元素上是没有数据的。
+            数据绑定就是***使被选择元素里面包含有数据***。
+                》datum() 将指定数据赋值给被选择元素
+                》data() 将数据数组与选择集的元素结合
+            //datum()的工作过程
+                <p>A</p>
+                <p>B</p>
+                var p =d3.selectAll("p");
+                //绑定数值7到选择集上
+                p.datum(7)//每个元素对应的__data__属性即为绑定的对应值 (7)
+                    .text(function(d){//用于设置或获取被选择元素的文本
+                        return d;
+                    })
+
+                即datum的工作原理：对于选择集中的每个元素都为其增加一个__data__属性，属性值为datum(value)的参数value，
+                此处的value类型：number string boolean object等，如果使用undefined和null作为参数将不会创建__data__属性。
+
+            //d3还有一个特性，能使被绑定的数据传递给子元素--在被绑定数据的选择集中添加元素后，新元素也会具有被绑定的数据。
+                p.datum("a")
+                 .append('span')
+                 .text(function(d,i){
+                   return d + " "+i;
+                 });
+5.15 使用data()绑定数据
+            data()函数能够将数组各项**分别**绑定到各元素上，而且能够设置绑定的规则。data()还能够处理数组长度与元素数量不一致的情况。
+            当数组长度大于元素数量，能为多余数据预留元素位置，以便将来插入新元素；
+            当数组长度小于元素数量时，能提供指向多余元素的方法，以便将来删除。
+
+            data()的工作过程：
+            》data()与datum()区别
+                datum是把值  同时绑定给选择集
+                data是把数组的值分别绑定给选择集的各个元素
+            》数组长度与元素数量
+                update 数组长度=元素数量
+                enter 数组长度>元素数量(多出的数据部分)
+                exit  数组长度<元素数量(多出的元素部分)
+            data()函数返回一个对象，对象里面包含了update部分和两个函数。
+                一个是enter()函数，返回enter部分
+                一个是exit()函数，返回exit部分。
+5.16 绑定数据的顺序
+            data()函数有两个参数，第一个是被绑定的数据，第二个参数用于指定绑定的顺序，在数据需要更新的时候常常用到。
+            默认情况下，data()函数是按照**索引号**依次绑定数组各项的。
+            也可以不按照此顺序进行绑定，这就需要data()的第二个参数，这个参数是一个函数 -- 键函数 key function
+            注意：只有在选择集原来已经绑定有数据的情况下，才能使用健函数指定绑定的顺序。
+                        var p = d3.selectAll("p"),
+                            data = [{id:1,name:"a"},{id:2,name:"b"},{id:3,name:"c"}];
+                        p.data(data).text(function(d){return d.name});
+
+                        //更新数据
+                        dt = [{id:3,name:"cc"},{id:1,name:"aa"},{id:2,name:"bb"}]
+                        p.data(dt,
+                            function(d){return d.id}//表示使用数组项的id属性作为键
+                        ).text(function(d){return d.name});
+5.17 enter和exit的处理方法以及处理模版
+            》enter的处理方法
+                如果没有足够的元素，那么处理方法通常是使用append()添加元素。
+                var data = [3,6,9];
+                var p = d3.selectAll("p");//d3的重要特性：可以选择一个空集
+                //绑定数据后，分别获取update和enter部分
+                var update = p.data(data);
+                var enter = update.enter();
+                //update部分处理方式：直接修改内容
+                update.text(function(d){return d;});
+                //enter部分处理方式：添加元素后再修改内容
+                enter.append('p').text(function(d){return d;});
+            》exit的处理方法
+                有多出的元素，没有数据与之对应。对于这样的元素，通常的做法是使用remove()删除元素。
+                var data = [1,2,3];
+                var p = d3.selectAll('p');
+                //绑定数据之后，分别获取update和exit部分
+                var update = p.data(data);
+                var exit = update.exit();
+                //update部分：修改内容
+                update.text(function(d){return d;});
+                //exit部分处理方式：删除
+                exit.remove();
+            》处理模版
+                对于不知道数组长度或元素数量的问题，定义处理模版统一处理。
+                var data = [1,2,3];
+                var p =d3.selectAll("p");
+                //绑定数据后分别返回update enter exit部分。
+                var update = p.data(data);
+                var enter = update.enter();
+                var exit = update.exit();
+
+                //update处理
+                update.text(function(d){return d;});
+                //enter部分处理
+                enter.append('p').text(function(d){return d;});
+                //exit部分处理
+                exit.remove();
+5.18 处理模版的应用
+            应用模版的场合：当数据需要更新(添加、删除、变更)的时候
+            》应用该模版的柱形图
+                <button onclick="mysort()">排序</button>
+                <button onclick="myadd()">添加</button>
+                function draw(){
+                        //获取矩形的update部分
+                        var updateRect = svg.selectAll('rect').data(dataset);
+                        //获取矩形的enter部分
+                        var enterRect = updateRect.enter();
+                        //获取矩形的exit部分
+                        var exitRect = updateRect.exit();
+                        //会矩形的update enter exit的处理
+                        updateRect.attr("fill",'steelblue')
+                            .attr('x',function(d,i){return padding.left + i*rectStep;})
+                            .attr('y',function(d){return height - padding.bottom -d;})
+                            .attr('width',rectWidth)
+                            .attr('height',function(d){return d;});
+                        enterRect.append("rect")
+                            .attr("fill",'steelblue')
+                            .attr('x',function(d,i){return padding.left + i*rectStep;})
+                            .attr('y',function(d){return height - padding.bottom -d;})
+                            .attr('width',rectWidth)
+                            .attr('height',function(d){return d;});
+                        exitRect.remove();
+                        //获取文字的update部分
+                        var updateText = svg.selectAll('text').data(dataset);
+                        //文字的enter部分
+                        var enterText = updateText.enter();
+                        //文字的exit部分
+                        var exitText = updateText.exit();
+                        //文字update enter exit的处理
+                        updateText.attr('fill','white')
+                            .attr('font-size','14px')
+                            .attr('text-anchor','middle')
+                            .attr('x',function(d,i){
+                                return padding.left + i*rectStep;
+                            })
+                            .attr('y',function(d){return height - padding.bottom -d})
+                            .attr('dx',rectWidth/2)
+                            .attr('dy','1em')
+                            .text(function(d){return d;});
+                        enterText.append('text')
+                            .attr('fill','white')
+                            .attr('font-size','14px')
+                            .attr('text-anchor','middle')
+                            .attr('x',function(d,i){
+                                return padding.left + i*rectStep;
+                            })
+                            .attr('y',function(d){return height - padding.bottom -d})
+                            .attr('dx',rectWidth/2)
+                            .attr('dy','1em')
+                            .text(function(d){return d;});
+                        exitText.remove();
+                    }
+                    var dataset = [50,43,120,87,99,167,147];
+                    var width = 400;
+                    var height = 400;
+                    var svg = d3.select('body').append('svg').attr("width",width).attr('height',height);
+                    var padding = {top:20,bottom:20,right:20,left:20};
+                    var rectStep = 35;//矩形宽度 包括空白区域
+                    var rectWidth = 30;//矩形宽度 不包括空白区域
+                    function mysort(){
+                        dataset.sort(d3.ascending);
+                        draw();
+                    }
+                    function myadd(){
+                        dataset.push(Math.floor(Math.random()*100));
+                        draw();
+                    }
+                    draw();
+/*************************高级系列***************************/
+6.1 文本的换行
+        在SVG中添加文本是使用text元素。但是这个元素不能够自动换行，超出的部分就显示不出来。
+        var str = "云中谁寄锦书来，雁字回时，月满西楼";
+            var width = 300;
+            var height = 300;
+            var svg = d3.select('body')
+                        .append('svg')
+                        .attr('width',width)
+                        .attr('height',height);
+            //不换行
+        //    var text = svg.append('text')
+        //                    .attr('x',30)
+        //                    .attr('y',100)
+        //                    .attr('font-size',30)
+        //                    .attr('font-family','simsun')
+        //                    .text(str);
+            /***************换行************/
+            //在text中添加tspan子元素
+            //svg中的文本不支持自动换行，需要手动实现，其中一种方法就是使用tspan标签。
+            //tspan是写在text中，作为其子元素存在，设置文本属性的时候，有一个dy属性，表示y轴的相对位置，dy的值通常
+            //用10px 1em这类值，其中em是以行为单位的。
+            //这样，我们在text中添加多个tspan，每个代表一行，每一个tspan属性都赋予一个1em值(即一行)，如此文本就会一行一行的显示了
+            //注意tspan中的x属性是必要的，表示该行从什么位置开始显示
+            var text = svg.append('text')
+                    .attr('x',30)
+                    .attr('y',100)
+                    .attr('font-size',30)
+                    .attr('font-family','simsun');
+            //将str分段
+            var strs = str.split('，');
+            //填充数据
+            text.selectAll('tspan')
+                .data(strs)
+                .enter()
+                .append('tspan')
+                .attr('x',text.attr('x'))
+                .attr('dy','1em')
+                .text(function(d){return d;});
+6.2 封装文本自动换行
+        //引入multext.js
+        》函数的参数
+            文件里只实现了一个函数appendMultiText(),其参数的意义：
+            appendMultiText(
+                container,//文本的容器，可以是svg或g
+                str,//字符串
+                posX,//文本的x坐标
+                posY,//文本的y坐标
+                width,//每一行的宽度，单位像素
+                fontsize,//文本的大小 默认14
+                fontfamily//文本字体 默认simsun, arial
+            );
+        》测试
+            //添加多行文本测试
+                var width = 300;
+                var height = 300;
+                var svg = d3.select('body')
+                            .append('svg')
+                            .attr('width',width)
+                            .attr('height',height);
+                var str = "青青子衿，悠悠我心，但为君故，沉吟至今。";
+                var text = appendMultiText(svg,str,30,100,120,20);//appendMultiText返回值是被添加的<text>元素
+                text.attr('transform','rotate(-20)');
+6.3 捆图
+        捆图Bundle是D3中比较奇特的一个布局，只有两个函数，而且需要与其他布局配合使用。
+        捆图布局之所以函数少，是因为他常与其他层级布局一起使用。所谓层级布局是指采用嵌套结构(父子节点关系)来描述节点信息。
+        根据层级布局扩展出来的布局即：集群图、打包图、分区图、树状图、矩阵树图。最常见的是与集群图一起使用，使用集群图布
+        局计算节点位置，再用捆图布局计算连线路径。
+        即捆图布局只干一件事：****计算连线的路径****。
+        //数据
+            var cities = {
+                name:"",
+                children:[
+                    {name: "北京"},{name: "上海"},{name: "杭州"},
+                    {name: "广州"},{name: "桂林"},{name: "昆明"},
+                    {name: "成都"},{name: "西安"},{name: "太原"}
+                ]
+            }
+            var railway = [
+                {source: "北京", target: "上海"},
+                {source: "北京", target: "广州"},
+                {source: "北京", target: "杭州"},
+                {source: "北京", target: "西安"},
+                {source: "北京", target: "成都"},
+                {source: "北京", target: "太原"},
+                {source: "北京", target: "桂林"},
+                {source: "北京", target: "昆明"},
+                {source: "北京", target: "成都"},
+                {source: "上海", target: "杭州"},
+                {source: "昆明", target: "成都"},
+                {source: "西安", target: "太原"}
+            ];
+            var size = 800,
+                radius = size/2,
+                innerRadius = radius - 50;
+            //数据转换  捆图+集群图
+            //创建集群图生成器
+            var cluster = d3.cluster().size([360,innerRadius]);
+            //构建连线生成器
+            var line = d3.radialLine()
+                            .curve(d3.curveBundle.beta(1))
+                            .radius(function(d){return d.y;})
+                            .angle(function(d){return d.x/180*Math.PI;});
+
+            /*************数据转换****************/
+            var nodesRoot = cluster(d3.hierarchy(cities));
+            /********************开始绘制**************************/
+            //其实捆图布局是生成连线的路径
+            var svg = d3.select('body')
+                        .append('svg')
+                        .attr('width',size)
+                        .attr('height',size)
+                        .append('g')
+                        .attr('transform','translate('+ size/2 +','+ size/2 +')');
+            //颜色生成器
+            var color = d3.scaleOrdinal(d3.schemeCategory20);
+
+            //绘制连线
+            var links = svg.selectAll('.link')
+                            .data(function(){//生成link对应的数组 通过 path API
+                                var data = [],
+                                    map =[ ];
+                                nodesRoot.descendants().forEach(function(curr){
+                                    map[curr.data.name] = curr;
+                                });
+                                nodesRoot.descendants().forEach(function(d){
+                                    railway.forEach(function(curr){
+                                        if(curr.source === d.data.name){
+                                            data.push(map[d.data.name].path(map[curr.target]));
+                                        }
+                                    })
+                                });
+                                return data;
+                            })
+                            .enter()
+                            .each(function(d){ d.source = d[0],d.target = d[d.length -1]})
+                            .append('path')
+                            .attr('class','link')
+                            .attr('d',line);
+            //绘制节点
+            var node = svg.selectAll('g')
+                            .data(nodesRoot.descendants().filter(function(d){ return !d.children;}))
+                            .enter()
+                            .append('g')
+                            .attr('transform',function(d){
+                                return "rotate("+ (d.x - 90)+") translate("+ d.y +") rotate("+ (90 - d.x)+")";
+                            })
+                            .on("mouseover",function(d){
+                                node.each(function(n){
+                                    n.target = n.source = false;
+                                });
+                                links
+                                    .classed("link-target",function(l){
+                                        if(d === l.target) return l.source.source =true;
+                                    })
+                                    .classed('link-source',function(l){
+                                        if( d === l.source) {
+                                            return l.target.target = true;
+                                        }
+                                    });
+                                node
+                                    .classed('node-target',function(n){return n.target;})
+                                    .classed('node-source',function(n){return n.source});
+                            })
+                            .on('mouseout',function(d){
+                                node
+                                    .classed('node-target',false)
+                                    .classed('node-source',false);
+                                links
+                                    .classed('link-target',false)
+                                    .classed('link-source',false);
+                            });
+            node.append('circle')
+                .attr('r',20)
+                .style('fill',function(d,i){return color(i);});
+            node.append('text')
+                .attr('dy','.2em')
+                .style('text-anchor','middle')
+                .text(function(d){return d.data.name;});
+6.4 堆栈图
+            堆栈图布局 Stack Layout 能够计算二维数组每一数据层的基线，以方便将各数据层叠加起来。
+            //数据
+                var dataset = [
+                    {   name: "PC" ,
+                        sales: [
+                            { year:2005, profit: 3000 },
+                            { year:2006, profit: 1300 },
+                            { year:2007, profit: 3700 },
+                            { year:2008, profit: 4900 },
+                            { year:2009, profit: 700 }
+                            ]
+                    },
+                    {   name: "SmartPhone" ,
+                        sales: [
+                            { year:2005, profit: 2000 },
+                            { year:2006, profit: 4000 },
+                            { year:2007, profit: 1810 },
+                            { year:2008, profit: 6540 },
+                            { year:2009, profit: 2820 }
+                            ]
+                    },
+                    { name: "Software" ,
+                        sales: [
+                            { year:2005, profit: 1100 },
+                            { year:2006, profit: 1700 },
+                            { year:2007, profit: 1680 },
+                            { year:2008, profit: 4000 },
+                            { year:2009, profit: 4900 }
+                            ]
+                    }
+                ];
+                function dataFormat(data){
+                    var resultData = [];
+                    data[0].sales.forEach(function(curr){
+                        resultData.push({
+                            year:curr.year
+                        });
+                    });
+                    resultData.forEach(function(curr){
+                        var year = curr.year;
+                        data.forEach(function(d){
+                            d.sales.forEach(function(s){
+                                if(s.year === year){
+                                    curr[d.name] = s.profit;
+                                    return false;
+                                }
+                            })
+                        })
+                    });
+                    resultData.forEach(function(curr){
+                        curr.total = curr.PC + curr.SmartPhone + curr.Software;
+                    })
+                    return resultData;
+                }
+                var data = dataFormat(dataset);
+                var svg = d3.select('svg'),
+                    margin = {top:20,bottom:20,left:60,right:20},
+                    width = +svg.attr('width') - margin.left - margin.right,
+                    height = +svg.attr('height') - margin.top - margin.bottom,
+                    g = svg.append('g').attr('transform','translate('+ margin.left +','+ margin.top +')')
+                //获取keys
+                var keys = [];
+                dataset.forEach(function(curr){
+                    keys.push(curr.name);
+                });
+                /************定义比例尺*************/
+                //定义x轴比例尺
+                var x = d3.scaleBand()
+                        .rangeRound([0,width])
+                        .align(1)
+                        .paddingInner(.2)
+                        .paddingOuter(.1)
+                        .domain(data.map(function(d){return d.year}));
+                //定义y轴比例尺
+                var y = d3.scaleLinear()
+                            .rangeRound([height,0])
+                            .domain([0,d3.max(data,function(d){return d.total})]);
+                //定义颜色生成器
+                var color = d3.scaleOrdinal()
+                                .range(["#1F77B4", "#FF7F0E", "#31A231"])
+                                .domain(keys);
+                //定义堆叠图布局
+                var stack = d3.stack()
+                                .keys(keys);
+                //数据转换
+                var root = stack(data);
+                /************绘制************/
+                //绘制矩形
+                g.append('g')
+                    .selectAll('g')
+                    .data(root)
+                    .enter().append('g')
+                    .attr('fill',function(d){return color(d.key)})
+                    .selectAll('rect')
+                    .data(function(d){return d;})
+                    .enter().append('rect')
+                    .attr('x',function(d){return x(d.data.year)})
+                    .attr('y',function(d){return y(d[1])})
+                    .attr('width',x.bandwidth())
+                    .attr('height',function(d){return y(d[0]) - y(d[1])});
+                //绘制坐标轴
+                g.append('g')
+                    .attr('transform','translate(0,'+ height +')')
+                    .call(d3.axisBottom(x))
+                    .append('text')
+                    .text('年')
+                    .attr('x',x.range()[1])
+                    .attr('fill','#000')
+                    .attr('dy','1.2em')
+                    .attr('dx','-.5em')
+                    .attr('font-weight','bold')
+                    .attr('text-anchor','start')
+                    .attr('font-size','14px')
+                g.append('g')
+                    .call(d3.axisLeft(y))
+                    .append('text')
+                    .attr('x',-36)
+                    .attr('y',0)
+                    .text('利润')
+                    .attr('fill','#000')
+                    .attr('dy','.36em')
+                    .attr('font-weight','bold')
+                    .attr('text-anchor','start')
+                    .attr('font-size','14px')
+
+                //绘制注释
+                var legend = g.append('g')
+                    .attr('font-size','10px')
+                    .attr('text-anchor','end')
+                    .selectAll('g')
+                    .data(keys)
+                    .enter()
+                    .append('g')
+                    .attr('transform',function(d,i){return 'translate('+ (width-20) +','+ 40*i +')'});
+                legend.append('rect')
+                    .attr('width',19)
+                    .attr('height',39)
+                    .attr('fill',color);
+                legend.append('text')
+                        .text(function(d){return d;})
+                        .attr('dy','2.4em')
+                        .attr('dx','-.5em');
+6.5 矩阵树图
+            矩阵树图 Treemap 也是层级布局的扩展，根据数据将区域划分为矩形的集合。矩形的大小和颜色都是数据的反映。
+            var svg = d3.select('svg'),
+                    margin = {top:20,bottom:20,left:20,right:20},
+                    width =+svg.attr('width') - margin.left -margin.right,
+                    height =+svg.attr('height') - margin.top -margin.bottom,
+                    g = svg.append('g').attr('transform','translate(' + margin.left + ','+ margin.top +')');
+                //定义矩阵树布局
+                var treemap = d3.treemap()
+                                .size([width,height])
+                                .padding(2)
+                                .round(true);
+
+                //颜色生成器
+                var color = d3.scaleOrdinal(d3.schemeCategory20);
+                //获取数据
+                d3.json('citygdp.json',function(err,data){
+                    if(err) return console.error(err);
+
+                    //数据转换
+                    var root = d3.hierarchy(data)
+                        .sum(function(d){return d.gdp;})
+                        .sort(function(a,b){return b.height - a.height || b.value - a.value;});
+                    treemap(root);
+
+                    /****************绘制****************/
+                    var groups = g.selectAll('g')
+                                    .data(root.leaves())
+                                    .enter()
+                                    .append('g');
+
+                    var rects = groups.append('rect')
+                                        .attr('class','nodeRect')
+                                        .attr('x',function(d){return d.x0;})
+                                        .attr('y',function(d){return d.y0;})
+                                        .attr('width',function(d){return d.x1 - d.x0;})
+                                        .attr('height',function(d){return d.y1 - d.y0})
+                                        .style('fill',function(d,i){return color(d.parent.data.name)});
+
+                    var texts = groups.append('text')
+                                        .attr('class','nodeName')
+                                        .attr('x',function(d){return d.x0;})
+                                        .attr('y',function(d){return d.y0})
+                                        .attr('dx','.5em')
+                                        .attr('dy','1.5em')
+                                        .text(function(d){return d.data.name + " " + d.data.gdp;});
+                })
+            //布局的作用是将某种数据转换成另一种数据，而转换后的数据是利于可视化的。
+6.6 颜色
+            常用的标准有RGB和HSL，D3提供了创建颜色对象的方法，能够相互转换和插值。
+                RGB色彩模式是通过对红red、绿green、蓝blue三个颜色通道相互叠加来得到各种各样的颜色，三个通道的值的范围
+            都为0~255，总共有256^3种。
+                HSL色彩模式是通过对色相Hue、饱和度Saturation、明暗Lightness三个通道的相互叠加来得到各种颜色。
+            其中，色相的范围为0°~360°，饱和度的范围为0~1，明度的范围为0~1。
+            色相的取值是一个角度，每个角度可以代表之中颜色，需要记住的是0°或360°代表红色，120°代表绿色，240°代表蓝色。
+            饱和度的数值越大，颜色越鲜艳，灰色越少。
+            明度值用于控制色彩的明暗变化，值越大，越明亮，越接近于白色；值越小，越暗，越接近黑色。
+            注：RGB颜色和HSL颜色是可以相互转换的。
+            》RGB
+                》RGB颜色的创建：
+                    d3.rgb(r,g,b)//分别输出r、g、b值来创建颜色
+                    d3.rgb(color)//输入相应的字符串来创建颜色
+                        color类型：
+                            》RGB的十进制值：“rgb(255, 255, 255)”
+                            》HSL的十进制值：“hsl(120, 0.5, 0.5)”
+                            》RGB的十六进制值：“#ffeeaa”
+                            》RGB的十六进制值的缩写形式：“#fea”
+                            》颜色名称：“red”、“white”
+                》rgb.brighter([k]) 颜色变得更明亮
+                    RGB各通道的值乘以  .7^-k ,如果k省略，k的值为1。只有当某通道的值范围在30~255之间时，才进行相应的计算。
+                》rgb.darker([k]) 颜色变得更暗
+                    RGB各通道的值乘以 .7^k。
+                》d3.hsl(rgb) 返回该颜色对应的HSL值。
+                》rgb.toString() 以字符串形式返回该颜色值如"#ffeeaa"
+                注意：brighter()与darker()并不会改变当前颜色本身，而是返回一个新的颜色，新的颜色值发生了相应的变化。
+                函数brighter() darker() hsl()返回的都是对象，不是字符串，前两个函数返回的是RGB对象，最后一个函数返回的是HSL对象。
+            》HSL
+                》d3.hsl(h,s,l)//根据h、s、l的值来创建HSL颜色
+                》d3.hsl(color)//根据字符串来创建HSL颜色
+                》hsl.brighter([k])//变得更亮
+                》hsl.darker([k])//变得更暗
+                》hsl.rgb();//返回对应的RGB颜色
+                》hsl.toString();以RGB字符串形式输出该颜色
+            》插值
+                要得到两个颜色值之间的值，这种时候就要用到插值(Interpolation)。
+                D3提供了d3.interpolateRgb()来处理RGB颜色之间的插值运算，
+                d3.interpolateHsl()来处理HSL颜色之间的运算。更方便的是使用d3.interpolate(),
+                它会自动判断调用那个函数，d3.interpolate()也可以处理数值、字符串等之间的插值。
+                 d3.interpolate(startColor1,endColor2)([0~1]);
+6.7 颜色插值和线性渐变
+            颜色插值指的是：给出两个RGB颜色值，两个颜色之间的值通过插值函数计算得到。
+            线性渐变是添加到SVG图形上的过滤器，只需要给出两端的颜色值即可。
+            》颜色插值
+                var a = d3.rgb(255,0,0);
+                    var b = d3.rgb(0,255,0);
+                    var compute = d3.interpolate(a,b);
+                    console.log(compute(.5));//参数的范围[0,1]//0返回开始值即a //1返回结束值即b //0~1返回a~b之间的插值颜色
+                    //当某个值域的饭我并不在0到1之间，需要用到线性比例尺 如：0~150;
+                    var linear = d3.scaleLinear().domain([0,150]).range([0,1]);
+                    //在计算颜色值时，只要compute(linear(x))即可，x的范围是0到150
+
+                    //下面绘制150个矩形，分为10行，每行15个，用颜色插值函数分别计算每个矩形的填充色。
+                    var svg = d3.select('svg');
+                    var rects = svg.selectAll('rect')
+                        .data(d3.range(150))
+                        .enter().append('rect')
+                        .attr('x',function(d,i){
+                            return i%15*15;
+                        })
+                        .attr('y',function(d,i){
+                            return Math.floor(i/15)*15;
+                        })
+                        .attr('width',15)
+                        .attr('height',15)
+                        .style('fill',function(d){
+                            return compute(linear(d));
+                        });
+            》线性渐变过滤器
+                    渐变表示一种颜色平滑过渡到另一种颜色。
+                    SVG中有线性渐变<linearGradient>和放射性渐变<radialGradient>。
+                    渐变定义在<defs>标签中，然后给渐变定义一个id，在需要使用的图形上调用此id即可
+                    <defs>
+                        <linearGradient id='gradient' x1='0%' y1='0%' x2='100%' y2='0%'>
+                            <stop offset='0%' stop-color='#f00'/>
+                            <stop offset='100%' stop-color='#0ff'/>
+                        </linearGradient>
+                    </defs>
+                    //x1 y1 x2 y2用于定义渐变的方向，此处表示水平渐变，offset定义渐变的位置 stop-color定义该位置处的颜色
+                    //使用渐变
+                    <rect fill='url(#gradient)' x='10' y='10' width='300' height='100'></rect>
+
+                    //d3中的实现
+                        //定义线性渐变
+                            var linearGradient = d3.select('.linear-gradient')
+                                                    .append('defs')
+                                                    .append('linearGradient')
+                                                    .attr('id','linearColor')
+                                                    .attr('x1','0%')
+                                                    .attr('y1','0%')
+                                                    .attr('x2','100%')
+                                                    .attr('y2','0%');
+                            linearGradient.append('stop')
+                                            .attr('offset','0%')
+                                            .attr('stop-color',a.toString());
+                            linearGradient.append('stop')
+                                            .attr('offset','100%')
+                                            .attr('stop-color',b.toString());
+                            //使用渐变
+                            d3.select('.linear-gradient').append('rect')
+                                .attr('x',10)
+                                .attr('y',10)
+                                .attr('width',400)
+                                .attr('height',300)
+                                .style('fill','url(#'+ linearGradient.attr('id') +')');
+6.8 值域和颜色 -- 利用颜色的变化来表示值的变化 (地图完整案例)
+         var width = 600,
+                height = 600,
+                svg = d3.select('body')
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+
+            //投影函数
+            var projection = d3.geoMercator()
+                .center([107, 31])
+                .scale(500)
+                .translate([width / 2, height / 2]);
+            //路径生成
+            var path = d3.geoPath().projection(projection);
+            //绘制完整的中国地图
+            //读取TogoJson地图文件
+            d3.json("china.geojson", function (err, topoData) {
+                if (err) return console.error(err);
+
+                //将TogoJson(文件较小)对象转换成GeoJson(信息详细,直接读取文件较大)
+                //使用ogr2ogr即可
+                var geoData = topoData;
+                /*************绘制************/
+                var china = svg.append('g');
+                //绘制
+                var provinces = china.selectAll('path')
+                    .data(geoData.features)
+                    .enter()
+                    .append('path')
+                    .attr('class', 'province')
+                    .style('fill', '#ccc')
+                    .attr('d', path);
+
+                //为各省市添加颜色
+                //tourism.json:各省份旅游业发展数据
+                d3.json('tourism.json', function (err, tourismData) {
+                    if (err) return console.error(err);
+
+                    //创建颜色插值函数
+                    var maxvalue = d3.max(tourismData.provinces, function (d) {
+                        return d.value;
+                    });
+                    var minvalue = 0;
+                    var colorLinear = d3.scaleLinear()
+                                        .domain([minvalue,maxvalue])
+                                        .range([0,1]);
+                    var a = d3.rgb(0,255,255);
+                    var b = d3.rgb(0,0,255);
+                    //颜色插值函数
+                    var computeColor = d3.interpolate(a,b);
+                    var values = [];
+                    tourismData.provinces.forEach(function(curr){
+                        values[curr.name] = curr.value;
+                    })
+
+                    //设定个省份填充色
+                    provinces.style('fill',function(d,i){
+                        return computeColor(colorLinear(values[d.properties.name])).toString();
+                    });
+
+                    //添加颜色标志
+                    //定义一个线性渐变
+                    var linearGradient = svg.append('defs').append('linearGradient')
+                                            .attr('id','linear')
+                                            .attr('x1','0%')
+                                            .attr('y1','0%')
+                                            .attr('x2','100%')
+                                            .attr('y2','0%');
+                    linearGradient.append('stop').attr('offset','0%').style('stop-color',a.toString());
+                    linearGradient.append('stop').attr('offset','100%').style('stop-color',b.toString());
+                    //添加矩形
+                    var colorRect = svg.append('rect')
+                                        .attr('x',20)
+                                        .attr('y',490)
+                                        .attr('width',140)
+                                        .attr('height',30)
+                                        .style('fill','url(#'+ linearGradient.attr('id') +')');
+                    //添加文字
+                    var minValueText = svg.append('text')
+                                            .attr('class','valueText')
+                                            .attr('x',20)
+                                            .attr('y',490)
+                                            .attr('dy','-.3em')
+                                            .text(minvalue);
+                    var maxValueText = svg.append('text')
+                                            .attr('class','valueText')
+                                            .attr('x',160)
+                                            .attr('y',490)
+                                            .attr('dy','-.3em')
+                                            .text(maxvalue);
+                })
+
+            })
+            /**
+             * 此外，南海诸岛的地图是不包含在地图文件里的。但是，中国的南海诸岛，
+             * 一般只是显示在右下角，用一个方框框起来而已，不一定要做成GeoJSON格式。
+             * 直接制作一个SVG格式的文件即可。
+             */
+            //绘制南海诸岛
+            d3.xml('southchinasea.svg', function (err, xmlDom) {
+                if (err) return console.error(err);
+                svg.html(function (d) {
+                    return d3.select(this).html() + xmlDom.getElementsByTagName('g')[0].outerHTML;//outerHTML 包含对象本身
+                });
+                //移动位置
+                d3.select('#southsea')
+                    .attr('transform', 'translate(480,350) scale(.5)')
+                    .attr('class', 'southsea');
+            })
+6.9 标注地点
+        标注(点元素)：地图上只需要一个坐标(经纬度)即可表示的元素
+        http://www.ourd3js.com/wordpress/1201/
+
+
+
+
+
+
+
+
+
+
 
 
 

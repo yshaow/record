@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>值域和颜色</title>
+    <script src="d3.js"></script>
+    <style>
+
+        .province {
+            stroke: black;
+            stroke-width: 1px;
+        }
+
+        .southsea {
+            stroke: black;
+            stroke-width: 1px;
+            fill: #ccc;
+        }
+
+        .valueText {
+            font-family: arial;
+            font-size: 12px;
+            text-anchor: middle;
+        }
+
+    </style>
+</head>
+<body>
+<script>
+//    var paleGreen = d3.rgb(66, 251, 75);//浅绿
+//    var darkGreen = d3.rgb(2, 100, 7);//深绿
+//    var color = d3.interpolate(paleGreen, darkGreen);//颜色插值函数
+//    var linear = d3.scaleLinear()//定义颜色比例尺
+//        .domain([10, 500])//定义值域即实际的值
+//        .range([0, 1]);//定义作用于即color的参数范围[0,1]
+
+    var width = 600,
+        height = 600,
+        svg = d3.select('body')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height);
+
+    //投影函数
+    var projection = d3.geoMercator()
+        .center([107, 31])
+        .scale(500)
+        .translate([width / 2, height / 2]);
+    //路径生成
+    var path = d3.geoPath().projection(projection);
+    //绘制完整的中国地图
+    //读取TogoJson地图文件
+    d3.json("china.geojson", function (err, topoData) {
+        if (err) return console.error(err);
+
+        //将TogoJson(文件较小)对象转换成GeoJson(信息详细,直接读取文件较大)
+        //使用ogr2ogr即可
+        var geoData = topoData;
+        /*************绘制************/
+        var china = svg.append('g');
+        //绘制
+        var provinces = china.selectAll('path')
+            .data(geoData.features)
+            .enter()
+            .append('path')
+            .attr('class', 'province')
+            .style('fill', '#ccc')
+            .attr('d', path);
+
+        //为各省市添加颜色
+        //tourism.json:各省份旅游业发展数据
+        d3.json('tourism.json', function (err, tourismData) {
+            if (err) return console.error(err);
+
+            //创建颜色插值函数
+            var maxvalue = d3.max(tourismData.provinces, function (d) {
+                return d.value;
+            });
+            var minvalue = 0;
+            var colorLinear = d3.scaleLinear()
+                                .domain([minvalue,maxvalue])
+                                .range([0,1]);
+            var a = d3.rgb(0,255,255);
+            var b = d3.rgb(0,0,255);
+            //颜色插值函数
+            var computeColor = d3.interpolate(a,b);
+            var values = [];
+            tourismData.provinces.forEach(function(curr){
+                values[curr.name] = curr.value;
+            })
+
+            //设定个省份填充色
+            provinces.style('fill',function(d,i){
+                return computeColor(colorLinear(values[d.properties.name])).toString();
+            });
+
+            //添加颜色标志
+            //定义一个线性渐变
+            var linearGradient = svg.append('defs').append('linearGradient')
+                                    .attr('id','linear')
+                                    .attr('x1','0%')
+                                    .attr('y1','0%')
+                                    .attr('x2','100%')
+                                    .attr('y2','0%');
+            linearGradient.append('stop').attr('offset','0%').style('stop-color',a.toString());
+            linearGradient.append('stop').attr('offset','100%').style('stop-color',b.toString());
+            //添加矩形
+            var colorRect = svg.append('rect')
+                                .attr('x',20)
+                                .attr('y',490)
+                                .attr('width',140)
+                                .attr('height',30)
+                                .style('fill','url(#'+ linearGradient.attr('id') +')');
+            //添加文字
+            var minValueText = svg.append('text')
+                                    .attr('class','valueText')
+                                    .attr('x',20)
+                                    .attr('y',490)
+                                    .attr('dy','-.3em')
+                                    .text(minvalue);
+            var maxValueText = svg.append('text')
+                                    .attr('class','valueText')
+                                    .attr('x',160)
+                                    .attr('y',490)
+                                    .attr('dy','-.3em')
+                                    .text(maxvalue);
+        })
+
+    })
+    /**
+     * 此外，南海诸岛的地图是不包含在地图文件里的。但是，中国的南海诸岛，
+     * 一般只是显示在右下角，用一个方框框起来而已，不一定要做成GeoJSON格式。
+     * 直接制作一个SVG格式的文件即可。
+     */
+    //绘制南海诸岛
+    d3.xml('southchinasea.svg', function (err, xmlDom) {
+        if (err) return console.error(err);
+        svg.html(function (d) {
+            return d3.select(this).html() + xmlDom.getElementsByTagName('g')[0].outerHTML;//outerHTML 包含对象本身
+        });
+        //移动位置
+        d3.select('#southsea')
+            .attr('transform', 'translate(480,350) scale(.5)')
+            .attr('class', 'southsea');
+    })
+
+
+</script>
+</body>
+</html>

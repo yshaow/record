@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>捆图</title>
+    <script src="d3.js"></script>
+    <style>
+        .node{
+            font: 300 11px "Helvetica Neue", Helvetica, Arial, sans-serif;
+            fill: #bbb;
+        }
+        .node:hover{
+            fill:#000;
+        }
+        .link{
+            stroke:steelblue;
+            stroke-opacity: .4;
+            fill:none;
+            pointer-events: none;
+        }
+        .node:hover,.node-source,.node-target{
+            font-weight:700;
+        }
+        .node-source{
+            fill:#2ca02c;
+        }
+        .node-target{
+            fill:#d62728;
+        }
+        .link-source,.link-target{
+            stroke-opacity: 1;
+            stroke-width: 2px;
+        }
+        .link-source{
+            stroke:#d62728;
+        }
+        .link-target{
+            stroke:#2ca02c;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+    var diameter = 960,
+        radius = diameter/2,
+        innerRadius = radius - 120;
+
+    //创建集群图布局
+    var cluster = d3.cluster().size([360,innerRadius]);
+
+    //构建线条生成器
+    var line = d3.radialLine()//构建radial线条生成器
+                    .curve(
+                        d3.curveBundle.beta(.85)//使用指定的捆绑参数返回一个捆绑曲线。参数介于[0,1].
+                                                // 如果beta为0则会在起止点之间生成一条直线。如果beta为1则会生成一个标准的basis
+
+                    )//设置曲线类型
+                    .radius(function(d){return d.y;})//指定半径
+                    .angle(function(d){return d.x/180 * Math.PI});//指定角度
+
+    /**********************绘制***********************/
+    var svg = d3.select('body').append('svg')
+                                .attr('width',diameter)
+                                .attr('height',diameter)
+                                .append('g')
+                                .attr('transform','translate('+radius+','+radius+')');
+
+    var link = svg.append('g').selectAll('.link'),
+        node = svg.append('g').selectAll('.node');
+
+    //获取数据
+    d3.json('bundle',function(err,data){
+        if(err) return console.error(err);
+
+        //数据转换
+        var root = packageHierarchy(data).sum(function(d){return d.size;});
+        cluster(root);
+
+        //绘制
+        link = link.data(packageImports(root.leaves()))//root.leaves() 返回以当前节点为根节点的子树的所有叶节点
+                    .enter().append('path')
+                    .each(function(d){d.source = d[0],d.target = d[d.length -1]})
+                    .attr('class','link')
+                    .attr('d',line);
+
+        node = node.data(root.leaves())
+            .enter().append('text')
+            .attr("class", "node")
+            .attr("dy", "0.31em")
+            .attr("transform", function(d) { return "rotate(" + (d.x - 90) + ")translate(" + (d.y + 8) + ",0)" + (d.x < 180 ? "" : "rotate(180)"); })
+            .attr("text-anchor", function(d) { return d.x < 180 ? "start" : "end"; })
+            .text(function(d) { return d.data.key; })
+            .on("mouseover", mouseovered)
+            .on("mouseout", mouseouted);
+    })
+
+    //selections.classed(names[,value])设置或获取指定的类名状态，如果指定了value则根据value值启用或关闭类
+    function mouseovered(d) {
+        node
+            .each(function(n) { n.target = n.source = false; });
+
+        link
+            .classed("link-target", function(l) { if (l.target === d) return l.source.source = true; })
+            .classed("link-source", function(l) { if (l.source === d) return l.target.target = true; })
+            .filter(function(l) { return l.target === d || l.source === d; })
+            .raise();//重新将元素插入到对应父元素,作为父元素的最后一个子元素
+
+        node
+            .classed("node-target", function(n) { return n.target; })
+            .classed("node-source", function(n) { return n.source; });
+    }
+
+    function mouseouted(d) {
+        link
+            .classed("link-target", false)
+            .classed("link-source", false);
+
+        node
+            .classed("node-target", false)
+            .classed("node-source", false);
+    }
+    function packageHierarchy(classes) {
+        var map = {};
+
+        function find(name, data) {
+            var node = map[name], i;
+            if (!node) {
+                node = map[name] = data || {name: name, children: []};
+                if (name.length) {
+                    node.parent = find(name.substring(0, i = name.lastIndexOf(".")));
+                    node.parent.children.push(node);
+                    node.key = name.substring(i + 1);
+                }
+            }
+            return node;
+        }
+
+        classes.forEach(function(d) {
+            find(d.name, d);
+        });
+
+        return d3.hierarchy(map[""]);
+    }
+
+     function packageImports(nodes){
+        var map = {},
+            imports = [];
+
+        nodes.forEach(function(d){
+            map[d.data.name] = d;
+        });
+
+        nodes.forEach(function(d){
+            if(d.data.imports) d.data.imports.forEach(function(i){
+                imports.push(map[d.data.name].path(map[i]));
+            });
+        })
+
+        return imports;
+    }
+</script>
+</body>
+</html>

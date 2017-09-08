@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>文本自动换行</title>
+    <script src="d3.js"></script>
+    <script src="multext.js"></script>
+</head>
+<body>
+<script>
+    //添加多行文本测试
+    var width = 300;
+    var height = 300;
+    var svg = d3.select('body')
+                .append('svg')
+                .attr('width',width)
+                .attr('height',height);
+    var str = "青青子衿，悠悠我心，但为君故，沉吟至今。";
+    var text = appendMultiText(svg,str,30,100,120,20);//appendMultiText返回值是被添加的<text>元素
+    text.attr('transform','rotate(-20)');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>地图中的标注</title>
+    <script src="d3.js"></script>
+    <style>
+
+        .province {
+            stroke: black;
+            fill:#ccc;
+            stroke-width: 1px;
+        }
+
+        .southsea {
+            stroke: black;
+            stroke-width: 1px;
+            fill: #ccc;
+        }
+
+        .point{
+            fill: blue;
+        }
+
+    </style>
+</head>
+<body>
+
+<script>
+    var width = 600,
+        height = 600,
+        svg = d3.select('body')
+                .append('svg')
+                .attr('width',width)
+                .attr('height',height);
+    /**
+     * 在d3地图上的标注
+     */
+    //定义投影函数
+    var projection = d3.geoMercator()
+                        .center([107,31])
+                        .scale(500)
+                        .translate([width/2,height/2]);
+    //使用投影定义地理路径生成器
+    var path = d3.geoPath().projection(projection);
+
+    /*************绘制标注案例************/
+    //以北京的经纬度[116.3,39.9]作为投影的参数，得到北京的像素坐标
+//    var peking = [116.3,39.9];
+//    var proPeking = projection(peking);//像素坐标
+    //使用上面的像素坐标--绘制一个圆
+//    svg.append('circle')
+//        .attr('class','point')
+//        .attr('cx',proPeking[0])
+//        .attr('cy',proPeking[1])
+//        .attr('r',8);
+    /************************************/
+    //获取数据
+    d3.json('china.geojson',function(err,data){
+        if(err) return console.error(err);
+
+        //绘制地图
+        svg.append('g')
+            .selectAll('path')
+            .data(data.features)
+            .enter().append('path')
+            .attr('d',path)
+            .attr('class','province');
+        //绘制南部岛屿
+        d3.xml('southchinasea.svg', function (err, xmlDom) {
+            if (err) return console.error(err);
+            svg.html(function (d) {
+                return d3.select(this).html() + xmlDom.getElementsByTagName('g')[0].outerHTML;//outerHTML 包含对象本身
+            });
+            //移动位置
+            d3.select('#southsea')
+                .attr('transform', 'translate(480,350) scale(.5)')
+                .attr('class', 'southsea');
+        })
+
+        /*****************根据经纬度绘制标注********************/
+        d3.json('places.json',function(err,placesData){
+           if(err) return console.error(err);
+
+           var location = svg.append('g')
+                               .selectAll('.point')
+                               .data(placesData.location)
+                               .enter().append('g')
+                               .attr('class','point')
+                               .attr('transform',function(d){
+                                   var point = projection([d.log,d.lat]);
+                                   return 'translate('+ point[0] +','+ point[1] +')'
+                               });
+           //绘制标注点
+            location.append('circle')
+                    .attr('r',5)
+                    .append('title')
+                    .text(function(d){return d.name;});
+            //插入图片
+            location.append('image')
+                    .attr('x',20)
+                    .attr('y',-40)
+                    .attr('width',90)
+                    .attr('height',90)
+                    .attr('xlink:href',function(d){
+                        return d.img;
+                    });
+
+
+        });
+    })
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>
