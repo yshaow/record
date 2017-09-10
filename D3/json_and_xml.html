@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>json与xml的转换</title>
+</head>
+<body>
+<script src="json2xml.js"></script>
+<script src="xml2json.js"></script>
+<script>
+    //xml字符串转成JSON对象
+    var str = "<root>" +
+                    "<name>Alice</name>" +
+                    "<age>Alice</age>" +
+                    "<friends>I</friends>" +
+                    "<friends>you</friends>" +
+                    "<friends>he</friends>" +
+               "</root>";
+   // var obj = xml2json(str,'\n');
+    //console.log(obj);
+    //json转xml
+    var obj = {
+        company: "Xiaomi",
+        CEO: "Lei",
+        products: ["cellphone","TV"]
+    };
+    console.log(json2xml(obj,'\n'));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

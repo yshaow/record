@@ -88,8 +88,15 @@
                                .enter().append('g')
                                .attr('class','point')
                                .attr('transform',function(d){
+                                   /***通过投影函数将经纬度转换成像素点位置**/
                                    var point = projection([d.log,d.lat]);
                                    return 'translate('+ point[0] +','+ point[1] +')'
+                               })
+                               .on('mouseover',function(){
+                                   d3.select(this).select('image').attr('display',"block");
+                               })
+                               .on('mouseout',function(){
+                                   d3.select(this).select('image').attr('display',"none");
                                });
            //绘制标注点
             location.append('circle')
@@ -104,24 +111,10 @@
                     .attr('height',90)
                     .attr('xlink:href',function(d){
                         return d.img;
-                    });
-
-
+                    })
+                    .attr('display',"none");
         });
     })
-
-
-
-
-
-
-
-
-
-
-
-
-
 </script>
 </body>
 </html>

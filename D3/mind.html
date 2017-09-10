@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>思维导图</title>
+    <script src="d3.js"></script>
+    <style>
+
+
+        .node circle {
+            cursor: pointer;
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 2px;
+        }
+
+        .node text {
+            font-size: 12px;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 1.5px;
+        }
+
+    </style>
+</head>
+<body>
+
+<script>
+    var width = 600,
+        height = 500,
+        padding = {left:100,right:100,top:20,bottom:20},//边界空白
+        svg = d3.select('body').append('svg')
+                .attr('width',width + padding.left + padding.right)
+                .attr('height',height + padding.top + padding.bottom)
+                .append('g')
+                .attr('transform','translate('+ padding.left +','+ padding.top +')');
+
+    //创建树状图布局
+    var tree = d3.tree()
+                    .size([height * .9,width * .9]);
+
+    //创建对角线生成器
+    var linkVertical = d3.linkVertical()
+                            .x(function(d){ return d.y})
+                            .y(function(d){return d.x});
+
+    //获取数据
+    d3.json('learn.json',function(err,data){
+        if(err) return console.error(err);
+
+        /**
+         * 计算节点和连线位置
+         */
+        //数据转换
+        data = d3.hierarchy(data);
+
+        //以第一个节点为起始节点重绘
+        redraw(data);
+
+        /**
+         * 重绘函数
+         * @param source
+         */
+        function redraw(source){
+            tree(data);
+            links = data.links();
+
+            //重新计算y坐标，是为了当书记更新时，保证树状图的结构不要发生太大的变化
+            //data.descendants().forEach(function(d) { d.y = d.depth * 180; });
+
+            /**
+             * 节点处理
+             */
+            //获取节点的update部分
+            var nodeUpdate = svg.selectAll('.node')
+                                .data(data.descendants(),function(d){return d.data.name;});
+            //获取节点enter部分
+            var nodeEnter = nodeUpdate.enter();
+            //获取节点exit部分
+            var nodeExit = nodeUpdate.exit();
+
+            //节点的enter部分的处理
+            var enterNodes = nodeEnter
+                .append('g')
+                .attr('class','node')
+                .attr('transform',function(d){return 'translate('+ d.y +','+ d.x +')'})
+                .on('click',function(d){
+                    toggle(d); //切换开关
+                    redraw(d);//重绘
+                });
+            enterNodes.append('circle')
+                .style('fill',function(d){ return d._children ? "lightsteelblue" : "#fff"})
+                .attr('r',0)
+                .transition()
+                .duration(500)
+                .attr('r',8);
+
+            enterNodes.append('text')
+                .attr('x',function(d){ return d.children || d._children ? -14 : 14;})
+                .attr('dy','.35em')
+                .attr('text-anchor',function(d){return d.children || d._children ? 'end' : 'start';})
+                .text(function(d){return d.data.name})
+                .style('fill-opacity',0)
+                .transition()
+                .duration(500)
+                .style('fill-opacity',1);
+            //节点的update部分的处理
+            var updateNodes = nodeUpdate.transition()
+                                        .duration(500)
+                                        .attr('transform',function(d){ return 'translate('+ d.y +','+d.x +')'});
+            updateNodes.select('circle')
+                .attr('r',8)
+                .style('fill',function(d){ return d._children ? 'lightsteelblue':"#fff"});
+            updateNodes.select('text')
+                .style('fill-opacity',1);
+            //节点exit部分的处理办法
+            var exitNodes = nodeExit.transition()
+                .duration(500)
+                .attr('transform',function(d){return 'translate('+ d.y +','+d.x +')'})
+                .remove();
+            exitNodes.select('circle')
+                .attr('r',0);
+            exitNodes.select('text')
+                .style('fill-opacity',0);
+
+            /**
+             * 连线的处理
+             */
+            //获取连线update部分
+            var linkUpdate = svg.selectAll('.link')
+                    .data(links,function(d){return d.target.data.name });
+           //获取连线的enter部分
+            var linkEnter = linkUpdate.enter();
+            //获取连线的exit部分
+            var linkExit = linkUpdate.exit();
+            //连线的enter部分的处理办法
+            linkEnter.insert('path','.node')
+                .attr('class','link')
+                .attr('d',function(d){
+                    var o = {x:source.x,y:source.y};
+                    return linkVertical({source:o,target:o});
+                })
+                .transition()
+                .duration(500)
+                .attr('d',linkVertical);
+            //连线update部分的处理
+            linkUpdate.transition()
+                .duration(500)
+                .attr('d',linkVertical);
+            //连线的exit部分的处理
+            linkExit.transition()
+                .duration(500)
+                .attr('d',function(d){
+                    var o = {x:source.x,y:source.y};
+                    return linkVertical({source:o,target:o});
+                })
+                .remove();
+        }
+
+        /**
+         * 切换开关
+         * @param d 被点击的节点
+         */
+        function toggle(d){
+            if(d.children){//有子节点
+                d._children = d.children;
+                d.children = null ;//隐藏子节点
+            }else{
+                d.children = d._children;//显示子节点
+                d._children = null;
+            }
+        }
+
+
+    });
+
+</script>
+</body>
+</html>
