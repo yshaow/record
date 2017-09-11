@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>为饼状图添加提示框</title>
+    <script src="d3.js"></script>
+    <style>
+
+        .tooltip{
+            font-family: simsun;
+            font-size: 14px;
+            width: 120px;
+            height: auto;
+            position: absolute;/*绝对定位必须的*/
+            text-align: center;
+            border-style: solid;
+            border-width: 1px;
+            background-color: white;
+            border-radius: 5px;
+        }
+
+
+    </style>
+</head>
+<body>
+
+<script>
+    var width = 600,
+        height = 600,
+        svg = d3.select('body')
+                .append('svg')
+                .attr('width',width)
+                .attr('height',height);
+
+    //初始化数据
+    var data = [
+        ['小米',60.8],
+        ['三星',58.4],
+        ['联想',47.3],
+        ['苹果',46.6],
+        ['华为',41.3],
+        ['酷派',40.1],
+        ['其他',111.5]
+    ];
+    //定义饼状图布局
+    var pie = d3.pie()
+                .value(function(d){
+                    return d[1];
+                });
+    //转换数据
+    var pieData = pie(data);
+
+    /***********绘制**********/
+    var fontsize = 14;
+    var outerRadius = 400/3;
+    var innerRadius = 0;
+    //创建圆弧路径生成器
+    var arc = d3.arc()
+                .innerRadius(innerRadius)
+                .outerRadius(outerRadius);
+    //定义颜色生成器
+    var a = d3.rgb(0,255,255);
+    var b= d3.rgb(0,255,0);
+    var color = d3.interpolate(a,b);
+    var colorLinear = d3.scaleLinear()
+                        .domain([d3.min(pieData,function(d){ return d.value}),d3.max(pieData,function(d){return d.value})])
+                        .range([0,1]);
+    //添加对应的弧组
+    var arcs = svg.selectAll('g')
+                    .data(pieData)
+                    .enter().append('g')
+                    .attr('transform','translate('+ outerRadius +','+ outerRadius +')');
+    //绘制圆弧
+    arcs.append('path')
+        .attr('d',arc)
+        .attr('fill',function(d){
+            return color(colorLinear(d.value));
+        })
+        .attr('stroke','#fff');
+    //绘制弧内文字
+    arcs.append('text')
+        .attr('transform',function(d){
+            return 'translate('+ arc.centroid(d)[0]*1.4 +','+ arc.centroid(d)[1]*1.4 +')';
+        })
+        .attr('text-anchor','middle')
+        .style('font-size',fontsize)
+        .text(function(d){
+            //计算市场份额
+            var percent = Number(d.value) * 100 / d3.sum(data,function(d){return d[1];});
+            return percent.toFixed(1) + "%";
+        });
+    //添加提示框
+    var tooltip = d3.select('body')
+                    .append('div')
+                    .attr('class','tooltip')
+                    .style('opacity',0);
+    //添加事件
+    arcs.on('mouseover',function(d){
+        tooltip.html(d.data[0] + '的出货量为<br/>'+ d.data[1] + '百万台！')
+            .style('left',d3.event.pageX + 'px')
+            .style('top', d3.event.pageY + 20 + 'px')
+            .style('opacity',1);
+        })
+        .on('mousemove',function(d){
+            tooltip.style('left', d3.event.pageX + 'px')
+                .style('top', d3.event.pageY + 20 +'px');
+        })
+        .on('mouseout',function(){
+            tooltip.style('opacity',0);
+        });
+</script>
+</body>
+</html>

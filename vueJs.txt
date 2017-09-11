@@ -6881,4 +6881,91 @@ Compile template into render function|    |Compile el's outerHTML as template
 		属性：
 			name--string 用于命名插槽
 		使用：
-			<slot>元素作为组件模板之中的内容分发插槽，<slot>元素自身将被替换。			 
+			<slot>元素作为组件模板之中的内容分发插槽，<slot>元素自身将被替换。
+/*********************************************/
+1.vue与angular的区别
+	vue:
+		》简单 易学
+		》指令以v-xxx
+		》一片HTML代码配合上json，再new出来vue实例
+		》个人维护项目
+		适合：移动端项目 小巧
+	angular：
+		》上手难
+		》指令以ng-xxx
+		》所有属性和方法都挂到$scope身上
+		》angular由google维护
+		适合：pc端项目
+	共同点：不兼容低版本IE
+2.v-for自带的索引
+	<li v-for="value in arr">
+		{{$index}}//自带的索引 {{$key}}//自带的对象键名
+	</li>
+3.鼠标右键事件  contextmenu
+4.模板
+	{{msg}} 数据更新模板也跟着变化，以文本的形式输出数据
+	{{*msg}} 数据只绑定一次，即初始化之后模板不会跟着数据的更新而变化
+	{{{msg}}} HTMl转意输出
+5.过滤器
+	{{msg| filterA 参数}}//参数表示当前过滤器需要的参数
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

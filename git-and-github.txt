@@ -201,3 +201,4 @@
 		》在github上添加ssh密钥 即添加id_rsa.pub里面的公钥
 		》测试ssh公钥是否成功： ssh git@git服务器地址(github.com)
 12. git小乌龟是依赖于git bash的  即 安装小乌龟之前必须安装git bash
+    小乌龟查看文档  点击help即可
