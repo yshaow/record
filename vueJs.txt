@@ -8,6 +8,7 @@
 3.vue的安装
 	》全局安装vue-cli
 		npm install -g vue-cli
+		验证：vue --version
 	》创建一个基于webpack模板的新项目
 		vue init webpack my-project(项目名称)
 	》安装依赖
@@ -119,7 +120,7 @@
 			全局安装 vue-cli
 				npm install --global vue-cli
 			创建一个基于webpack模板的项目
-				vue init webpack my-project
+				vue init webpack[加了代码检测、规范](simple[无用]、webpack-simple[无代码检测等]、browserify、browserify-simple) my-project
 			安装依赖
 				cd my-project
 				npm install
@@ -6311,7 +6312,7 @@ Compile template into render function|    |Compile el's outerHTML as template
 						handler:function(newVal,oldVal){
 							//
 						},
-						deep:true
+						deep:true//监听对象属性的变化
 					}
 				}
 			});
@@ -6720,7 +6721,7 @@ Compile template into render function|    |Compile el's outerHTML as template
 		[v-cloak]{
 			display:none;
 		}
-		<div v-clock>{{message}}</div>
+		<div v-clock>{{message}}</div>//用指令 v-text v-html等也可以防止闪烁
 		//不会显示 直到编译结束
 	》v-once 不需要表达式
 		只渲染元素和组件一次，随后的重新渲染 元素/组件及其所有的子节点将被视为静态内容并跳过。这个可以用于优化更新性能
@@ -6905,67 +6906,277 @@ Compile template into render function|    |Compile el's outerHTML as template
 4.模板
 	{{msg}} 数据更新模板也跟着变化，以文本的形式输出数据
 	{{*msg}} 数据只绑定一次，即初始化之后模板不会跟着数据的更新而变化
-	{{{msg}}} HTMl转意输出
+	{{{msg}}} HTMl转意输出 v2.x版本取消了
 5.过滤器
 	{{msg| filterA 参数}}//参数表示当前过滤器需要的参数
+	双向过滤器：
+	    Vue.filter(name,{
+	        read:function(input){//model -> view的数据
+	            return 处理之后的数据;
+	        },
+	        write:function(val){//view -> model的数据
+	            return val;
+	        }
+	    })
+6.包管理器
+    npm：偏向于后端
+        开发环境依赖下载 保存 --save-dev 如 npm install css-loader --save-dev
+        项目依赖下载 保存 --save 如：npm install vue --save-dev
+    bower：偏向于前端
+            安装：npm install bower -g
+            验证：bower --version
+            bower  install 包名(版本号)
+            bower uninstall 包名
+            bower info 包名 -- 查看包的相关版本信息
+    webpack -p -- 打包并压缩
+7. 1.x与2.x的区别
+        》在每个组件模版，不在支持片段代码
+            组件中的template:
+                1.x:
+                    <template>
+                        <h3>我是组件</h3><strong>我是加粗标签</strong>
+                    </template>
+                2.x:/**必须有根元素，包裹住所有的代码**/
+                    <template>
+                        <div>
+                            <h3>我是组件</h3><strong>我是加粗标签</strong>
+                        </div>
+                    </template>
+        》关于组件定义
+            Vue.extend 这种方式在2.0有些改动，但是这种定义组件的方式，不推荐使用。
 
+            Vue.component(组件名,{//这个无改变
+                data(){},
+                methods:{},
+                template:""
+            });
+        》生命周期
+            1.x:
+                init//实例创建，但是什么属性都没有
+                created//实例创建完成，属性都有了
+                beforeCompile//模版编译(挂载)之前
+                compiled//模版编译完成
+                ready//模版挂载完成
+                beforeDestroy//组件销毁前
+                destroyed//组件销毁后
+            2.x:
+                beforeCreate -- init
+                created      -- created
+                beforeMount  -- beforeCompile
+                mounted      -- compiled 与 ready
+                beforeUpdate -- 组件(数据)更新之前  新增hook
+                updated      -- 组件(数据)更新完成  新增hook
+                beforeDestroy -- beforeDestroy
+                destroyed      -- destroyed
+        》循环
+            1.x//默认不能添加重复数据,需要使用track-by才可以
+                //在list里面添加重复的数据  $index是隐式变量
+                <li v-for="item in list" track-by='$index'></li>
 
+                //显示取值
+                v-for="(index,val) in array"
+            2.x//默认可以添加重复数据 去掉了隐式变量  如：$index $key 需要自己显示取值
+                v-for = "(val,index) in array"
 
+                1.x的track-by="id" 变成了 :key="id"//用于唯一标识  提升循环性能
+        》自定义键盘指令
+            1.x
+                Vue.directive('on').keyCodes.ctrl = 17
+            2.x
+                Vue.config.keyCodes.ctrl = 17
+        》过滤器
+            1.x
+                系统自带了很多过滤器 如 currency  json等
+            2.x
+                内置的过滤器，全部删除了
+                推荐使用lodash 工具库
+            自定义过滤器可以使用，但是自定义过滤器的传参发生了变化：
+                1.x
+                    {{msg | filterName arg1 arg2 ...}}
+                2.x
+                    {{msg | filterName(arg1,arg2,...)}}
+        》组件通信
+            父组件和子组件：
+                子组想拿到父组件的数据：通过props
+                <child-component :msg="msg"/>
+                1.x
+                    子组件可以更改父组件的数据，可以是同步(父子组件一起修改)修改的 通过sync
+                    <child-component :msg.sync="msg"/>
+                2.x
+                    不允许子组件修改父组件的数据
+                    》解决方式
+                        》方式1
+                            父组件每次传一个对象给子组件，通过修改这个对象的属性，来实现父子数据的同步即可(对象之间是引用的)
+                        》方式2
+                            不同步的做法，即只修改子组件里面的数据，在mounted中通过子组件属性中转，即可只修改子组件的数据
+            所有组件之间的通信方式：通过单一事件管理组件通信即vuex的原理
+                //定义一个单一的vue实例
+                var event = new Vue();
 
+                //在需要传递数据的组件中 发送数据到event实例中
+                event.$emit(事件名称("a"),数据)
 
+                //在需要接受数据的组件中 接受event实例中的数据
+                mounted(){
+                    //添加事件监听
+                    event.$on(事件名称("a"),function(data){
+                        //把data绑定在当前组件中，如果需要用到this需要bind(this)
 
+                    }.bind(this));
+                }
+        》动画
+            1.x
+                transition是属性
+                <div transition="css类名 如：fade"><div>
+            2.x
+                transition是组件
+                <transition name='fade'>
+                    运动的元素 、属性 、路由等等
+                </transition>
+                //class定义
+                .fade-enter{//初始状态
+                    opacity:0,
+                }
+                .fade-enter-active{//变化成什么样 -- 当元素出来时
+                    transition:1s all ease;
+                    opacity:1;
+                }
+                .fade-leave{//离开时的初始状态
+                    opacity:1;
+                }
+                .fade-leave-active{//变化成什么样 -- 当元素离开时
+                    transition:1s all ease;
+                    opacity:0;
+                }
+            //transition事件
+            <transition
+                @before-enter
+                @enter
+                @after-enter
+                @before-leave
+                @leave
+                @after-leave
+            >
+                <p></p>
+            </transition>
+            //配合animate.css使用
+            <transition
+                enter-active-class="animated zoomInLeft(类名)"
+                leave-active-class='animated zoomOutRight'
+            >
+                <p></p>
+            </transition>
+            或
+            <transition
+                enter-active-class="zoomInLeft(类名)"
+                leave-active-class='zoomOutRight'
+            >
+                <p class='animated'></p>
+            </transition>
+            //多个元素运动<transition-group>
+            <transition-group
+                enter-active-class="zoomInLeft(类名)"
+                leave-active-class='zoomOutRight'
+            >
+                <p class='animated' :key='1'></p>
+                <p class='animated' :key='2'></p>
+            </transition-group>
+        》vue-router
+            1.x
+                <a v-link="{path:'/home'}"></a>
+                <router-view></router-view>
+                //创建路由实例
+                var router = new VueRouter()
+                //配置路由
+                router.map({
+                    home:{
+                        component:home,
+                        subRoutes:{
+                            children:{
+                                component:children
+                            }
+                        }
+                    }
+                });
+                //重定向
+                router.redirect({
+                    "/":"/home"
+                });
+                //启动路由
+                router.start(App,'#app');
+            2.x
+                <router-link to='/home'></router-link>
+                <router-view></router-view>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+                //配置路由
+                const routes = [
+                    {
+                        path:"/home",
+                        component:Home,
+                        children:{
+                            path:,
+                            component:
+                        }
+                    },
+                    {path:"/",redirect:"/home"}
+                ]
+                //创建路由实例
+                const router=new VueRouter({
+                    routes
+                });
+                //挂载到vue上
+                new Vue({
+                    router
+                });
+        》UI组件
+            智能社论坛:bbs.zhinengshe.com
+            以下两个UI组件都是饿了么团队开源的、基于vue组件库
+            》elementUI -- PC
+                http://element.eleme.io/
+                使用：
+                    》安装
+                        npm i element-ui -S
+                        // i --> install
+                        // D --> --save-dev
+                        // S --> --save
+                    》在入口文件引入  -- main.js(全局使用)
+                        /***************element-ui的内容全部引入**************/
+                        import ElementUI from 'element-ui';//引入UI组件
+                        import 'element-ui/lib/theme-default/index.css';//引入相关样式
+                        /***************按需加载相关UI组件*************/
+                        //借助babel的一个插件 babel-plugin-component
+                            //安装
+                                npm install babel-plugin-component -D
+                            //配置
+                                .babelrc
+                                "plugins": [["component", [
+                                    {
+                                      "libraryName": "element-ui",
+                                      "styleLibraryName": "theme-default"
+                                    }
+                                 ]]]
+                            //引入
+                                import {Button} from 'element-ui';
+                    》使用组件
+                        /***************element-ui的内容全部引入**************/
+                        Vue.use(ElementUI);
+                        //****字体图标等文件  需要file-loader****
+                        /***************按需加载相关UI组件*************/
+                        Vue.use(Button);
+                        或
+                        Vue.component(Button.name,Button);
+                    》vue中组件上加事件
+                        <my-button @click.native=""></my-button>//其实是绑定在my-button中的button上的事件，通过native实现
+            》MintUI -- 移动端
+                    http://mint-ui.github.io/
+                    》下载
+                        npm install mint-ui -S
+                    》引用
+                        /**************引入全部组件****************/
+                        import Mint from 'mint-ui';
+                        import 'mint-ui/lib/style.css';
+                        Vue.use(Mint);
+                        /****************引入部分组件*****************/
+                        import { Cell, Checklist } from 'mint-ui';
+                        Vue.component(Cell.name, Cell);
+                        Vue.use(Checklist);
