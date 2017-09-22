@@ -724,7 +724,7 @@
 			<NumberList numbers={numbers} />,
 			document.getElementById('root');
 		);
-		//当运行这段代码时，你将得到一个警告：在列表中可以应该被提供。当创建一个列表元素的时候需要
+		//当运行这段代码时，你将得到一个警告：在列表中key应该被提供。当创建一个列表元素的时候需要
 		提供一个唯一字符串属性key
 	》keys
 		keys可以帮助React分辨这些列表项的改变 添加 移除。所以keys应该被给
@@ -736,9 +736,9 @@
 				const todoItems=todos.map((todo,index)=>
 					<li key={index}>{todo.text}</li>
 				);
-			//不推荐利用所以作为key值，因为如果这些列表项被重写，这将是缓慢的
+			//不推荐利用索引作为key值，因为如果这些列表项被重写，这将是缓慢的
 	》提取组件的keys
-		keys只有在有内容的数组环境中被使用才有意义。例如如果你提取一个列表组件，你应该保持列表项的元素有key，而不是这些列表项的更元素。
+		keys只有在有内容的数组环境中被使用才有意义。例如如果你提取一个列表组件，你应该保持列表项的元素有key，而不是这些列表项的根元素。
 		//一个好的规则是元素调用map的时候需要keys
 	》key一定要唯一在兄弟元素之间
 		keys在兄弟元素之间需要唯一，然而它们不需要全局唯一，在两个不同的数组中时我们可以利用相同的keys
@@ -1115,7 +1115,1102 @@
 		props和组件的合成 赋予了我们灵活的构建组件的表现与行为。组件可以接受**任意类型**的props属性
 *****高级指南*****
 1.深入jsx
-	
+    》实际上，jsx仅仅是为React.createElement(component,props,...children)函数提供了语法糖。
+        //通过React.createElement创建组件
+        React.createElement(
+            MyButton,
+            {color:"blue",shadowSize:2},
+            "Click Me"
+        )
+        //通过jsx
+        <MyButton color='blue' shadowSize={2}>Click Me</MyButton>
+        /**********如果没有子节点 可以使用自关闭标签***********/
+        //jsx
+        <div className="sidebar"/>
+        //createElement
+        React.createElement("div",{className:"sidebar"},null);
+	》指定 React元素的类型
+	    jsx标签的第一部分决定了React元素的类型
+	    大写类型表示jsx标签是指React组件，这些标签被编译成对命名变量的直接引用，所以如果使用jsx<Foo/>表达式，则Foo必须在范围内。
+
+	    》react必须在范围内
+	        由于jsx编译时调用React.createElement，所以React库必须始终在jsx代码的范围内。
+	        如：
+
+	        import React from 'react'
+	        import CustomButton from './CustomButton'
+	        //这两个导入都是必须的代码，即React并没有在CustomButton的js中直接引用
+	        function WarningButton(){
+	            return <CustomButton color='red'/>//编译时 return React.createElement(CustomButton,{color:"red",null});
+	        }
+	       注意：如果你不使用js绑定器并从<script>标签加载React，则它已经作为了React全局范围。
+	    》对jsx使用点符号
+	        在jsx中使用点符号表示引用React组件
+	        import React from 'react'
+
+	        const MyComponents = {
+	            DatePicker(props){
+	                return <div>Hello!</div>
+	            }
+	        }
+
+	        function BlueDatePicker(){
+	            return <MyComponents.DatePicker color="blue"/>
+	        }
+	    》自定义的组件名首位必须大写
+	        当元素名称以小写字母开头时，它会引用一个内置的组件，如<div>或<span>将"div"或"span"传递给
+	        React.createElement。
+	        名称以大写字母开头，如<Foo/>编译时React.createElement(Foo)并对应于您的js文件中定义或导入的组件。
+
+	        即：<hello />解析成普通的html标签，<Hello/>解析成组件标记
+
+	        注意：建议用大写字母命名组件，如果组件以小写字母开头，请在jsx中使用之前将其分配给大写的变量。
+	》在运行时根据名称选择组件
+	    不能使用通用表达式来选择组件名称作为React组件，如果想使用通用表达式来指定组件，需要将其分配给大写的变量。
+        const MyComponent = {
+             test1(props){
+                 return <div>测试jsx中的 "{props.ope}" 操作</div>
+             },
+            test2(){
+                 return <div>test1</div>
+            },
+            test3(){
+                return <div>test2</div>
+            }
+         }
+
+        function Test2(props){
+             //return <MyComponent[props.storyType] /> //错误
+
+             //正确
+             const CurrComponent = MyComponent[props.storyType];
+             return <CurrComponent/>
+         }
+    》jsx中的属性
+        》js表达式作为props
+            可以使用js表达式作为属性值，在{}中书写。
+            <MyComponent foo={ 1+2+3 }/>
+            //if条件与for循环不是表达式在js中，所以不能直接被使用在jsx中
+        》string作为属性值
+            <Hello msg="hello"/>等价于<Hello msg={"hello"}/>
+
+            <Hello msg="&lt;3"/>等价于<Hello msg={"<3"}/>
+        》Props默认是true
+            <Hello autocomplete/>等价于<Hello autocomplete={true}/>
+        》属性的传播
+            若有个props作为一个对象，当需要在jsx中解析时，可以使用...作为传播符将其解析成属性对象
+
+            function App(){
+                return <Greeting firstName="Ben" lastName="Hector"/>
+            }
+            等价于
+            function App(){
+                const props = {firstName="Ben",lastName="Hector"};
+                return <Greeting {...props}/>
+            }
+    》jsx中的children
+        在jsx的标签之间的内容有一个特殊的属性表示：props.children
+        》string
+            <Hello> Hello world! </Hello>
+            //props.children表示"Hello world!"
+            //注意jsx移除了开始与结束的空格
+        》JSX children
+            可以提供更多的jsx元素作为children，表示嵌套组件
+            <MyContainer>
+                <MyComponent /> //--children
+            </MyContainer>
+        》不同类型的children
+            可以混合不同类型的作为children
+            <div>
+                Here is a list
+                <ul>
+                    <li>Item</li>
+                </ul>
+            </div>
+        》js表达式作为children
+            可以使用任何js表达式作为children，并通过{}包裹
+            <Hello>foo</Hello>
+            等价于
+            <Hello>{"foo"}</Hello>
+
+            //这种情况通过被使用在渲染一个list时
+            function Item(props){
+                return <li>{props.message}</li>;
+            }
+            function TodoList(){
+                const todos= ['item1','item2','item3'];
+                return <ul>
+                            {
+                                todos.map(msg => <Item key={msg} message={msg}/>)
+                            }
+                       </ul>
+            }
+
+            //js表达式能够和其他类型的children混合使用
+            <div>Hello {props.addressee}</div>
+        》Functions 作为children
+            function Repeat(props){
+                let items = [];
+                for(let i=0;i<props.numTimes;i++){
+                    items.push(props.children(i));
+                }
+                return <div>{items}</div>
+            }
+
+            function ListOfThings(){
+                return <Repeat numTimes={10}>
+                            {
+                                index => <div key={index}> This is item {index} in the list!</div>
+                            }
+                       </Repeat>
+            }
+        》Booleans Null Undefined 是被忽略的
+            false true null undefined是合法的children，只是他们不会被渲染。
+            <div/>
+            等价于
+            <div>{false || null || true || undefined}</div>
+2.使用PropType进行类型检测
+    随着应用程序的增长，可以通过类型检测捕获大量错误。对于某些应用程序，可以使用像Flow或TypeScript这样的js扩展
+    来对整个应用程序进行类型检查，但即使你不使用他们，React也有一些内置的类型检测功能。要在组件上运行类型检测，
+    可以分配特殊的propTypes属性。
+    import PropTypes from 'prop-types';
+    class Greeting extends React.Component{
+        render(){
+            return <h1>Hello,{this.props.name}</h1>
+        }
+    }
+    Greeting.propTypes = {
+        name:PropTypes.string
+    }
+    //PropTypes导出一系列验证器，可用于确保你接受的数据有效，当提供无效的prop时，控制台将显示警告，出于性能
+    //原因，propTypes仅在开发模式下进行检查
+
+    》PropTypes中的验证
+        import PropTypes from 'prop-types';
+        MyComponent.propTypes = {
+          optionalArray: PropTypes.array,
+          optionalBool: PropTypes.bool,
+          optionalFunc: PropTypes.func,
+          optionalNumber: PropTypes.number,
+          optionalObject: PropTypes.object,
+          optionalString: PropTypes.string,
+          optionalSymbol: PropTypes.symbol,
+
+          // PropTypes.node包括： numbers, strings, elements or an array or fragment等类型
+          optionalNode: PropTypes.node,
+
+          // React元素
+          optionalElement: PropTypes.element,
+
+         //验证是否为实例
+          optionalMessage: PropTypes.instanceOf(Message),
+
+         //限制prop的属性值为指定列表中的一个
+          optionalEnum: PropTypes.oneOf(['News', 'Photos']),
+
+          //对于同一属性添加多个验证
+          optionalUnion: PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.number,
+            PropTypes.instanceOf(Message)
+          ]),
+
+          // 某种类型的数组 如：number类型的数组
+          optionalArrayOf: PropTypes.arrayOf(PropTypes.number),
+
+          // 指定对象属性值的类型 如number
+          optionalObjectOf: PropTypes.objectOf(PropTypes.number),
+
+          // 分别指定对象属性的类型
+          optionalObjectWithShape: PropTypes.shape({
+            color: PropTypes.string,
+            fontSize: PropTypes.number
+          }),
+
+          //指定是否必传某个props
+          requiredFunc: PropTypes.func.isRequired,
+
+          //任意的数据类型 + 必传
+          requiredAny: PropTypes.any.isRequired,
+          //自定义验证器
+          customProp: function(props, propName, componentName) {
+            if (!/matchme/.test(props[propName])) {
+              return new Error(
+                'Invalid prop `' + propName + '` supplied to' +
+                ' `' + componentName + '`. Validation failed.'
+              );
+            }
+          },
+
+          // 可以为 `arrayOf` and `objectOf`提供自定义验证器的回调函数
+          customArrayProp: PropTypes.arrayOf(function(propValue, key, componentName, location, propFullName) {
+            if (!/matchme/.test(propValue[key])) {
+              return new Error(
+                'Invalid prop `' + propFullName + '` supplied to' +
+                ' `' + componentName + '`. Validation failed.'
+              );
+            }
+          })
+        };
+    》需要单一的child
+        通过PropTypes.element可以实现单个child
+        class MyComponent extends React.Component{
+            render(){
+                return <div>{ this.props.children }</div>
+            }
+        }
+        MyComponent.propTypes = {
+            children:PropTypes.element.isRequired//单一 必传的child
+        }
+    》默认prop的值
+        你能给指定默认的属性值通过defaultProps属性
+        class Greeting extends React.Component{
+            render(){
+                return <h1>Hello,{this.props.name}</h1>
+            }
+        }
+        //指定默认值
+        Greeting.defaultProps = {
+            name:"Stranger"
+        }
+        //当组件没有传入相应的props时 defaultProps确保其有值，propTypes的验证发生在defaultProps解析后，所以propTypes也适用于defaultProps。
+3. Refs与DOM
+    在React数据流中，props仅仅是父子组件通信的一种方式，为了改变child，需要重新渲染新的props属性。
+    然而在一些情况下，你需要改变child范围之外的数据流，这个child被改变通过React组件实例或DOM元素，为了
+    满足这些场景，React提供了另一种方式。
+    》Refs的优点
+        管理焦点 文本选择或视屏播放
+        触发动效
+        集成第三方DOM库
+        //注意：应避免在任何场景下都使用refs
+    》不要过度使用refs
+        通常，拥有该状态的适当位置是在层次结构中处于较高的级别
+    》为DOM元素添加ref
+        React提供了一个特殊的属性为你能够附加任何组件，这个ref属性需要一个回调函数，并且回调函数将在组件被
+        挂载或销毁是立即执行
+        当ref属性在html元素上使用时，它的回调接受**根DOM元素**作为参数传入。
+        class CustomTextInput extends React.Component{
+            constructor(props){
+                super(props);
+            }
+
+            focusTextInput(){
+                this.textInput.focus();
+            }
+
+            render(){
+                return <div>
+                            <input type="text" ref={ input => {this.textInput = input} }/>//传入当前元素
+                            <input type="button" value="FOCUS" onClick={e => this.focusTextInput(e)}/>
+                        </div>
+            }
+        }
+    》为类组件添加ref
+        当在自定义组件类上使用ref时，ref回调接受的参数时当前挂载的组件实例。
+        class AutoFocusTextInput extends React.Component{
+            componentDidMount(){
+                this.currObj.focusTextInput();
+            }
+
+            render(){
+                return <CustomTextInput ref={obj =>{this.currObj = obj;}}/>
+            }
+        }
+    》Refs与函数组件
+        你可能不会为函数组件使用ref属性，因为他们没有实例
+        》当你在函数组件上使用ref时，无效需要将其转变成class组件，就像你需要使用生命hook与state一样
+            function MyFunctionComponent(){
+                return <input type="text" value="aaa"/>;
+            }
+            class Parent extends React.Component{
+                render(){
+                    return <MyFunctionComponent ref={obj=>{console.log(obj);/*null*/}}/>
+                }
+            }
+        》只要引用DOM元素与类组件时，ref属性就可以在函数组件内部使用
+            function CustomTextInputFun(props){
+                let textInput = null;
+
+                function handleClick(){
+                    textInput.focus();
+                }
+
+                return <div>
+                            <input type="text" ref={ elem=>{textInput=elem} }/>
+                            <input type="button" value="FOCUSFUN" onClick={handleClick}/>
+                        </div>
+            }
+    》将DOM的refs暴露给父组件
+        在少数情况下，可能需要在父组件中获取子组件DOM节点。正常情况这种方式是不推荐的，因为它破坏了组件的封装，
+        但它偶尔对于聚焦、量度大小或定位子组件DOM的位置是有用的。
+
+        当为子组件添加ref时，这不是一个理想的解决方案，因为你仅仅能拿到组件的实例而不是DOM节点，并且，它是无效的
+        对于函数组件。
+
+        推荐在child组件中使用一个特殊prop属性，这个child组件提供一个任意名称的函数，并附加DOM节点作为ref属性。
+        父节点通过中间组件将他自己的ref回调传递给child的DOM节点
+
+            function CustomTextInputA(props){
+                return <div>
+                            <input type="text" ref={props.inputRef}/>
+                        </div>
+            }
+
+            class ParentA extends React.Component{
+                render(){
+                    return <CustomTextInputA inputRef={ el=> this.inputElement = el}/>
+                }
+
+                componentDidMount(){
+                    console.log(this.inputElement);
+                }
+            }
+            //这种模式的另一个好处就是**无限制组件的深度**
+            function CustomTextInputA(props){
+                return <div>
+                            <input type="text" ref={props.inputRef}/>
+                        </div>
+            }
+
+            class ParentA extends React.Component{
+                render(){
+                    return <CustomTextInputA inputRef={ this.props.inputRef}/>
+                }
+            }
+
+            class GrandParent extends React.Component{
+                render(){
+                    return <ParentA inputRef = { el=>this.inputElement = el}/>
+                }
+
+                componentDidMount(){
+                    console.log(this.inputElement);
+                }
+            }
+            //如果你不能控制子组件的实现，还有一种不推荐的做法：利用findDOMNode()
+    》String类型的Refs
+            class StringRefChild extends React.Component{
+                render(){
+                    return <div ref={"testStr"}>String Refs</div>
+                }
+
+                componentDidMount(){
+                    console.log(this.refs.testStr);
+                }
+            }
+            //由于一些遗留问题的存在，这种方式并不推荐，在后面的版本中可能被遗弃，推荐用前面的回调替代这种方式
+    》注意：
+        如果ref回调 被定义为一个行内元素，它将被调用两次，第一次返回null 第二次返回DOM元素，这是因为每次渲染时都有
+        一个新的实例被创建，所以React需要清除旧的ref 设置新的ref，通过class的方式绑定回调函数，可以避免这种情况。
+4. 没有被控制的组件
+    在大多数，推荐使用控制组件定义表单，在控制组件中，表单数据被React组件处理。
+    相反的是不受控制的组件，这里的表单数据被DOM自己处理。
+    //没有被控制的组件案例
+        class NameForm extends React.Component{
+            constructor(props){
+                super(props);
+            }
+
+            handleSubmit(e){
+                e.preventDefault();
+
+                console.log(this.input.value);
+            }
+
+            render(){
+                return <form onSubmit={ e=> this.handleSubmit(e) }>
+                            <label>Name: <input type="text" ref={ el => this.input = el }/></label>
+                            <input type="submit" value="提交"/>
+                        </form>
+            }
+        }
+    //由于不受控制的组件保持了DOM的真实来源，当使用不受控制组件时，它更容易集成React与非React的代码，
+    //如果你想快速开发时，它是有较少的代码，否则你应该使用受控制的组件。
+
+    》默认值
+        在React渲染的生命周期中，这个form中的value属性将覆盖DOM中的value值。在不受控制的组件中，你想React
+        有一个初始值，但在后面的更新不受控制，为了解决，你需要用defaultValue属性替代DOM的value属性。
+        <label>Name: <input type="text" defaultValue="Blob" ref={ el => this.input = el }/></label>
+
+        <input type='checkbox'/>与<input type='radio' /> 提供defaultChecked
+        <select>与<textarea> 提供defaultValue
+5. 优化性能
+    React内部采用了几个先进的技术为了减少DOM UI更新的开销。对于许多应用来说，使用React将会比较快速，而不需要做更多的工作为了
+    优化性能。
+    然而有几种方式可是使得react应用更加快速。
+    》使用生产环境
+        在开发环境中有许多警告，这在开发环境非常有用，但是会使得React更大、更慢，所以当部署代码的时候应该使用生产环境。
+        使用React Developer工具检查 https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi
+        》使用npm run build
+        》压缩js npm install --save-dev uglify-js-brunch
+            brunch build -p
+        》webpack
+            new webpack.DefinePlugin({
+              'process.env': {
+                NODE_ENV: JSON.stringify('production')
+              }
+            }),
+            new webpack.optimize.UglifyJsPlugin()
+    》分析Chrome的性能卡
+    》避免和解
+        需要更新DOM 显示返回true，不需要更新返回false
+        shouldComponentUpdate(nextProps, nextState) {
+          return true;
+        }
+        //案例
+        class CounterButton extends React.Component{
+            constructor(props){
+                super(props);
+                this.state = {count:1}
+            }
+
+            shouldComponentUpdate(nextProps,nextState){//值改变了就更DOM 否则不更新DOM
+                console.log(this.state,nextState);
+                if(this.props.color !== nextProps.color){
+                    return true;
+                }
+
+                if(this.state.count !== nextState.count){
+                    return true;
+                }
+
+                return false;
+            }
+
+            render(){
+                return <button color={this.props.color} onClick={() => this.setState(state => ({count:state.count +1}))}>
+                        Count: {this.state.count}</button>
+            }
+        }
+        //等同于
+        class CounterButton extends React.PureComponent{//React.PureComponent类是对上面的封装，只需要继承即可达到效果
+            constructor(props){
+                super(props);
+                this.state = {count:1}
+            }
+
+            render(){
+                return <button color={this.props.color} onClick={() => this.setState(state => ({count:state.count+1}))}>
+                        Count: {this.state.count}</button>;
+            }
+        }
+        //大多数情况，应该使用React.PureComponent 而不是自己写shouldComponentUpdate。因为他仅仅是一个浅浅比较，如果这个prop或state突变时，
+        //这个浅比较将失效所以你不能利用他
+        class ListOfWords extends React.PureComponent{
+            render(){
+                return <div>{this.props.words.join(',')}</div>
+            }
+        }
+        class WordAdder extends React.Component{
+            constructor(props){
+                super(props);
+                this.state = {words:['food']}
+            }
+
+            handleClick(){
+                const words = this.state.words;
+                words.push('a');
+                this.setState({words});
+                console.log(words);
+            }
+
+            render(){
+                return <div>
+                            <button onClick={ e => this.handleClick(e) }>添加单词</button>
+                            <ListOfWords words = {this.state.words}/>
+                        </div>
+            }
+        }
+        //上面的代码：PureComponent将在旧值与新值之间做一个简单的比较，一旦在handleClick中突变words数组
+        //这个旧值和新值将匹配为相等，尽管数组中的值已经改变，ListOfWords也不会更新并重新渲染
+
+        》不突变数据的功能
+            避免上面问题最简单的方式：避免突变props或state。
+            /***********针对数组**************/
+            handleClick(){
+                    this.setState(prevState => ({
+                        words:prevState.words.concat(['a'])
+                    }));
+            }
+            //ES6的实现
+                    this.setState( prevState => ({
+                        words:[...prevState.words,'b','c']
+                    }));
+            /***********针对对象**************/
+            也可以使用类似的方式，改变对象数据而避免对象突变
+            function updateColorMap(colormap){//突变
+                colormap.right = 'blue'
+            }
+            //避免突变
+            function updateColorMap(colormap){
+                return Object.assign({},colormap,{right:"blue"});
+            }
+            或
+            function updateColorMap(colormap){
+                return {...colormap,right:"blue"};
+            }
+            》使用不可变的数据结构 -- https://github.com/facebook/immutable-js
+                Immutable.js是另一种方式为了解决这个问题，他为共享数据结构提供了不变的，持久的集合。
+                不变的：一旦创建，集合不能够在另一个时间点被修改
+                持久的：新的集合能够从以前的集合中被创建，并且可以通过设置突变来创建。以前的集合在新的集合创建后也是有效的。
+                结构共享：创建新的集合时尽量采用和旧集合相同的结构，减少复制，提高性能。
+
+                不变使得追踪改变更容易，一个改变总是创建一个新的对象，我们只需要追踪引用地址是否改变即可。
+                如：
+                const x = {foo:"bar"};
+                const y = x;
+                y.foo = "baz";
+                x===y//true
+                //使用immutable.js
+                const SomeRecord = Immutable.Record({ foo: null });
+                const x = new SomeRecord({ foo: 'bar' });
+                const y = x.set('foo', 'baz');
+                const z = x.set('foo', 'bar');
+                x === y; // false
+                x === z; // true
+6.无ES6的react
+        通常你使用js的class定义一个React组件
+        import React from 'react'
+        class Greeting extends React.Component{
+            render(){
+                return <h1>Hello,{this.props.name}</h1>
+            }
+        }
+        export default Greeting
+
+        import WithoutEs6 from './withoutES6'
+        ReactDom.render(<WithoutEs6 name="无ES6"/>,document.getElementById('app'))
+
+        //当不使用ES6时，可以使用create-react-class模块来代替
+        var createReactClass = require('create-react-class');
+        var React = require('react');
+        var Greeting = createReactClass({
+            render:function(){
+                return <h1>Hello,{this.props.name}</h1>
+            }
+        });
+
+        module.exports = {
+            Greeting:Greeting
+        }
+
+        const WithoutEs6 = require('./withoutES6');
+        ReactDom.render(<WithoutEs6.Greeting name="无ES6"/>,document.getElementById('app'));
+
+        /*************声明默认props************/
+        //ES6 -- 使用函数和class组件的defaultProps属性
+        import React from 'react'
+        class Greeting extends React.Component{
+            render(){
+                return <h1>Hello,{this.props.name}</h1>
+            }
+        }
+        Greeting.defaultProps = {
+            name:"Mary"
+        }
+        export default Greeting
+        //无ES6 -- 使用create-react-class时，需要定义getDefaultProps函数并返回对象
+        var React = require('react');
+        var createReactClass = require('create-react-class');
+        var Greeting = createReactClass({
+            render:function(){
+                return <h1>Hello,{this.props.name}</h1>
+            },
+            getDefaultProps:function(){
+                return {
+                    name:"无ES6的默认props"
+                }
+            }
+        });
+        module.exports = {
+            Greeting:Greeting
+        }
+        /*************初始化state************/
+        //ES6 -- 定义初始化state在构造器中
+        import React from 'react'
+        class Counter extends React.Component{
+            constructor(props){
+                super(props);
+                this.state = {count:props.initCount}
+            }
+            render(){
+                return <h1>Hello,{this.state.count}</h1>
+            }
+        }
+        export default Counter;
+        //无ES6 -- create-react-class提供了getInitialState方法用于初始化state 返回state对象
+        var React = require('react');
+        var createReactClass = require('create-react-class');
+        var Counter = createReactClass({
+            render:function(){
+                return <h1>Hello,{this.state.count}</h1>
+            },
+            getInitialState:function(){
+                return {
+                    count:this.props.initCount
+                }
+            }
+        });
+        module.exports = {
+            Counter:Counter
+        }
+        /*************自动绑定************/
+        //ES6 -- 用E6类定义的React组件，组件的方法遵循ES6类的规则，这意味着他们不会自动绑定this作为实例。
+                你需要在构造器中明确的用.bind(this)绑定this。
+        import React from 'react'
+        class SayHello extends React.Component{
+            constructor(props){
+                super(props);
+                this.state = {msg:"Hello!"};
+                //绑定this
+                this.handleClick = this.handleClick.bind(this);
+            }
+
+            handleClick(){
+                alert(this.state.msg);
+            }
+
+            render(){
+                return <button onClick={ this.handleClick }>HELLO</button>
+            }
+        }
+        export default SayHello;
+
+        //create-react-class -- 它是不需要明确绑定的，因为他自动绑定this到全部的方法中
+        var React = require('react');
+        var createReactClass = require('create-react-class');
+        var SayHello = createReactClass({
+            getInitialState:function(){
+                return {
+                    msg:"Hello! 无ES6"
+                }
+            },
+            handleClick:function(){
+                alert(this.state.msg);
+            },
+            render:function(){
+                return <button onClick={ this.handleClick }>HELLO</button>
+            }
+        });
+        module.exports = {
+            hello:SayHello
+        }
+        //这意味着ES6对于事件处理 会额外多一些代码，但是对于大型项目 它会有较好的性能。
+
+        //如果样本代码(额外的事件绑定this)对你没有吸引力，你可以使用Babel的Class语法提案
+        class SayHello extends React.Component{
+            constructor(props){
+                super(props);
+                this.state = {msg:"Hello!"}
+            }
+
+            handleClick = ()=>{//提案，使用箭头函数绑定this -- 该语法还在实验阶段
+                alert(this.state.msg);
+            }
+
+            render(){
+                return <button onClick={this.handleClick}>HELLO</button>
+            }
+        }
+        //注意：上面语法是提案，如果你想更安全可以采用下面的方式
+            》在构造器中绑定this
+            》在事件中用箭头函数  onClick = { e => this.handleClick(e) }
+            》继续使用createReactClass
+
+        /*************Mixins************/
+        注意：启用ES6没有任何的混合宏支持，因此，当使用ES6的类时，是不支持混合宏的。
+        我在使用混合宏中发现了很多问题，并且不推荐使用混合宏。
+
+        有时候不同的组件可能会共享一些相同的功能 -- 这叫cross-cutting concerns。createReactClass允许使用遗留的mixins系统。
+        案例：
+            var React = require('react');
+            var createReactClass = require('create-react-class');
+
+            //定义共享混合宏
+            var SetIntervalMixin = {
+                componentWillMount:function(){//挂载hook
+                    this.intervals = []
+                },
+                setInterval:function(){
+                    this.intervals.push(setInterval.apply(null,arguments));
+                },
+                componentWillUnmount:function(){
+                    this.intervals.forEach(clearInterval);
+                }
+            }
+            //声明组件
+            var TickTock = createReactClass({
+                mixins:[SetIntervalMixin],//使用混合宏
+                getInitialState:function(){
+                    return {seconds:0}
+                },
+                componentDidMount:function(){
+                    this.setInterval(this.tick,1000);
+                },
+                tick:function(){
+                    this.setState({
+                        seconds:this.state.seconds +1
+                    });
+                },
+                render:function(){
+                    return <p>React has been running for {this.state.seconds} seconds</p>
+                }
+            });
+            module.exports ={
+                TickTock:TickTock
+            }
+            //如果一个组件定义了多个混合宏，并且几个混合宏定义了相同的生命hook函数。所有的生命hook将被调用。在混合宏
+            //中定义的hook方法将按顺序被调用(同一自定义函数名不能在多个mixins中定义多次)
+7.无JSX的React
+        JSX不是使用React必须的，当你在你的构建环境中不想编译时，使用没有jsx的react是比较方便的。
+        每个jsx仅仅是调用React.createElement(component,props,...children)的语法糖。所以在使用jsx
+        的任何地方也可以直接使用js(即上面的API)。
+        案例：
+            /**********使用jsx***********/
+            class Hello extends React.Component{
+                render(){
+                    return <div>Hello {this.props.toWhat}</div>
+                }
+            }
+            /**********不使用jsx***********/
+            class Hello extends React.Component{
+                render(){
+                    return React.createElement('div',null,`Hello ${ this.props.toWhat }`);//${ es6取变量 }
+                }
+            }
+
+            ReactDom.render(
+                React.createElement(WidthoutJsx,{toWhat:"无JSX"},null),
+                document.getElementById('app')
+            )
+            //在线jsx转js：https://babeljs.io/repl/
+
+            React.createElement(component,props,...children)中的component可以是String,继承React.Component的class或者
+            没有state的函数组件。
+
+            简写：
+            const e = React.createElement;
+            ReactDOM.render(
+                e("div",null,'hello world'),
+                document.getElementById('root')
+            );
+            //另外，可以参考一些社区项目，如： react-hyperscript(https://github.com/mlmorg/react-hyperscript)
+            //与hyperscript-helpers(https://github.com/ohanhi/hyperscript-helpers)。他们提供了更简单的语法。
+8.一致性比较 Reconciliation
+        React提供声明式API，因此在每次更新中不需要关心具体的更改内容。这使得编写应用更加容易，但是这样使得对React
+        内部具体实现并不了解，这里介绍了React的"diffing"算法中我们做出的抉择，以使得组件的更新是可预测的并且可以
+        适用于高性能应用。
+        》动机
+            当你使用React，在任何一个单点时刻你可以认为render()函数的作用是创建React元素树。在下一个state或props更新时，
+            render()函数将会返回一个不同的React元素树。接下来的问题是React将如何高效的更新UI来匹配最近时刻的React元素树。
+
+            目前存在大量通用的方法能够以最少的操作将一个树转换成另一棵树，然而这个算法是复杂度为o(n^3),其中n为树的元素个数。
+
+            React基于以下两个假设实现了时间复杂度为o(n)的算法：
+                》不同类型的两个元素将会产生不同的树
+                》开发人员可以使用一个key prop来指示在不同的渲染中那个那些元素可以保持稳定。
+        》Diffing算法
+            当比较不同的两个树，React首先比较两个根元素，根据根的类型不同，他有不同的行为。
+            》元素类型不相同
+                无论什么时候，当根元素类型不同时，React将会销毁原先的树并重写构建的新树。从<a>到<img>
+                或从<Article>到<Comment>，从<Button>到<div>--这些都将导致全部重新构建。
+
+                当销毁原先的树时，之前的DOM节点将销毁，实例组件执行componentWillUnmount()。
+                当构建新的一个树，新的DOM节点将会插入DOM中，组件将会执行componentWillMount()以及componentDidMount()。与之前旧的树相关的state都会丢失。
+
+                根节点以下的任何组件都会被卸载(unmounted),其state状态都会丢失。如：
+                    <div>
+                        <Counter />
+                    </div>
+                    到
+                    <span>
+                        <Counter/>
+                    </span>
+                    //这回销毁旧的Counter，重新加载一个新的Counter
+            》DOM元素类型相同
+                当比较两个相同类型的React DOM元素时，React检测他们的属性(attributes),保留相同的底层DOM节点，只更新发生改变的属性。
+                如：
+                    <div className='before' title='stuff'/>
+                    <div className='after' title='stuff'/>
+                    //通过比较两个元素，React仅会修改DOM节点的className属性
+
+                当更新style属性，React也仅仅只更新改变的属性
+                如：
+                    <div style={ { color:"red",fontWeight:"bold" } }/>
+                    <div style={ { color:"green",fontWeight:"bold" } }/>
+                    //当React对两个元素进行转换时，仅会修改color 而不会修改fontWeight。
+                    //在处理完当前DOM节点后，React会递归处理子节点
+            》相同类型的组件
+                当一个组件更新的时候，组件实例保持不变，以便在渲染中保持state。React会更新组件实例的属性来匹配新的元素，
+                并在元素实例上调用componentWillReceiveProps()和componentWillUpdate()。
+
+                然后，render()方法会被调用，并且diff算法对上一次的结果和新的结果进行递归。
+            》子元素递归
+                默认情况下，当递归一个DOM节点的子节点时，React只需同时遍历所有的孩子基点，同时当他们不同时，生成一个改变。
+                如：//当给子元素末尾添加一个元素，在两棵树之间的转化中 性能就不错
+                <ul>
+                    <li>first</li>
+                    <li>second</li>
+                </ul>
+                到
+                <ul>
+                    <li>first</li>
+                    <li>second</li>
+                    <li>third</li>
+                </ul>
+                //React会比较两个<li>first</li>树与两个<li>second</li>,最后插入<li>third</li>树
+
+                如：在开始处插入一个节点，性能将会很差
+                <ul>
+                    <li>Duke</li>
+                    <li>Villanova</li>
+                </ul>
+                到
+                <ul>
+                    <li>Connecticut</li>
+                    <li>Duke</li>
+                    <li>Villanova</li>
+                </ul>
+                //React会改变每一个子节点而不会意思到需要保留<li>Duke</li>与<li>Villanova</li>，从而性能将降低。
+            》Keys
+                为了解决上面的问题，React支持一个key属性(attribute)。当子节点有了key，React使用这个key去比较原来的树的子节点和之后树的
+                节点。(这也是为什么key不推荐使用数组索引的原因)
+                如：
+                    <ul>
+                        <li key='2015'>Duke</li>
+                        <li key="2016">Villanova</li>
+                    </ul>
+                    到
+                    <ul>
+                        <li key='2014'>Connecticut</li>
+                        <li key='2015'>Duke</li>
+                        <li key="2016">Villanova</li>
+                    </ul>
+                    //这样就可以解决上面的问题了 现在 React 知道有'2014' key 的元素是新的， key为'2015' 和'2016'的两个元素仅仅
+                    //只是被移动而已。
+
+                    //key只需要兄弟节点之间唯一就行，不需要全局唯一
+
+                    //作为最后的手段，你可以将数组中的索引作为 key 。如果它们从不重新排序，它们工作也很好，但
+                    //是如果存在重新排序，性能将会很差。
+            》权衡利弊
+                reconciliation算法仅仅是一个实现细节。React会在每个操作上重新渲染整个应用，最终的结果可能是相同的。
+                我们经常细化启发式算法，以便优化性能。
+
+                在当前实现中，你可以表达这样一个事实，子树已经在兄弟节点中被移除，但是你不必告诉被移到什么位置。这个算法
+                将会重新渲染整个子树。
+
+                因为React依赖这个启发式，如果他们背后的假设没有得到满足，性能将会受到影响：
+                    》算法不会尝试匹配不同节点类型的子树。如果你发现在有类似输出的两个不同节点类型中相互切换，
+                      你可能需要将其转化成同种类型，事实上，我们没有在其中发现问题。
+
+                    》keys 应该是稳定的、可预测的并且是唯一的。不稳定的 key (类似于 Math.random() 函数的结果)
+                      可能会产生非常多的组件实例并且 DOM 节点也会非必要性的重新创建。这将会造成极大的性能损失
+                      和组件内state的丢失。
+9.上下文 Context
+    注意：从React v15.5开始，React.PropTypes助手函数已被弃用，建议使用prop-types库来定义contextTypes。
+
+    在React中，通过你的React组件很容易追踪数据流。但你查看一个组件时，你可以找出那些属性(props)被传递，这使得你的应用非常容易理解。
+
+    在某些场景下，你想在整个组件树种传递数据，但却不想手动地在每一层传递属性，你可以直接在React中使用强大的"context"解决上面问题。
+
+    》为什么不使用上下文(Context)
+        》绝大多数的应用程序不需要使用上下文Context
+        》如果希望应用程序更加稳定，就不要使用上下文Context。这只是一个实验性的API，并且可能在未来的React版本中移除。
+        》如果你不熟悉Redux(https://github.com/reactjs/redux)或Mobx(https://github.com/mobxjs/mobx)这类state管理库，就不要使用
+          Context。在许多实际应用中，这些库和React绑定是一个很好的state管理。Redux相比Context是更好的解决方案。
+        》如果你不是一个经验丰富的React的开发者，就不要使用Context，更好的方式是使用props和state。
+    》使用Context -- 通过将 childContextTypes 和 getChildContext 设置上下文，通过contextTypes 和this.context获取上下文
+        import PropTypes from 'prop-types'
+
+        class Button extends React.Component{
+            render(){
+                //使用上下文 属性
+                console.log(this,"button*********************");
+                return <button style= { {background:this.context.color} }>{ this.props.children }</button>
+            }
+        }
+        //设置上下文属性的类型
+        Button.contextTypes = {//如果子组件想拿到父组件定义的上下文，必须定义这个上下文类型
+            color:PropTypes.string
+        }
+
+        class Msg extends React.Component{
+            render(){
+                console.log(this,"Msg*********************");
+                return <div>{this.props.text} <Button>Delete</Button></div>
+            }
+        }
+
+        class MsgList extends React.Component{
+            getChildContext(){//设置context React自动向下传递信息，并且子组件都可以通过定义contextTypes去访问它。
+                              // 如果contextTypes没有定义，context将是一个空对象。
+                return {color:"purple"}
+            }
+
+            render(){
+                const children = this.props.msgs.map(msg => <Msg text={msg.text} key = {msg.text}/>);
+
+                return <div>{children}</div>
+            }
+        }
+        MsgList.childContextTypes = {//设置上下文时，这个必须定义
+            color:PropTypes.string
+        }
+    》父子耦合
+        Context可以构建API使得父组件和子组件进行相互通信。如React Router V4就是使用这种方式的一个库。
+        import {BrowserRouter as Router,Route,Link} from 'react-router-dom';
+
+        const BasicExample = ()=>{
+            <Router>
+                <div>
+                    <ul>
+                        <li><Link to='/'>Home</Link></li>
+                        <li><Link to='/about'>About</Link></li>
+                        <li><Link to='/topics'>Topics</Link></li>
+                    </ul>
+
+                    <hr/>
+                    <Route exact path="/" component={Home} />
+                    <Route path="/about" component={About} />
+                    <Route path="/topics" component={Topics} />
+                </div>
+            </Router>
+        }
+        //从Router组件向下传递一些信息，每一个Link和Route都可以沟通回到包含容器Router
+    》在生命周期方法中引用Context
+        如果contextTypes在组件中定义，下列的生命hook方法将接受一个额外的参数，context对象
+        》constructor(props, context)
+        》componentWillReceiveProps(nextProps, nextContext)
+        》shouldComponentUpdate(nextProps, nextState, nextContext)
+        》componentWillUpdate(nextProps, nextState, nextContext)
+        》componentDidUpdate(prevProps, prevState, prevContext)
+    》在无状态的函数式组件中引用Context
+        无状态的函数式组件也可以引用context，如果contextTypes作为函数的属性被定义，下面代码展示一个无状态的函数式Button组件
+        function Button({children},context){//{children} 获取this.props中的children
+            console.log(context);
+            return <button style={ {background:context.color} }>{children}</button>
+        }
+        //设置上下文属性类型
+        Button.contextTypes = {
+            color:PropTypes.string
+        }
+    》更新Context
+        React有一个API更新context，但是它打破类基本流程，不应该使用。
+        getChildContext函数会在每次state或props改变时调用。为了更新context中的数据，使用this.setState触发本地状态的更新。
+        这将触发一个context并且数据的改变可以被子元素收到。
+
+        class MediaQuery extends React.Component{
+            constructor(props){
+                super(props);
+                this.state = {type:"desktop"}
+            }
+
+            getChildContext(){//设置context
+                return {type:this.state.type}
+            }
+
+            componentDidMount(){
+                const checkMediaQuery = ()=>{
+                    const type = window.matchMedia("(min-width:1025px)").matches ? "desktop" :"mobile";
+
+                    //更新state
+                    if(type !== this.state.type) this.setState({type});
+                }
+
+                //添加监听事件
+                window.addEventListener('resize',checkMediaQuery);
+
+                //执行一次检测函数
+                checkMediaQuery();
+            }
+
+            render(){
+                return <ShowCurrState />;
+            }
+        }
+        MediaQuery.childContextTypes = {
+            type:PropTypes.string
+        }
+
+        function ShowCurrState(props,context){
+            return <div>{context.type}</div>
+        }
+        ShowCurrState.contextTypes = {
+            type:PropTypes.string
+        }
+        注意：组件提供的context值的改变，后代元素如果shouldComponentUpdate返回false，那么context
+        的值将不会更新。这使得使用context的组件完全失控，所以基本上没有可靠的办法更新context。这也是
+        为什么不推荐使用Context的原因。
+10. Web Components
+    React和Web Component是为了解决不同的问题而建立的。Web Component为了可重用组件提供了强大的封装，然而React提供声明库
+    可以使得DOM和数据保持同步。两者的目标是互补的。你可以在你的Web Component中自由使用React或者在React中使用Web Component
+    或者都使用。
+
+    大多数使用React的开发者不使用Web Component，但是你可能想要使用Web Component，尤其是你正在使用Web Component编写的第三方UI库的情况下。
+
+    /****************在Web Component中使用React******************/
+    //定义web component
+    const proto = Object.create(HTMLElement.prototype,{
+        attachedCallback:{
+            value:function(){
+                const mountPoint = document.createElement('span');
+                this.createShadowRoot().appendChild(mountPoint);
+
+                const name = this.getAttribute('name');
+                const url = 'https://www.google.com/search?q=' + encodeURIComponent(name);
+                ReactDOM.render(<a href= {url}>{name}</a>,mountPoint);
+            }
+        }
+    });
+    document.registerElement('x-search',{prototype:proto});
+
+    /****************在React中使用Web Components******************/
+    class HelloMsg extends React.Component{
+        render(){
+            return <div>Hello <x-search>{ this.props.name }</x-search>!</div>
+        }
+    }
+    注意：web components通常会对外暴露一个必须的API，为了访问web component的命令式API，需要使用
+    ref与DOM节点直接交互。如果你使用的是第三方的web component，最好的解决方案是编写React组件作为
+    web component的包装器。
+    由于web component发出的事件可能不会沿着React渲染树正确传播，因此在你的React组件中，需要手动的添加
+    事件处理程序来处理这些事件。
+
+    一个常见的问题 Web Component使用class而不是className:
+    function BrickFlipbox(){
+        return <brick-flibox class='demo'></brick-flibox>//brick-flibox是Web components
+    }
+11.高阶组件
+    在React中，高阶组件是**重用组件逻辑**的一项高级技术。高阶组件并不是React API的一部分。高阶组件源自于React生态。
+    其实，高阶组件是一个函数，能够接受一个组件并返回一个新的组件
+    即：const EnhancedComponent = higherOrderComponent(WrappedComponent);
+    组件是将props转化为UI，然而高阶组件是将一个组件转化为另一个组件。
+    React在第三方组件库中非常常见的，如：Redux的connect和 Relay's createContainer等等。
+
+    》在横切关注点中使用高阶组件
+        注意：mixins也是处理横切关注点的一种方法。但是mixin的弊端比较大。
+
+        组件是React中代码重用的最小单元，然而某些模式并不能直接适应传统的组件
+        案例：
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	
 
 
