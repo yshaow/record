@@ -2193,6 +2193,727 @@
 
         组件是React中代码重用的最小单元，然而某些模式并不能直接适应传统的组件
         案例：
+            /**
+             * 接受外部数据源 渲染评论列表的组件
+             */
+            class CommentList extends React.Component{
+                constructor(props){
+                    super(props);
+
+                    this.state = {
+                        comments:Datasource.getComments()
+                    };
+
+                    this.handleChange = this.handleChange.bind(this);
+                }
+
+                componentDidMount(){
+                    DataSource.addChangeListener(this.handleChange);
+                }
+
+                componentWillUnmount(){
+                    DataSource.removeChangeListener(this.handleChange);
+                }
+
+                handleChange(){
+                    this.setState({
+                        comments:DataSource.getComments()
+                    });
+                }
+
+                render(){
+                    return <div>
+                                {
+                                    this.state.comments.map(comment => <Comment comment={comment} key={ comment.id} />)
+                                }
+                            </div>
+                }
+            }
+
+            /**
+             * 订阅单个博文的组件
+             */
+            class BlogPost extends React.Component{
+                constructor(props){
+                    super(props);
+
+                    this.handleChange = this.handleChange.bind(this);
+
+                    this.state = {
+                        blogPost:DataSource.getBlogPost(props.id)
+                    }
+                }
+
+                componentDidMount(){
+                    DataSource.addChangeListener(this.handleChange);
+                }
+
+                componentWillUnmount(){
+                    DataSource.removeChangeListener(this.handleChange);
+                }
+
+                handleChange(){
+                    this.setState({
+                        blogPost:DataSource.getBlogPost(this.props.id)
+                    });
+                }
+
+                render(){
+                    return <TextBlock text={ this.state.blogPost}/>
+                }
+            }
+
+            /**
+             * CommentList和BlogPost是等价的，除了它们调用DataSource的不同方法，有不同的输出。但它们大部分的实现是类似的
+             *      组件mount结束后，都添加DataSource的change监听
+             *      除了监听函数，无论什么时候dataSource改变之后，都会调用setState
+             *      组件unmount之后，都会移除监听
+             *
+             * 把公共的部分抽象出来，使得我们在一个地方定义逻辑并且在我们的组件中共享 -- 这就是高阶组件的优点
+             *      我们可以写一个函数，能够创建类似于CommentList和BlogPost这类订阅DataSource的新的组件。这个函数接收
+             *      一个子组件作为参数，这个子组件接受订阅数据源作为props，调用withSubscription
+             */
+            const CommentListWidthSubscription = withSubscription(CommentList,DataSource => DataSource.getComments());
+            const BlogPostWidthSubscription = withSubscription(BlogPost,(DataSource,props) => DataSource.getBlogPost(props.id));
+
+            /**
+             *
+             * @param WrappedComponent 被包含的组件
+             * @param selectData 函数--根据给定的DataSource和当前props取回我们需要的数据
+             */
+            function widthSubscription(WrappedComponent,selectData){
+
+                return HigherComponents;
+            }
+
+            /**
+             * 当 CommentListWidthSubscription与BlogPostWidthSubscription被渲染的时候，CommentList和BlogPost将会
+             * 被传递data属性，其中包含从DataSource取回的最新数据
+             */
+            class HigherComponents extends React.Component{
+
+                constructor(props){
+                    super(props);
+                    this.handleChange = this.handleChange.bind(this);
+                    this.state = {
+                        data:selectData(DataSource,props)
+                    }
+                }
+
+                componentDidMount(){
+                    DataSource.addChangeListener(this.handleChange);
+                }
+
+                componentWillUnmount(){
+                    DataSource.removeChangeListener(this.handleChange);
+                }
+
+                handleChange(){
+                    this.setState({
+                        data:selectData(DataSource,this.props)
+                    });
+                }
+
+                render(){
+                    //被包裹的元素接收container的所有props和新的props，并使用其渲染输出。
+                    //高阶组件并不关心数据将会如何或者为什么使用，并且被包裹的元素并不关心数据的源头
+                    return <WrappedComponent data={this.state.data} {...this.props }/>;
+                }
+            }
+            /**
+             * 结果：高阶组件既不会修改输入组件，也不会通过继承来复制行为。相反，通过包裹的形式，高阶组件
+             *       将原先的组件组合在container组件中。高阶组件是纯函数，没有副作用。
+             */
+
+
+            /*******************注意事项**********************/
+
+            /**
+             * 1.不要改变原始组件，而是使用组合
+             *      在高阶组件中要避免修改组件原型
+             */
+            //如下：就修改了原型
+            function LogProps(InputComponent){
+                InputComponent.prototype.componentWillReceiveProps = function(nextProps){
+                    console.log(nextProps);
+                }
+                return InputComponent;
+            }
+            //相比于修改，高阶组件最好是通过输入组件包裹在容器组件的方式来使用组合
+            function LogProps(WrappedComponent){
+                return class extends React.Component {
+                    componentWillReceiveProps(nextProps){
+                        console.log(nextProps);
+                    }
+                    render(){
+                        return <WrappedComponent {...this.props}/>;
+                    }
+                }
+            }
+            //上面的高阶组件与之前的修改原型的版本有着相同的功能，但又避免了潜在的冲突可能
+            //高阶组件和容器组件的模式有相同之处，容器组件是分离责任策略的一部分，这个分离策略是关于
+            //高层次和低层次关注点之间的责任分离。容器管理着类似订阅和状态这类东西，和给组件传递属性来处理类似渲染UI这类事情。
+            //高阶组件使用容器作为其实现的一部分。可以将高阶组件视为定义参数化容器组件。
+
+            /**
+             * 2.约定：给包裹组件传递不相关的属性Props -- 帮助确定高阶组件能够足够的灵活和可以被重用
+             *      高阶组件可以向组件添加功能，它不应该大幅度地改变功能，期望的是高阶组件返回的组件和被包裹的组件具有相似的界面
+             */
+            //高阶组件应该通过props传递那些与特定功能无关的特性，大多数的高阶组件包含如下的render函数
+            render(){
+                //过滤掉与高阶函数功能相关的props属性
+                const {extraProp,...passThroughProps} = this.props;
+                //向包裹组件注入props属性，一般是高阶组件的state状态或实例方法
+                const injectedProp = someStateOrInstanceMethod;
+                //向包裹组件传递props顺序
+                return <WrappedComponent injectedProp={injectedProp} {...passThroughProps}/>
+            }
+
+            /**
+             * 3. 约定：最大化组合
+             */
+            //不是所有的高阶组件看起来都是一样的，有时候，它接受包裹组件作为单一参数
+            const NavbarWithRouter = withRouter(Navbar);
+            //通常情况下，高阶组件接受其他参数
+            const CommentWidthRelay = Relay.createContainer(Comment,config);
+            //高阶组件最常见的签名
+            const ConnectedComment = connect(commentSelector,commentActions)//返回一个函数 -- 高阶组件
+                                        (CommentList);//调用高阶组件
+
+            /**
+             * 4.约定：为了方便调式 包装显示名称
+             *      由于高阶属性创建的容器组件在React开发者工具中显示通其他的组件相似，为了方便调式，选择一个显示名称display name,表示它是高阶组件的结果。
+             */
+            //最常见的方法是给被包裹元素包裹一个显示名称display name。因此如果你的高阶组件名字为widthSubscription,被包裹的元素名称为CommentList，那就选择名称为
+            //WidthSubscription(CommentList)
+            function widthSubscription(WrappedComponent){
+                class WidthSubscription extends  React.Component{};
+
+                WidthSubscription.displayName = `WidthSubscription(${getDisplayName(WrappedComponent)})`
+
+                return WidthSubscription;
+            }
+            function getDisplayName(WrappedComponent){
+                return WrappedComponent.displayName || WrappedComponent.name || "Component";
+            }
+
+            /**
+             * 5. 警告
+             */
+            // 5.1不要再render函数中使用高阶组件
+            /**
+             * React的diff算法又称为reconciliation使用组件标识符来决定是否应该更新已有的子树或将其抛弃并安装新的子树。
+             * 如果从render返回的组件等同于(===)之前的render函数返回的组件，React将会迭代地通过diff算法更新子树到新的子树
+             * 如果不相等则先前的子树将会完全卸载
+             */
+            //通常情况下，不需要考虑这些，但是这对于高阶组件非常重要，因为这意味着你在组件的render方法不能通过高阶组件产生
+            render(){
+                //每次render函数调用都会创建一个新的EnhancedComponent实例
+                const EnhancedComponent = enhance(MyComponent);
+                //每一次都会使得子对象完全被移除
+                return <EnhancedComponent />
+            }
+            //在组件定义外应用高阶组件，以便于生成的组件只会被创建一次，然后他的标识符在每次渲染中都是相同的。
+
+            //5.2静态方法必须复制
+            //当你将一个组件应用于高阶组件时，虽然原有的组件被容器组件所包裹，但这也意味着新的组件没有之前组件的静态函数
+            //定义静态方法
+            WrappedComponent.staticMethod = function(){}
+
+            //使用高阶组件
+            const EnhancedComponent = enhance(WrappedComponent);
+            EnhancedComponent.staticMethod === 'undefined'//true
+
+            //复制原有的静态方法
+            function enhance(WrappedComponent){
+                class Enhance extends React.Component{}
+
+                //复制
+                Enhance.staticMethod = WrappedComponent.staticMethod;
+
+                return Enhance;
+            }
+            //然而，上面的代码需要明确的晓得什么方法需要复制，可以使用hoist-non-react-statics来自动复制非React的静态方法
+            import hoistNonReactStatic from 'hoist-non-react-statics';
+            function enhance(WrappedComponent) {
+                class Enhance extends React.Component {/*...*/}
+                hoistNonReactStatic(Enhance, WrappedComponent);
+                return Enhance;
+            }
+            //另一个有效的方法是将静态方法与组件本身相分离
+            //将：
+            MyComponent.someFunction = someFunction;
+            export default  MyComponent;
+            //换成：
+            export {someFunction};
+            import MyComponent,{someFunction} from './MyComponent';
+
+            //5.3 Refs不会被传递
+            /**
+             * 高阶组件会给被包裹的组件传递所有的属性，但是不会传递refs。因为ref不是一个属性，就像key一样，它是由React特殊处理的。如果
+             * 你给高阶组件产生的组件一个元素添加ref，ref引用的是外层容器组件的实例，而不是被包裹的组件。
+             *
+             * 最好的解决方法是避免使用ref，props是更好的选择
+             */
+            function Field({inputRef,...rest}){
+                return <input ref={inputRef} {rest}/>;
+            }
+            //在高阶组件中增强Field组件
+            const EnhancedFiled = enhance(Field)；
+
+            //通过props传递ref
+            <EnhancedFiled inputRef = {input =>{
+                this.input = input;
+            }}/>
+12.与其他库的整合
+    如何将React与jquery以及Backbone等其他库的结合使用。
+    》与DOM节点操作类插件的结合
+        最简单的方式就是阻止React更新外部在操作的节点，那么你可以通过生成一个React根本不会去更新的元素来实现，如：空的<div/>
+        如：
+        class SomePlugin extends React.Component{
+            componentDidMount(){
+                this.$el = $(this.el);//把ref引用的元素传递给jquery
+                this.$el.somePlugin();
+            }
+
+            componentWillUnmount(){
+                this.$el.somePlugin('destroy');
+            }
+
+            render(){
+                return <div ref= {el => this.el = el}/>//这个div是空的 React就不会去更新它了 jquery就可以随意的更新它了
+            }
+        }
+
+        》集成Jquery Chosen插件
+            function Example(){
+                return <Chosen onChange={ val =>console.log(val)}>
+                                <option>A</option>
+                                <option>B</option>
+                                <option>C</option>
+                        </Chosen>
+            }
+
+            //通过jquery 的Chosen插件 集成一个React的插件
+            class Chosen extends React.Component{
+                render(){
+                    return <div>
+                                <select className='Chosen-select' ref={el => this.el = el}>{this.props.children}</select>
+                            </div>
+                }
+
+                componentDidMount(){
+                    this.$el = $(this.el);
+                    this.$el.chosen();
+
+                    this.handleChange = this.handleChange.bind(this);
+                    this.$el.on('change',this.handleChange);
+                }
+
+                componentWillUnmount(){
+                    this.$el.off('change',this.handleChange);
+                    this.$el.chosen('destroy');
+                }
+
+                handleChange(e){
+                    this.props.onChange(e.target.value);
+                }
+
+                componentDidUpdate(prevProps){//手动更新
+                    if(prevProps.children !== this.props.children){
+                        this.$el.trigger('chosen:updated');
+                    }
+                }
+            }
+    》在React中使用其他引擎加载页面
+        》在React中使用"字符串替换"类的库
+            如：
+            //jquery
+            $("#container").html("<button id='btn'>Say Hello</button>");
+            $("#btn").click(function(){alert('Hello!')});
+            //React
+            function Button(){
+                return <button id='btn'>Say Hello</button>
+            }
+            ReactDom.render(<Button />,document.getElementById('container'),function(){
+                $('#btn').click(function(){
+                    alert('Hello!');
+                });
+            });
+            /*************************/
+            function Button(props){
+                return <button onClick={props.onClick}>Say Hello</button>
+            }
+
+            function HelloButton(){
+                function handleClick(){
+                    alert('Hello!');
+                }
+                return <Button onClick={handleClick}/>
+            }
+            ReactDOM.render(<HelloButton />,document.getElementById('container'));
+        》在React中使用Backbone视图
+            Backbone的视图是很典型的HTML字符串，或者说是通过模板生成的DOM元素的函数。
+            function Paragraph(props){
+                return <p>{ props.text }</p>
+            }
+            const ParagraphView = Backbone.View.extend({
+                render(){
+                    const text = this.model.get('text');
+                    ReactDOM.render(<Paragraph text={text} />,this.el);
+                    return this;
+                }
+                remove(){
+                    ReactDOM.unmountComponentAtNode(this.el);
+                    Backbone.View.prototype.remove.call(this);
+                }
+            });
+        》在React中使用其他数据层库和框架
+            一般来说推荐大家使用符合单向数据流的框架和库，如：React state、Flux、Redux等，但React
+            的组件也可以支持其他处理数据流的框架和库。
+            》在React组件中使用Backbone处理数据
+                如果想在React中使用Backbone处理数据模型，最简单的实现方式就是监听多个事件，然后手动调用方法，强制更新页面。
+
+                //Item组件负责显示数据
+                class Item extends React.Component{
+                    constructor(props){
+                        super(props);
+                        this.handleChange = this.handleChange.bind(this);
+                    }
+
+                    handleChange(){
+                        this.forceUpdate();//强制更新
+                    }
+
+                    componentDidMount(){
+                        this.props.model.on('change',this.handleChange);
+                    }
+
+                    componentWillUnmount(){
+                        this.props.model.off('change',this.handleChange);
+                    }
+
+                    render (){
+                        return <li>{ this.props.model.get('text') }</li>
+                    }
+                }
+                //List组件用来显示来自Backbone的数据
+                class List extends React.Component{
+                    constructor(props){
+                        super(props);
+                        this.handleChange = this.handleChange.bind(this);
+                    }
+
+                    handleChange(){
+                        this.forceUpdate();
+                    }
+
+                    componentDidMount(){
+                        this.props.collection.on('add','remove',this.handleChange);
+                    }
+
+                    componentWillUnmount(){
+                        this.props.collection.off('add','remove',this.handleChange);
+                    }
+
+                    render(){
+                        return <ul>
+                            {this.props.collection.map(model => <Item key={model.cid} model={model}/>)}
+                        </ul>
+                    }
+                }
+            》从Backbone的数据模型中提取数据
+                function connectToBackboneModel(WrappedComponent) {
+                  return class BackboneComponent extends React.Component {
+                    constructor(props) {
+                      super(props);
+                      this.state = Object.assign({}, props.model.attributes);
+                      this.handleChange = this.handleChange.bind(this);
+                    }
+
+                    componentDidMount() {
+                      this.props.model.on('change', this.handleChange);
+                    }
+
+                    componentWillReceiveProps(nextProps) {
+                      this.setState(Object.assign({}, nextProps.model.attributes));
+                      if (nextProps.model !== this.props.model) {
+                        this.props.model.off('change', this.handleChange);
+                        nextProps.model.on('change', this.handleChange);
+                      }
+                    }
+
+                    componentWillUnmount() {
+                      this.props.model.off('change', this.handleChange);
+                    }
+
+                    handleChange(model) {
+                      this.setState(model.changedAttributes());
+                    }
+
+                    render() {
+                      const propsExceptModel = Object.assign({}, this.props);
+                      delete propsExceptModel.model;
+                      return <WrappedComponent {...propsExceptModel} {...this.state} />;
+                    }
+                  }
+                }
+
+                function NameInput(props) {
+                  return (
+                    <p>
+                      <input value={props.firstName} onChange={props.handleChange} />
+                      <br />
+                      My name is {props.firstName}.
+                    </p>
+                  );
+                }
+
+                const BackboneNameInput = connectToBackboneModel(NameInput);
+
+                function Example(props) {
+                  function handleChange(e) {
+                    model.set('firstName', e.target.value);
+                  }
+
+                  return (
+                    <BackboneNameInput
+                      model={props.model}
+                      handleChange={handleChange}
+                    />
+                  );
+                }
+
+                const model = new Backbone.Model({ firstName: 'Frodo' });
+                ReactDOM.render(
+                  <Example model={model} />,
+                  document.getElementById('root')
+                );
+            //对于任何处理数据模型的库或框架，都可以在React中通过生命周期函数订阅它的变化事件，你还可以把这些数据直接复制到
+            //React组件的state中。
+13.可访问性
+    可访问性的原因：
+        web可访问性(a11y)是所有人都可以使用站点的设计与创建。可访问性的支持是辅助技术解析web页面的必要条件
+        React是支持建立可访问性站点的，通常使用HTML标准。
+    》标准与指导方针
+        WCAG
+             Web Content Accessibility Guidelines提供了关于创建可访问站点的指导方针。
+             WCAG checklists提供了一个概述：
+                WCAG checklist from Wuhcag
+                WCAG checklist from WebAIM
+                Checklist from The A11Y Project
+        WAI-ARIA
+             Web Accessibility Initiative - Accessible Rich Internet Applications文档包含了构建可访问js工具的技术。
+             注意：所有的aria-*的html属性在jsx中是支持的。尽管大多数DOM属性在React中是camelCased(驼峰命名)，这些属性应该被小写。
+             <input
+                type='text'
+                aria-label={labelText}
+                aria-required='true'
+                onChange = {onchangeHandle}
+                value={inputValue}
+                name='name'
+             />
+    》可访问的表单
+        》Labeling
+            所有的表单控件，如<input />等都需要一个可访问的labeled。我们需要提供一个描述性的labels，并且这些labels也会暴露
+            给屏幕阅读者。
+            尽管这些HTML标准能够直接用于React。但是label标签的for属性在JSX中被重写为htmlFor：
+            <label htmlFor='namedInput'>Name:</label> <input id='namedInput' type='text' name='name'/>
+        》焦点控制
+            》键盘焦点和焦点轮廓
+                键盘焦点指：DOM中被选中并接收键盘输入的当前元素。我们把它看成一个焦点轮廓。
+            》用编程的方式管理焦点
+                render(){
+                    return <input type='text'
+                        ref={ input => this.textInput =input}
+                    />
+                }
+                focus(){
+                    this.textInput.focus();
+                }
+/**********************API************************/
+1. React
+    React是React库的入口，如果你使用<script>标签来加载React，这些顶级API都在React这个全局变量上。
+    如果你在npm下使用Es6，通过import React from 'react'。如果在npm下使用Es5通过var React = require('react');
+
+    》组件
+        React组件允许你将UI拆分为独立的可重用的模块，并且每一个模块逻辑也是独立的。React组件可以通过扩展React.Component
+        或React.PureComponent来定义。
+        》React.Component -- React组件使用Es6类定义时的基类
+            class Greeting extends React.Component{
+                render(){
+                    return <h1>Hello,{ this.props.name }</h1>
+                }
+            }
+
+        》React.PureComponent
+            React.PureComponent与React.Component完全相同，但是前者在shouldComponentUpdate()中实现时，使用了props与state的浅比较。
+            如果你的React的组件的render()函数在给定相同的props和state情况下，渲染相同的结果，在某些情况下，可以使用
+            React.PureComponent来提高性能。
+            注意：
+                React.PureComponent的shouldComponentUpdate仅对对象进行浅比较。如果这些包含复杂的数据结构，它可能会在更深层数据
+                差异比较时发生判断偏差。所以扩展PureComponent只能用于具有简单的props和state的组件，或者在知道深层数据结构已更改时
+                使用forceUpdate()来强制更新组件。或者考虑使用不可变对象来帮助嵌套数据的快速比较。
+                React.PureComponent的shouldComponentUpdate方法跳过了整个组件子树的props更新。所以确保来所有的子组件也是"pure"。
+
+        注意：如果不使用ES6的类，可以使用create-react-class模块来替代。
+    》创建React元素
+        每个JSX元素都是调用React.createElement()的语法糖。
+        》React.createElement(type,[props],[...children])
+            创建并返回一个新的给定类型的React元素。这个type类型参数可以是一个标签名的字符串("div")，或者是React的组件类型(类或者函数)。
+
+            React.DOM提供了一个方便的包装为DOM组件的React.createElement的方法。如React.DOM.a(...)是React.createElement('a',...)的方法包装。
+            它们是被认为是遗留的API，推荐使用JSX或React.createElement()。
+
+            使用JSX编写的代码将被转成使用React.createElement。如果使用JSX，则可以不必显示直接调用React.createElement()。
+
+        》React.createFactory(type)
+            返回一个函数，该函数生成给定类型的React元素。
+            type参数可以是标签名字符串("div")，或React组件类型(类或函数)。
+
+            这个函数被认为是遗留的API，推荐使用jsx或React.createElement()。
+    》转换元素
+        》React.cloneElement(element,[props],[...children])
+            使用element作为起点，克隆并返回一个新的React元素。所产生的元素将具有原始元素的props，新的props为浅层合并，新的子元素将
+            取代现有的子元素，key和ref将被保留。
+            等效于：
+            <element.type {...element.props} {...props}>{children}</element.type>
+            然而它会保留ref，这意味着，如果你通过他上面的ref获取自己的子节点，你将不会有机会从你的祖先获取它，你只会获得绑定在你的新元素上
+            的相同ref。
+
+            这个API引入是作为废弃的React.addons.cloneWithProps() 替代品。
+
+        》React.isValidElement(object)
+            验证对象是否是一个React元素，返回true或false
+
+        》React.Children
+            React.Children提供了处理this.props.children这种不透明数据结构的实用程序。
+            》React.Children.map(children,function[(thisArg)])
+                对包含在children中的每个*直接*子元素调用一个函数，使用this设置thisArg。如果children是一个键片段或数组，
+                它将被遍历，该函数永远不会传递容器对象。如果children是null或undefined，返回null或undefined而不是一个数组。
+            》React.Children.forEach(children,function[(thisArg)])
+                和上面map一样，但是不返回新的数组
+            》React.Children.count(children)
+                返回children中的组件总数，等于传递给map或forEach的回调被调用的次数。
+            》React.Children.only(children)
+                返回children中的唯一子集，否则抛出异常。
+            》React.Children.toArray(children)
+                将children不透明数据结构作为一个平面数组返回，并且key分配给每个子集。如果你想在渲染方法中操作children集合
+                特别是想在传递它之间重新排序或切割this.props.children，这是很有用的。
+
+                注意：React.Children.toArray() 更改 keys 去防止嵌套数组的语法当扁平化子节点列表。 也就是说，toArray为返回数
+                        组中的每个key赋予前缀，以便将每个元素的 key 范围限定为包含它的输入数组。
+2.React.Component
+    》概述
+        React.Component是一个抽象的基类，所以直接引用React.Component没有意义，相反通常会将其子类化，
+        并且至少需要定义一个render()方法。
+    》组件的生命周期
+        每个组件都有几个"生命周期方法"，你可以重写这些方法，以在过程中的特定事件运行代码。前缀为will的方法在一些事情
+        发生之前调用，而前缀为did的方法在一些事情发生后被调用。
+
+        》Mounting
+            当组件实例被创建并将其插入DOM时，调用下面hook：
+            》constructor(props)
+                在React组件被mounted前，该组件的constructor将被调用。当实现React.Component子类的constructor方法时，**应该在其他任何语句
+                之前调用super(props)**,否则，this.props将在构造器中是undefined的，这将导致bug。
+
+                constructor是初始化state的正确地方，如果不初始化state，并且不绑定方法，则不需要为React组件实现构造函数。
+
+                //可以根据props来初始化state
+                constructor(props){
+                    super(props);
+                    this.state = {
+                        color:props.initalColor
+                    }
+                }
+                //注意：state不会随着任何props更新而更新。通常不应该将props同步到state，应该提升state状态。
+                如果通过"fork"props来作为state使用，可能还需要实现componentWillReceiveProps(nextProps)来保持state和它们同步更新，但是
+                状态提升往往是更容易实现的，且不容易出错。
+
+            》componentWillMount()
+                在组件mounting发生之前被调用，它在render()之前调用。因此在此方法中设置的state不会触发重新渲染。避免在此方法中进行任何其他
+                修改或订阅。
+
+                这是在服务器渲染上调用的唯一的生命周期钩子，推荐使用constructor()。
+
+            》render() -- 必需的
+                当被调用时，它会检查this.props和this.state并返回一个单独的React元素。此元素可以是原生DOM组件的表示形式如:<div/>,
+                也可以是你自定义的复合组件。
+
+                也可以返回null或false来表示不想渲染任何东西。当返回null或false时，ReactDOM.findDOMNode(this)将返回null。
+
+                render()函数应该是纯函数，这意味着它不会修改组件的状态，每次调用它时返回相同的结果，它不会直接与浏览器交互。
+                如果需要与浏览器交互，选择使用其他生命hook方法执行你的逻辑，保持render()为纯函数使得组件更容易理解。
+
+                注意：
+                    shouldComponentUpdate()方法返回false，render()不会被调用。
+
+            》componentDidMount()
+                在组件mounting后被调用，需要初始化DOM节点的应该放在这里，如果需要从远程端点加载数据，这里是进行网络请求的好地方。
+                此方法设置的state状态将触发重新渲染。
+
+        》Updating
+            改变props或state可以触发更新事件，在重新渲染组件时，这些方法将被调用：
+            》componentWillReceiveProps(nextProps)
+                在已mounted的组件接收到新的props之前调用。如果需要更新state以响应props的更改，则可以在此方法中比较this.props和
+                nextProps并使用this.setState执行状态转换。
+
+                注意：即使prop没有改变，React也可能调用这个方法，因此如果只想处理变化，请确保比较当前值和下一个值。当父组件导致你的
+                组件重新渲染时，可能发生这种情况。
+
+                在mount期间，React不会用初始化的props调用componentWillReceiveProps。如果某些组件的props可能更新，它只会调用此方法。
+                调用this.setState一般不会触发componentWillReceiveProps。
+
+            》shouldComponentUpdate(nextProps,nextState)
+                使用shouldComponentUpdate()让React知道组件的输出是否不受state或props当前变化的影响。
+                默认行为是在每次state更新时重新渲染，并且在绝大多数情况下，你应该依赖于默认行为。
+
+                当接收到新的props或state时，shouldComponentUpdate()在渲染之前被调用。默认返回true，对于
+                初始(第一次)渲染或使用forUpdate时，不调用此方法。
+
+                返回false不会阻止子组件在state更改时重新渲染。
+
+                目前，如果shouldComponentUpdate返回false，那么componentWillUpdate,render,componentDidUpdate将不会被调用。
+                注意：在将来React可能将shouldComponentUpdate作为暗示而不是严格的指令，即返回false可能仍然导致组件的重新渲染。
+
+                如果你确定一个特定的组件执行缓慢，可以使它继承React.PureComponent,它实现了具有props和state浅比较的shouldComponentUpdate()。
+                如果你确信你想手工编写它，可以比较this.props和nextProps以及this.state和nextState,并返回false,告诉React可以跳过这次更新。
+
+            》componentWillUpdate(nextProps,nextState)
+                当接收到新的props或state时，componentWillUpdate在渲染之前立即被调用，在更新发生之前，使用这个方法可以作为执行准备更新的一个好机会。
+                这个方法在第一次渲染时不会被调用。
+
+                注意：
+                    》这里不能调用this.setState(),如果你需要更新state以及响应props更改，需使用componentWillReceiveProps()。
+                    》如果 shouldComponentUpdate() 返回 false ，那么 componentWillUpdate() 不会被调用。
+            》render()
+            》componentDidUpdate(prevProps,prevState)
+                在更新发生后立即被调用。这个方法在第一次渲染时不会被调用。
+                当组件已更新时，使用此方法作为操作DOM的一个机会，这也是做网络请求的一个好地方，只需要你比较当前props和以前的props，改变了就执行
+                相应操作。
+
+                注意：
+                    如果 shouldComponentUpdate() 返回 false ，那么 componentDidUpdate() 不会被调用。
+
+        》Unmounting
+            当一个组件从DOM中删除时，这个方法将被调用：
+            》componentWillUnmount()
+                在一个组件被unmounted和destroyed之前立即被调用。在此方法中执行任何必要的清理。如：计时器无效，取消网络请求或清理在
+                componentDidMount中创建的任何DOM元素。
+
+    》实例方法
+        》setState(updater,[callback])
+
+        》forceUpdate()
+    》类属性 -- 静态属性
+        》defaultProps
+        》displayName
+    》实例属性
+        》props
+        》state
+
+
+
 
 
 

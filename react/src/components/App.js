@@ -109,10 +109,16 @@ import { Router, Route, hashHistory } from 'react-router';
 // ReactDom.render(<WebComponents name="哈哈"/>,document.getElementById('app'));
 
 /**********************高阶组件************************/
-import HigherComponents from './higherComponents'
-ReactDom.render(<HigherComponents/>,document.getElementById('app'));
+// import HigherComponents from './higherComponents'
+// ReactDom.render(<HigherComponents/>,document.getElementById('app'));
 
+/**********************React.children测试************************/
+// import ChildrenTest from './childrenTest'
+// ReactDom.render(<ChildrenTest/>,document.getElementById('app'));
 
+/**********************React.Component测试************************/
+import ComponentMethods from './componentMethods'
+ReactDom.render(<ComponentMethods test="props test"/>,document.getElementById('app'));
 // var List = React.createClass({
 //     render: function() {
 //         return (
