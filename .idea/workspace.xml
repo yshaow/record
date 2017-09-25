@@ -2,8 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="068c142f-31e1-4953-93da-befd977f3c6f" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/encodings.xml" afterPath="$PROJECT_DIR$/.idea/encodings.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/D3/.idea/workspace.xml" afterPath="$PROJECT_DIR$/D3/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/react/src/components/higherComponents.js" afterPath="$PROJECT_DIR$/react/src/components/higherComponents.js" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -18,12 +19,95 @@
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="react.txt" pinned="false" current-in-tab="true">
+      <file leaf-file-name="react.txt" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/react.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="53">
+            <state relative-caret-position="-67557">
               <caret line="306" column="11" lean-forward="false" selection-start-line="306" selection-start-column="8" selection-end-line="306" selection-end-column="11" />
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="App.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/react/src/components/App.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-3564">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding>
+                <marker date="1506133799910" expanded="false" signature="22:135" ph="..." />
+                <marker date="1506133799910" expanded="true" signature="137:172" ph="/** jsx ...*/" />
+                <marker date="1506133799910" expanded="true" signature="173:464" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="465:496" ph="/** 组件定义 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="501:514" ph="/** 函数调用 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="519:772" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="777:789" ph="/** 类组件调用 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="794:924" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="930:1047" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="1048:1088" ph="/** state ...*/" />
+                <marker date="1506133799910" expanded="true" signature="1089:1210" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="1212:1251" ph="/** 事件 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="1252:1343" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="1345:1385" ph="/** 条件渲染 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="1386:1551" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="1553:1595" ph="/** 阻止组件渲染 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="1596:1729" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="1731:1774" ph="/** 列表与keys ...*/" />
+                <marker date="1506133799910" expanded="true" signature="1775:1902" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="1904:1946" ph="/** form表单 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="1947:2035" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="2037:2080" ph="/** 挂起state ...*/" />
+                <marker date="1506133799910" expanded="true" signature="2081:2187" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="2189:2230" ph="/** 组件的合成 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="2231:2349" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="2351:2392" ph="/** 组件的继承 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="2393:2517" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="2519:2573" ph="/** jsx的深入 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="2574:2685" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="2687:2743" ph="/** prop类型检测 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="2744:2904" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="2906:2962" ph="/** refs与DOM ...*/" />
+                <marker date="1506133799910" expanded="true" signature="2963:3048" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="3050:3105" ph="/** 不受控制的组件 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="3106:3239" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="3241:3299" ph="/** 无ES6的React ...*/" />
+                <marker date="1506133799910" expanded="true" signature="3300:3406" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="3408:3529" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="3531:3589" ph="/** 无JSX的react ...*/" />
+                <marker date="1506133799910" expanded="true" signature="3590:3841" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="3843:3900" ph="/** 使用Context ...*/" />
+                <marker date="1506133799910" expanded="true" signature="3901:4042" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="4044:4108" ph="/** 使用Web Components ...*/" />
+                <marker date="1506133799910" expanded="true" signature="4109:4233" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="4235:4287" ph="/** 高阶组件 ...*/" />
+                <marker date="1506133799910" expanded="true" signature="4409:4716" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="4718:5027" ph="//..." />
+                <marker date="1506133799910" expanded="true" signature="5029:5345" ph="//..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="form.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/react/src/components/form.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="324">
+              <caret line="9" column="13" lean-forward="false" selection-start-line="9" selection-start-column="8" selection-end-line="9" selection-end-column="13" />
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="higherComponents.js" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/react/src/components/higherComponents.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="324">
+              <caret line="142" column="2" lean-forward="false" selection-start-line="142" selection-start-column="2" selection-end-line="142" selection-end-column="2" />
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -62,20 +146,27 @@
       <list>
         <option value="$PROJECT_DIR$/vueJs.txt" />
         <option value="$PROJECT_DIR$/react.txt" />
+        <option value="$PROJECT_DIR$/react/src/components/higherComponents.js" />
       </list>
     </option>
   </component>
   <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
   <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsFlowSettings">
+    <service-enabled>true</service-enabled>
+    <exe-path />
+    <annotation-enable>false</annotation-enable>
+    <other-services-enabled>true</other-services-enabled>
+  </component>
   <component name="JsGulpfileManager">
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-8" />
-    <option name="y" value="-8" />
-    <option name="width" value="1936" />
-    <option name="height" value="1056" />
+    <option name="x" value="-105" />
+    <option name="y" value="352" />
+    <option name="width" value="1696" />
+    <option name="height" value="1059" />
   </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
@@ -105,6 +196,60 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="record" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="record" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="react" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="record" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="record" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="react" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="record" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="record" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="react" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="components" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
       <pane id="Scratches" />
@@ -112,7 +257,12 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../react_test" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="HbShouldOpenHtmlAsHb" value="" />
+    <property name="nodejs_interpreter_path" value="D:/tools/node/node" />
+    <property name="settings.editor.selected.configurable" value="Settings.JavaScript" />
+    <property name="JavaScriptPreferStrict" value="false" />
+    <property name="JavaScriptWeakerCompletionTypeGuess" value="true" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -125,6 +275,11 @@
         </RuleState>
       </list>
     </option>
+  </component>
+  <component name="RunManager">
+    <configuration default="true" type="NodeJSConfigurationType" factoryName="Node.js" path-to-node="project" working-dir="">
+      <method />
+    </configuration>
   </component>
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
@@ -143,25 +298,25 @@
       <workItem from="1505441060254" duration="8304000" />
       <workItem from="1505697473069" duration="1307000" />
       <workItem from="1505716213010" duration="858000" />
+      <workItem from="1506134079028" duration="2607000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="43572000" />
+    <option name="totallyTimeSpent" value="46179000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
-    <editor active="true" />
+    <frame x="-105" y="352" width="1696" height="1059" extended-state="0" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24920969" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1212304" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -182,6 +337,14 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/react.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/react.txt">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -295,11 +458,96 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/react/src/entry.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/react.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="53">
+        <state relative-caret-position="-67557">
           <caret line="306" column="11" lean-forward="false" selection-start-line="306" selection-start-column="8" selection-end-line="306" selection-end-column="11" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/react/src/components/App.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3564">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <marker date="1506133799910" expanded="false" signature="22:135" ph="..." />
+            <marker date="1506133799910" expanded="true" signature="137:172" ph="/** jsx ...*/" />
+            <marker date="1506133799910" expanded="true" signature="173:464" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="465:496" ph="/** 组件定义 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="501:514" ph="/** 函数调用 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="519:772" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="777:789" ph="/** 类组件调用 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="794:924" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="930:1047" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="1048:1088" ph="/** state ...*/" />
+            <marker date="1506133799910" expanded="true" signature="1089:1210" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="1212:1251" ph="/** 事件 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="1252:1343" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="1345:1385" ph="/** 条件渲染 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="1386:1551" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="1553:1595" ph="/** 阻止组件渲染 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="1596:1729" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="1731:1774" ph="/** 列表与keys ...*/" />
+            <marker date="1506133799910" expanded="true" signature="1775:1902" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="1904:1946" ph="/** form表单 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="1947:2035" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="2037:2080" ph="/** 挂起state ...*/" />
+            <marker date="1506133799910" expanded="true" signature="2081:2187" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="2189:2230" ph="/** 组件的合成 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="2231:2349" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="2351:2392" ph="/** 组件的继承 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="2393:2517" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="2519:2573" ph="/** jsx的深入 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="2574:2685" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="2687:2743" ph="/** prop类型检测 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="2744:2904" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="2906:2962" ph="/** refs与DOM ...*/" />
+            <marker date="1506133799910" expanded="true" signature="2963:3048" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="3050:3105" ph="/** 不受控制的组件 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="3106:3239" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="3241:3299" ph="/** 无ES6的React ...*/" />
+            <marker date="1506133799910" expanded="true" signature="3300:3406" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="3408:3529" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="3531:3589" ph="/** 无JSX的react ...*/" />
+            <marker date="1506133799910" expanded="true" signature="3590:3841" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="3843:3900" ph="/** 使用Context ...*/" />
+            <marker date="1506133799910" expanded="true" signature="3901:4042" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="4044:4108" ph="/** 使用Web Components ...*/" />
+            <marker date="1506133799910" expanded="true" signature="4109:4233" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="4235:4287" ph="/** 高阶组件 ...*/" />
+            <marker date="1506133799910" expanded="true" signature="4409:4716" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="4718:5027" ph="//..." />
+            <marker date="1506133799910" expanded="true" signature="5029:5345" ph="//..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/react/src/components/form.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="324">
+          <caret line="9" column="13" lean-forward="false" selection-start-line="9" selection-start-column="8" selection-end-line="9" selection-end-column="13" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/react/src/components/higherComponents.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="324">
+          <caret line="142" column="2" lean-forward="false" selection-start-line="142" selection-start-column="2" selection-end-line="142" selection-end-column="2" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
