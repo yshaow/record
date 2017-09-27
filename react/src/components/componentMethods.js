@@ -3,6 +3,8 @@
  */
 
 import React from 'react'
+import ReactDOM from 'react-dom'
+
 
 class ComponentMethod extends React.Component{
     constructor(props){
@@ -33,6 +35,7 @@ class ComponentMethod extends React.Component{
         //         propsTest:"componentDidMount"
         //     })
         // },10000)
+        console.log(ReactDOM.findDOMNode(this));
     }
 
     componentWillReceiveProps(nextProps){
@@ -69,13 +72,17 @@ class ComponentMethod extends React.Component{
     render(){
         console.log("**********render**********");
         return <div>
-                    <span>Props:{this.props.test}</span>
+                    <span>Props:{this.props.test + " --> " +this.props.color}</span>
                     <hr/>
                     <span>state:{this.state.propsTest}</span>
                 </div>
     }
 }
 
+ComponentMethod.defaultProps = {
+    color:"blue"
+}
+ComponentMethod.displayName = "a"
 class Container extends React.Component{
     constructor(props){
         super(props);
@@ -85,7 +92,7 @@ class Container extends React.Component{
     }
     render(){
         return <div>
-            <ComponentMethod test={ this.state.test }/>
+            <ComponentMethod test={ this.state.test } color= {"red"}/>
             <hr/>
             <button onClick={ () => {
                 this.setState({

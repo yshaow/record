@@ -1113,6 +1113,8 @@
 	//继承
 		我们利用React创建许多组件，但是我们没有发现任何案例中我们推荐创建组件的继承体系
 		props和组件的合成 赋予了我们灵活的构建组件的表现与行为。组件可以接受**任意类型**的props属性
+12.React的编程思想
+    
 *****高级指南*****
 1.深入jsx
     》实际上，jsx仅仅是为React.createElement(component,props,...children)函数提供了语法糖。
@@ -2903,57 +2905,460 @@
 
     》实例方法
         》setState(updater,[callback])
+            setState排队更改组件的state，并通过更新state来告诉React，该组件及其子组件需要重新渲染。这是用于响应事件处理程序和服务器响应
+            更新用户界面的主要方法。
 
-        》forceUpdate()
+            注意：setState作为一个请求，而不是立即命令来更新组件。为了更好的感知性能，React可能会延迟它，然后合并多个setState更新多个组件。
+                  React不保证state更新就立即应用(重新渲染)。
+
+            setState并不总是立即更新组件。它可能会批量或延迟到后面的更新。这使得在调用setState之后立即读取this.state存在一个潜在的缺陷。
+            而使用componentDidUpdate或setState回调，在应用更新后，都将被保证触发。
+
+            setState总是会导致重新渲染，除非shouldComponentUpdate()返回false。如果可变对象被使用，并且条件渲染逻辑不能在shouldComponentUpdate()
+            中实现，只有当新state与先前state不同时调用setState()才能避免不必要的重新渲染。
+
+            参数：
+                》updater -- 都是异步更新数据
+                    》(prevState,props) => stateChange-->{}
+                    》{}
+                    updater输出的与prevState浅层合并
+                》callback
+                    将在setState完成后执行，并且重新渲染组件。通常这样的逻辑我们建议使用componentDidUpdate()
+
+        》forceUpdate(callback)
+            默认情况下，当组件的state或props改变时，组件将重新渲染。如果你的render()方法依赖于一些其他数据，你可以告诉
+            React组件需要通过调用forceUpdate重新渲染。
+
+            调用forceUpdate会导致组件跳过shouldComponentUpdate(),直接调用render()。这将触发子组件的正常生命周期方法，包括每个
+            子组件的shouldComponentUpdate()方法。如果标记更改，React仍将更新DOM。
+
+            通常应该尽量避免使用forceUpdate()，并且render()中的this.props和this.state应该是只读的。
+
     》类属性 -- 静态属性
         》defaultProps
+            defaultProps可以定义组件类自身的属性，用来设置类的默认props。这用于未定义的props(undefined)但不用于null的props。
+            class CustomButton extends React.Component{
+                //...
+            }
+            CustomButton.defaultProps = {
+                color:"blue"
+            }
+
+            如果没有提供props.color 它将默认设置为"blue":
+            如果props.color设置为null，它将保持为null
+                render(){
+                    return <CustomButton color={null} />
+                }
+
         》displayName
+            displayName字符串被用在调式信息中，JSX自动设置设个值
     》实例属性
         》props
+            this.props包含此组件的调用者定义的props。
+            注意：this.props.children是一个特殊的props，通常由JSX表达式中的子标签定义而不是标签本身。
         》state
+            state包含该组件的特定数据，该数据可能随时间而变化，状态是用户定义的。它应该是一个纯粹的js对象。
+            如果你不在render()中使用它，它就不应该是state。
 
+            注意：永远不要直接改变this.state,因为调用setState()之后可能会覆盖你所做的这个改变，把this.state看作是不可变的。
+3.ReactDOM
+    如果使用<script>标签加载React，这些在ReactDOM上的顶层API全局可用，如果你使用ES6与npm，你可以写import ReactDOM from 'react-dom'。
+    如果使用Es5与npm，可以写var ReactDOM = require('react-dom');
+    》概述
+        react-dom包提供了DOM特定的方法，你可以在你的应用程序的顶层使用，如果你需要的话，也可以作为React模型之外的特殊操作DOM的接口。
+        但大多数组件应该不需要使用这个模块。
 
+        》render()
+            ReactDOM.render(element,container,[callback]);
+            渲染一个React元素到由container提供的DOM中，并且返回组件的一个引用(对于无状态组件返回null)。
 
+            如果React元素先前已经被渲染到了container中，那么将对其执行更新，并且对DOM只修改需要修改的地方，以反映最新的React元素。
 
+            如果提供了可选的回调，它将在组件渲染或更新后执行。
 
+            注意：
+                》ReactDOM.render()控制传入的容器节点的内容。当第一次调用时，容器内部的任何现有DOM元素都会被替换，之后使用React 的
+                  DOM diffing算法来进行有效的更新。
+                》ReactDOM.render() 不会修改容器节点，只修改容器的子节点，它可能插入一个组件到已经存在的DOM节点中而不会覆盖已经存在
+                  的子节点。
+                》ReactDOM.render() 当前返回根据ReactComponent实例的引用。但是使用此返回值是遗留的，应该避免使用，因为在某些情况下，
+                  React的未来版本可能会异步渲染组件，如果你需要引用根ReactComponent实例，优选的解决方案是绑定一个ref回调到根元素。
 
+        》unmountComponentAtNode()
+            ReactDOM.unmountComponentAtNode(container);
+            从DOM中移除已mounted的React组件，并清除其事件处理程序和state。如果在容器中没有挂载组件，调用此函数什么也不做。如果组件
+            被卸载了返回true，如果没有要卸载的组件则返回false。
+        》findDOMNode()
+            ReactDOM.findDOMNode(component)
+            如果组件已经被mounted到DOM中，这将返回相应的原生浏览器DOM元素。这个方法对读取DOM外的值是有用的，如：单字段值以及执行DOM分析。
 
+            在大多数情况下，可以绑定一个ref到DOM节点上，从而避免使用findDOMNode。
 
+            当render返回null或false时，findDOMNode将会返回null。
 
+            注意：
+                》findDOMNode是一个用于访问真实DOM节点的接口。在大多数情况下，不建议使用它，因为他会越过组件抽象层访问真实的DOM。
+                》findDOMNode仅适用于已装载的组件，即已放置在DOM中的组件。如果你试图在一个尚未安装的组件上调用它，将抛出异常。
+                》findDOMNode不能用于函数式组件。
+    》浏览器支持
+        React支持所有流行的浏览器，包括ie9及更高版本。
+        注意：不支持那些不支持ES6方法的旧版浏览器，但如果页面中包含诸如es5-shim和es5-sham，应用也可以在旧版浏览器中正常工作。
+4.ReactDOMServer
+    如果使用<script>标签加载React，这些在ReactDOMServer上的顶层API全局可用。如果你使用ES6与npm，你可以写import ReactDOMServer from 'react-dom/server'。
+    如果你使用ES5与npm，你可以写var ReactDOMServer = require('react-dom/server');
 
+    》ReactDOMServer对象允许您在服务器上渲染组件
+        》renderToString()
+            ReactDOMServer.renderToString(element)
+            将React元素渲染到其初始HTML中。该函数应该只在服务器上使用。
 
+            React将返回一个HTML字符串。你可以使用此方法在服务器上生成html，并在初始化请求时发送标记，已加快网页加载速度。
+            并允许搜索引擎抓取您的网页以实现SEO目的。
 
+            如果在已经具有此服务器渲染标记的节点上调用ReactDOM.render()，React将保留它，并且只附加事件处理程序，从而使你拥有
+            非常高性能的第一次加载体验。
 
+            注意：此方法返回的流将以UTF-8编码的字节流返回，如果你需要另一种编码的流，
+                  参考：https://www.npmjs.com/package/iconv-lite，其为转码文本提供了转换流。
 
+        》renderToStaticMarkup(element)
+            类似于renderToString，除了创建data-reactid外不创建额外的DOM属性，React在内部使用它。
 
+            如果你想使用React作为一个简单的静态页面生成器，这很有用，因为去掉了额外的属性可以节省大量的字节。
 
+            请注意，从此方法返回的流将以 utf-8 编码的字节流返回。转码同上。
+5.ReactDOMNodeStream
+    ES6+npm --> import ReactDOMNodeStream from 'react-dom/node-stream'
+    ES5+npm --> var ReactDOMNodeStream = require('react-dom/node-stream')
 
+    和React的其他包不同，ReactDOMNodeStream依赖于stream包，它在Node中可用，而不是在浏览器中。由于这个原因，ReactDOMNodeStream仅仅
+    提供了Node的版本，而没有<script>标签引入的版本。
 
+    》ReactDOMNodeStream允许你渲染你的组件在Node中，并且生成标记流。
+        》renderToStream(element)
+            渲染React元素为初始化HTML，它仅仅被用于Node中，在浏览器中它是不支持的，因为浏览器不支持Node的数据流。
 
+            React将返回一个可读流用于输出HTML字符串。以流形式输出的HTML是等价于ReactDOMServer.renderToString的返回值。
+            你能够使用这个方法在服务端生成HTML，并发送标记给初始化请求，达到更快的页面加载效果，并且允许搜索引擎SEO该页面。
 
+            如果在已经具有此服务器渲染标记的节点上调用ReactDOM.render()，React将保留它，并且只附加事件处理程序，从而使你拥有
+            非常高性能的第一次加载体验。
 
-	
+            注意：这个流的方法返回的是UTF-8的编码，如果想转换编码 同上使用 iconv-lite。
 
+        》renderToStaticStream()
+            ReactDOMNodeStream.renderToStaticStream(element)
+            和renderToStream类似，除了不会创建额外的DOM属性以外如：reactid，React在内部使用它。
 
+            如果你想使用React作为一个简单的静态页面生成器，这很有用，因为去掉了额外的属性可以节省大量的字节。
 
+            请注意，从此方法返回的流将以 utf-8 编码的字节流返回。转码同上。
+6.DOM元素
+    React实现了一个独立于浏览器的DOM系统，用于提高性能和跨浏览器兼容性。
 
+    在React中，所有的DOM properties和attributes(包括事件处理程序)都应该是驼峰命名法命名。
+    如：html属性tabindex对应于React中的tabIndex属性。唯一的例外是aria-*和data-*属性它们应该是小写，
+    如：aria-label就应该是aria-label，不需要驼峰式命名。
 
+    》属性中的差异
+        有许多属性在React和HTML之间有不同的使用方式：
+        》checked
+            类型为checkbox或radio的<input>组件支持checked属性。你可以使用它来设置该组件是否被选中。这对构建受控组件很有用。
+            defaultChecked设置在首次载入组件时是否选中。
+        》className
+            要指定CSS类，需使用className属性。这适用于所有常规DOM和SVG元素。
 
+            如果通过web components来使用React请改用class属性。
+        》dangerouslySetInnerHTML
+            dangerouslySetInnerHTML是React用于代替在浏览器DOM中使用innerHTML。一般来说，从代码设置HTML是有风险的。
+            因为容易将用户暴露于**跨站点脚本(XSS)**攻击。所以你可以直接从React设置HTML，但是你必须使用dangerouslySetInnerHTML
+            并通过__html键传递一个对象，提醒自己这是危险的。
 
+            function TestDangerouslySetInnerHTML(){
+                return <div dangerouslySetInnerHTML={ {__html:"<span>DANGEROUS XSS</span>"} }/>
+            }
+        》htmlFor
+            由于for是js的保留字，React元素使用htmlFor。
+        》onChange
+            onChange事件的行为与期望的一样：每当表单字段更改时，将触发此事件。我们故意不使用现有的浏览器行为
+            因为React依赖此事件来实时处理用户输入，onChange的表意与浏览器行为并不一致。
+        》selected
+            <option>组件支持selected属性，你可以使用它去设置组件是否被选中，这对构建受控的组件是有用的。
+        》style
+            style属性接受具有驼峰命名属性的js对象，而不是css字符串。这与js DOM的style属性一致，但是更高效，并且防止XSS安全漏洞。
+            如：
+            const divStyle = {
+                color:"blue",
+                backgroundImage:"url("+ imgUrl +")"
+            }
+            function Hello(){
+                return <div style={ divStyle }>Hello</div>
+            }
+            注意：样式不自动进行兼容，要支持旧版本的浏览器，需要提供相应的样式属性
+                const divStyle = {
+                    WebkitTransition:"all",//首字母大写
+                    msTransition:"all"//"ms"是唯一的小写字母的浏览器前缀 -- ms以外的供应商前缀应以大写字母开头
+                }
+        》suppressContentEditableWarning
+            通常，当带有子代的元素被标记为contentEditable时，会出现警告，因为它不会起作用，此属性抑制该警告。
+            不要使用它，除非你正在构建一个类似Draft.js的库，它手动管理contentEditable。
+        》value
+            <input>和<textarea>组件支持value属性，你可以使用它来设置组件的值。这对构建受控组件很有用。
+            defaultValue是不受控组件的等同项，它设置组件首次装载时的值。
+        》所有支持的HTML属性
+            React支持所有的data-*与aria-*属性以及以下属性：
+            accept acceptCharset accessKey action allowFullScreen allowTransparency alt
+            async autoComplete autoFocus autoPlay capture cellPadding cellSpacing challenge
+            charSet checked cite classID className colSpan cols content contentEditable
+            contextMenu controls controlsList coords crossOrigin data dateTime default defer
+            dir disabled download draggable encType form formAction formEncType formMethod
+            formNoValidate formTarget frameBorder headers height hidden high href hrefLang
+            htmlFor httpEquiv icon id inputMode integrity is keyParams keyType kind label
+            lang list loop low manifest marginHeight marginWidth max maxLength media
+            mediaGroup method min minLength multiple muted name noValidate nonce open
+            optimum pattern placeholder poster preload profile radioGroup readOnly rel
+            required reversed role rowSpan rows sandbox scope scoped scrolling seamless
+            selected shape size sizes span spellCheck src srcDoc srcLang srcSet start step
+            style summary tabIndex target title type useMap value width wmode wrap
+            //RDFa属性的支持
+            about datatype inlist prefix property resource typeof vocab
+            //非标准的特性的支持
+            Mobile Safari 中的 autoCapitalize autoCorrect 。
+            Safari 中 <link rel="mask-icon" /> 的 color 。
+            HTML5 microdata 中的 itemProp itemScope itemType itemRef itemID 。
+            老版本IE浏览器中的 security 。
+            Internet Explorer 的 unselectable 。
+            对WebKit/Blink 中的 search 类型输入域中的 results autoSave。
+        》所有支持的SVG属性
+            accentHeight accumulate additive alignmentBaseline allowReorder alphabetic
+            amplitude arabicForm ascent attributeName attributeType autoReverse azimuth
+            baseFrequency baseProfile baselineShift bbox begin bias by calcMode capHeight
+            clip clipPath clipPathUnits clipRule colorInterpolation
+            colorInterpolationFilters colorProfile colorRendering contentScriptType
+            contentStyleType cursor cx cy d decelerate descent diffuseConstant direction
+            display divisor dominantBaseline dur dx dy edgeMode elevation enableBackground
+            end exponent externalResourcesRequired fill fillOpacity fillRule filter
+            filterRes filterUnits floodColor floodOpacity focusable fontFamily fontSize
+            fontSizeAdjust fontStretch fontStyle fontVariant fontWeight format from fx fy
+            g1 g2 glyphName glyphOrientationHorizontal glyphOrientationVertical glyphRef
+            gradientTransform gradientUnits hanging horizAdvX horizOriginX ideographic
+            imageRendering in in2 intercept k k1 k2 k3 k4 kernelMatrix kernelUnitLength
+            kerning keyPoints keySplines keyTimes lengthAdjust letterSpacing lightingColor
+            limitingConeAngle local markerEnd markerHeight markerMid markerStart
+            markerUnits markerWidth mask maskContentUnits maskUnits mathematical mode
+            numOctaves offset opacity operator order orient orientation origin overflow
+            overlinePosition overlineThickness paintOrder panose1 pathLength
+            patternContentUnits patternTransform patternUnits pointerEvents points
+            pointsAtX pointsAtY pointsAtZ preserveAlpha preserveAspectRatio primitiveUnits
+            r radius refX refY renderingIntent repeatCount repeatDur requiredExtensions
+            requiredFeatures restart result rotate rx ry scale seed shapeRendering slope
+            spacing specularConstant specularExponent speed spreadMethod startOffset
+            stdDeviation stemh stemv stitchTiles stopColor stopOpacity
+            strikethroughPosition strikethroughThickness string stroke strokeDasharray
+            strokeDashoffset strokeLinecap strokeLinejoin strokeMiterlimit strokeOpacity
+            strokeWidth surfaceScale systemLanguage tableValues targetX targetY textAnchor
+            textDecoration textLength textRendering to transform u1 u2 underlinePosition
+            underlineThickness unicode unicodeBidi unicodeRange unitsPerEm vAlphabetic
+            vHanging vIdeographic vMathematical values vectorEffect version vertAdvY
+            vertOriginX vertOriginY viewBox viewTarget visibility widths wordSpacing
+            writingMode x x1 x2 xChannelSelector xHeight xlinkActuate xlinkArcrole
+            xlinkHref xlinkRole xlinkShow xlinkTitle xlinkType xmlns xmlnsXlink xmlBase
+            xmlLang xmlSpace y y1 y2 yChannelSelector z zoomAndPan
+7.事件系统 SyntheticEvent
+    》概述
+        你的事件处理程序将传递SyntheticEvent的实例，这是一个跨浏览器原生事件包装器。它具有与浏览器原生事件相同的接口，包括
+        stopPropagation()与preventDefault()，除了事件在所有浏览器中它们的工作方式都相同。
 
+        如果由于某种原因需要底层浏览器事件，只需使用nativeEvent属性来获取它。每个SyntheticEvent对象都具有以下属性：
+            boolean bubbles
+            boolean cancelable
+            DOMEventTarget currentTarget
+            boolean defaultPrevented
+            number eventPhase
+            boolean isTrusted
+            DOMEvent nativeEvent
+            void preventDefault()
+            boolean isDefaultPrevented()
+            void stopPropagation()
+            boolean isPropagationStopped()
+            DOMEventTarget target
+            number timeStamp
+            string type
+        注意：v.14起，事件处理程序返回false将不再停止事件传播，应该根据需要手动设置e.stopPropagation() 或 e.preventDefault() 。
+    》事件池
+        SyntheticEvent对象是通过合并得到的。这意味着在事件回调被调用后，SyntheticEvent对象将被重用，并且所有属性都将被取消。
+        这是出于性能的原因。因此无法以异步方式访问该事件。
+        注意：如果要以异步方式访问事件属性，应该对事件调用event.persist()，这将从池中删除合成事件，并允许用户代码保留对事件的引用。
+    》被支持的事件
+        React将事件规范化，以便它们在不同的浏览器中具有一致的属性。
 
+        事件处理程序由冒泡阶段中的事件触发，要为捕获阶段注册事件处理程序，需将Capture附加到事件名称中。
+        如：使用 onClickCapture 来处理捕获阶段中的点击事件，而不是使用 onClick 。
+        》剪贴板事件 Clipboard Events
+            事件名称：onCopy onCut onPaste
+            属性：DOMDataTransfer(类型) --> clipboardData(属性)
+        》合成事件 Composition Events
+            事件名称：onCompositionEnd onCompositionStart onCompositionUpdate
+            属性：string --> data
+        》键盘事件 Keyboard Events
+            事件名称：onKeyDown onKeyPress onKeyUp
+            属性：
+                boolean --> altKey
+                number --> charCode
+                boolean --> ctrlKey
+                boolean --> getModifierState(key)
+                string --> key
+                number --> keyCode
+                string --> locale
+                number --> location
+                boolean --> metaKey
+                boolean --> repeat
+                boolean --> shiftKey
+                number --> which
+        》焦点事件 Focus Events
+            事件名称：onFocus onBlur 这些焦点事件工作在React DOM中的所有元素上，不仅仅是表单元素。
+            属性：
+                DOMEventTarget --> relatedTarget
+        》表单事件 Form Events
+            事件名称：
+                onChange onInput onSubmit
+        》鼠标事件 Mouse Events
+            事件名称：
+                onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit
+                onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
+                onMouseMove onMouseOut onMouseOver onMouseUp
+            onMouseEnter和onMouseLeave事件从离开的元素传播到正在进入的元素，而不是普通的冒泡并且没有捕获阶段：
 
+            属性：
+                boolean altKey
+                number button
+                number buttons
+                number clientX
+                number clientY
+                boolean ctrlKey
+                boolean getModifierState(key)
+                boolean metaKey
+                number pageX
+                number pageY
+                DOMEventTarget relatedTarget
+                number screenX
+                number screenY
+                boolean shiftKey
+        》选择事件 Selection Events
+            事件名称：onSelect
+        》触摸事件 Touch Events
+            事件名称：
+                onTouchCancel onTouchEnd onTouchMove onTouchStart
+            属性：
+                boolean altKey
+                DOMTouchList changedTouches
+                boolean ctrlKey
+                boolean getModifierState(key)
+                boolean metaKey
+                boolean shiftKey
+                DOMTouchList targetTouches
+                DOMTouchList touches
+        》UI事件 UI Events
+            事件名称：onScroll
+            属性：
+                number detail
+                DOMAbstractView view
+        》滚轮事件 Wheel Events
+            事件名称：onWheel
+            属性：
+                number deltaMode
+                number deltaX
+                number deltaY
+                number deltaZ
+        》媒体事件 Media Events
+            事件名称：
+                onAbort onCanPlay onCanPlayThrough onDurationChange onEmptied onEncrypted
+                onEnded onError onLoadedData onLoadedMetadata onLoadStart onPause onPlay
+                onPlaying onProgress onRateChange onSeeked onSeeking onStalled onSuspend
+                onTimeUpdate onVolumeChange onWaiting
+        》图像事件 Image Events
+            事件名称：
+                onLoad onError
+        》动画事件 Animation Events
+            事件名称：
+                onAnimationStart onAnimationEnd onAnimationIteration
+            属性：
+                string animationName
+                string pseudoElement
+                float elapsedTime
+        》转换事件 Transition Events
+            事件名称：
+                onTransitionEnd
+            属性：
+                string propertyName
+                string pseudoElement
+                float elapsedTime
+        》其他事件 Other Events
+            事件名称：onToggle
+8.Test Utilities
+    import ReactTestUtils from 'react-dom/test-utils'; // ES6
+    var ReactTestUtils = require('react-dom/test-utils'); // ES5 with npm
 
+    ReactTestUtils是很容易测试React组件的。Facebook利用Jest(http://facebook.github.io/jest/docs/en/tutorial-react.html)测试js。
+    Enzyme测试工具http://airbnb.io/enzyme/
 
+    》浅渲染
+        当为React写单元测试时，浅渲染时很有帮助的。浅渲染使得渲染一个组件仅仅为"一级深度"并断言它渲染的结果。不关注其子组件
+        这些元素没有被实例化或渲染，是不需要DOM的。
+        注意：浅渲染已经被移到react-test-renderer/shallow。
 
+    》Simulate -- 模拟在DOM节点中的事件分发
+        Simulate.{eventName}(
+          element,
+          [eventData]
+        )
+        注意：你需要提供相关事件，上面函数不会帮你创建相关事件
+    》renderIntoDocument(element) -- 渲染一个React元素在独立的DOM节点中(即将组件渲染成一个DOM节点但是不将这个节点插入到视图中)
+                                     这个函数需要一个DOM
 
+        注意：你需要有window、window.document和window.document.createElement的全局属性在引入React之前。
+              否则React认为他不能获取DOM，这个方法和setState一样。
+    》mockComponent(componentClass,[mockTagName])
+        传递一个虚拟的组件模块给这个方法，给这个组件扩充一些有用的方法，让组件能够被当初一个React组件的仿制品来使用。
+        这个组件将会变成一个简单的<div>(或者是其他标签，如果mockTagName提供的话)。包含任何提供的子节点，而不像往常一
+        样渲染出来。
+    》isElement(element)
+        element是React element 则返回true
+    》isElementOfType(element,componentClass)
+        如果element的类型是componentClass 则返回true
+    》isDOMComponent(instance)
+        instance是DOM组件，返回true
+    》isCompositeComponent(instance)
+        如果实例是用户定义的组件则返回true
+    》isCompositeComponentWithType(instance,componentClass)
+        如果实例的类型是componentClass,则返回true
+    》findAllInRenderedTree(tree,testFunction)
+        遍历tree中的所有组件，收集test(component)返回true的所有组件。这本身不是很有用，但是他可以为其他测试提供原始数据。
+    》scryRenderedDOMComponentsWithClass(tree,ClassName)
+        查找所有带有className的DOM组件
+    》findRenderedDOMComponentWithClass(tree,className)
+        类似于scryRenderedDOMComponentsWithClass()，但是它只返回一个结果，如果有其它满足条件的，则会抛出异常。
+    》scryRenderedDOMComponentsWithTag(tree,tagName)
+        在tree中找出标签名是tagName的所有元素
+    》findRenderedDOMComponentWithTag(tree,tagName)
+        类似于scryRenderedDOMComponentsWithTag()，但是它只返回一个结果，如果有其它满足条件的，则会抛出异常。
+    》scryRenderedComponentsWithType(tree,componentClass)
+        找出所有组件实例，这些组件的类型为componentClass
+    》findRenderedComponentWithType(tree,componentClass)
+        类似于scryRenderedComponentsWithType()，但是它只返回一个结果，如果有其它满足条件的，则会抛出异常。
+9.Shallow Renderer
+    import ShallowRenderer from 'react-test-renderer/shallow'; // ES6
+    var ShallowRenderer = require('react-test-renderer/shallow'); // ES5 with npm
 
+    浅渲染使得渲染一个组件仅仅为"一级深度"并断言它渲染的结果。不关注其子组件
+    这些元素没有被实例化或渲染，是不需要DOM的。
 
+    可以认为浅渲染是提供了一个测试渲染组件的位置，你可以提取组件的输出。
+    》shallowRenderer.render()
+        它和ReactDOM.render()，但是他不需要DOM仅仅是渲染一级深度，这意味着你能够测试与孩子分离的组件。
 
-
-
-
-
-
-
-
+    》shallowRenderer.getRenderOutput()
+        获取浅渲染的输出
+    注意：浅渲染测试当前有些局限性，不支持refs
+    我们推荐使用Enzyme's的shallow rendering API(http://airbnb.io/enzyme/docs/api/shallow.html)，它提供了
+    一个更高级的API对于同样的功能。

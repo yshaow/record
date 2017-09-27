@@ -117,8 +117,36 @@ import { Router, Route, hashHistory } from 'react-router';
 // ReactDom.render(<ChildrenTest/>,document.getElementById('app'));
 
 /**********************React.Component测试************************/
-import ComponentMethods from './componentMethods'
-ReactDom.render(<ComponentMethods test="props test"/>,document.getElementById('app'));
+// import ComponentMethods from './componentMethods'
+// var reactRoot = ReactDom.render(<ComponentMethods test="props test"/>,document.getElementById('app'),function(){
+//     console.log("ComponentMethods -->渲染了");
+// });
+// setTimeout(function(){
+//     var result = ReactDom.unmountComponentAtNode(document.getElementById('app'));
+//     console.log(result);
+// },5000)
+
+// import ReactDOMServer from 'react-dom/server'
+// var result = ReactDOMServer.renderToString(<ComponentMethods/>);
+// console.log(result);
+
+/**********************DOM元素测试************************/
+// import DOM from './dom'
+// ReactDom.render(<DOM/>,document.getElementById('app'));
+
+/**********************事件系统************************/
+// import SyntheticEvent from './syntheticEvent'
+// ReactDom.render(<SyntheticEvent/>,document.getElementById('app'));
+
+/**********************Test Utilities************************/
+// import TestUitilitiesfrom from './testUitilities'
+// //ReactDom.render(<TestUitilitiesfrom/>,document.getElementById('app'));
+// TestUitilitiesfrom();
+/**********************浅渲染测试************************/
+import ShallowRenderer from './shallowRenderer'
+ShallowRenderer();
+
+
 // var List = React.createClass({
 //     render: function() {
 //         return (
