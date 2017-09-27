@@ -143,8 +143,23 @@ import { Router, Route, hashHistory } from 'react-router';
 // //ReactDom.render(<TestUitilitiesfrom/>,document.getElementById('app'));
 // TestUitilitiesfrom();
 /**********************浅渲染测试************************/
-import ShallowRenderer from './shallowRenderer'
-ShallowRenderer();
+// import ShallowRenderer from './shallowRenderer'
+// ShallowRenderer();
+/**********************案例************************/
+//import Example from './exmaple'
+// const products = [
+//     {category: "Sporting Goods", price: "$49.99", stocked: true, name: "Football"},
+//     {category: "Sporting Goods", price: "$9.99", stocked: true, name: "Baseball"},
+//     {category: "Sporting Goods", price: "$29.99", stocked: false, name: "Basketball"},
+//     {category: "Electronics", price: "$99.99", stocked: true, name: "iPod Touch"},
+//     {category: "Electronics", price: "$399.99", stocked: false, name: "iPhone 5"},
+//     {category: "Electronics", price: "$199.99", stocked: true, name: "Nexus 7"}
+// ];
+// ReactDom.render(<Example products={ products }/>,document.getElementById('app'));
+
+/**********************React router测试************************/
+import ReactRouter from './reactRouter'
+ReactDom.render(<ReactRouter/>,document.getElementById('app'));
 
 
 // var List = React.createClass({
