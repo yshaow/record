@@ -158,8 +158,33 @@ import { Router, Route, hashHistory } from 'react-router';
 // ReactDom.render(<Example products={ products }/>,document.getElementById('app'));
 
 /**********************React router测试************************/
-import ReactRouter from './reactRouter'
-ReactDom.render(<ReactRouter/>,document.getElementById('app'));
+// import ReactRouter from './reactRouter'
+// ReactDom.render(<ReactRouter/>,document.getElementById('app'));
+
+/**********************React router案例测试************************/
+// import BaseExample from './router/baseExample'
+// ReactDom.render(<BaseExample/>,document.getElementById('app'));
+
+// import UrlParams from './router/urlParams'
+// ReactDom.render(<UrlParams/>,document.getElementById('app'));
+
+// import Authentication from './router/authentication'
+// ReactDom.render(<Authentication/>,document.getElementById('app'));
+
+// import DefineLink from './router/defineLink'
+// ReactDom.render(<DefineLink/>,document.getElementById('app'));
+
+// import PreventNav from './router/preventNav'
+// ReactDom.render(<PreventNav/>,document.getElementById('app'));
+
+// import NotFind from './router/notFind'
+// ReactDom.render(<NotFind/>,document.getElementById('app'));
+
+// import Paths from './router/paths'
+// ReactDom.render(<Paths/>,document.getElementById('app'));
+
+import NavAslide from './router/navAslide'
+ReactDom.render(<NavAslide/>,document.getElementById('app'));
 
 
 // var List = React.createClass({

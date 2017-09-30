@@ -302,6 +302,8 @@
 			
 /**文档解析**/
 ****初级入门****
+http://www.css88.com/react/docs/installation.html
+https://facebook.github.io/react/
 1.安装
 	》创建一个新的应用
 		npm install -g create-react-app
@@ -3376,10 +3378,905 @@
     一个更高级的API对于同样的功能。
 
 *********************React路由**********************
+http://618cj.com/react-router4-0%E8%B7%AF%E7%94%B1%E4%B8%AD%E6%96%87%E6%96%87%E6%A1%A3api/
 1.安装
     npm install react-router
     或
     yarn add react-router
+
+    npm i react-router-dom -S //react-router-dom是4.0从react-router分离出去的
+    React Router 4.0里面有若干相互独立的包：
+        》react-router React Router 核心
+        》react-router-dom 用于 DOM 绑定的 React Router
+        》react-router-native 用于 React Native 的 React Router
+        》react-router-redux React Router 和 Redux 的集成
+        》react-router-config 静态路由配置的小助手
+2.开始
+    import React from 'react'
+    import {BrowserRouter as Router,Route,Link} from 'react-router-dom'//引入路由
+
+    /**********************快速开始*************************/
+    /**
+     * 定义路由
+     */
+    const BasicExample = () =>
+        <Router>
+            <div>
+                /**********定义路由链接***********/
+                <ul>
+                    <li><Link to="/">Home</Link></li>
+                    <li><Link to="/about">About</Link></li>
+                    <li><Link to="/topics">Topics</Link></li>
+                </ul>
+
+                <hr/>
+
+                /**********定义视图显示***********/
+                <Route exact path="/" component={Home}/>
+                <Route path='/about' component={About}/>
+                <Route path="/topics" component={Topics}/>
+            </div>
+        </Router>;
+    /**
+     * 定义组件
+     */
+    const Home = () =>
+        <div>
+            <h2>Home</h2>
+        </div>;
+
+    const About = () =>
+        <div>
+            <h2>About</h2>
+        </div>;
+
+    const Topics = ({match}) =>(
+      <div>
+          <h2>Topics</h2>
+          <ul>
+              <li>
+                  <Link to={ `${match.url}/rendering` }>Rendering width React</Link>
+              </li>
+              <li>
+                  <Link to={ `${match.url}/components` }>Components</Link>
+              </li>
+              <li>
+                  <Link to={ `${match.url}/props-v-state` }>Props v. State</Link>
+              </li>
+          </ul>
+
+          <Route path={ `${match.url}/:topicId` } component={Topic}/>
+          <Route exact path={match.url} render={ ()=> <h3>Please select a topic.</h3>}/>
+      </div>
+    );
+
+    const Topic = ({match}) =>{
+        console.log(match);
+
+        return <div>
+            <h3>{match.params.topicId}</h3>
+        </div>
+    }
+
+    export default BasicExample;
+3.服务器端渲染
+    服务端渲染最大的不同是无state的。其基本思想是通过无状态的<StaticRouter>来包裹我们的应用，而不是<BrowserRouter>
+    我们通过请求url来匹配routes。
+        //客户端
+        <BrowserRouter>
+            <App/>
+        </BrowserRouter>
+        //服务端
+        <StaticRouter
+            location={req.url}
+            context={context}
+        >
+            <App/>
+        </StaticRouter>
+    当你渲染一个<Redirect>在客户端，这个浏览器的地址改变，并且我们能得到一个新的视图。在静态的服务器环境，我们不能
+    改变app的状态，而是利用context属性寻找渲染结果，如果我们发现context.url我们就知道app已经被重定向，这允许我们发送
+    正确的重定向从服务器。
+        const context = {}
+        const markup = ReactDOMServer.renderToString(
+            <StaticRouter
+                location={req.url}
+                context={context}
+            >
+                <App/>
+            </StaticRouter>
+        );
+        if(context.url){
+            redirect(301,context.url);//<Redirect>被渲染
+        }else{
+            //发送请求
+        }
+    》为app添加特定的上下文信息
+        这个路由仅仅添加来context.url。但是你可以添加其他重定向信息，如：301，302等。或你可能需要一个404的响应为渲染一些
+        其他的UI分支，或者没有权限的401。这个context属性是你的，你可以改变它。
+        下面是区分301与302的重定向方法。
+        const RedirectWidthStatus = ({from,to,status}) =>(
+            <Route
+                render={
+                    ({staticContext}) =>{
+                        //在客户端是没有staticContext的，所以需要加判断
+                        if(staticContext) staticContext.status = status;
+
+                        return <Redirect from={from} to={to}/>
+                    }
+                }
+            />
+        );
+
+        const App = ()=>(
+            <Switch>
+                {/**其他路由*/}
+                <RedirectWidthStatus
+                    status={301}
+                    from="/users"
+                    to="/profiles"
+                />
+                <RedirectWidthStatus
+                    status={302}
+                    from="/courses"
+                    to="/dashboard"
+                />
+            </Switch>
+        )
+
+        const context = {}
+        const markup = ReactDOMServer.renderToString(
+            <StaticRouter context={context}>
+                <App/>
+            </StaticRouter>
+        );
+        if(context.url){
+            redirect(context.status,context.url);
+        }
+    》401 404或其他状态
+        const Status = ({code,children}) => (
+            <Route
+                render={
+                    ({staticContext}) =>(
+                        if(staticContext) staticContext.status = code;
+
+                        return children;
+                    )
+                }
+            />
+        );
+
+        const NotFound = () => (
+            <Status code={404}>
+                <div>
+                    <h1>Sorry,can't find that.</h1>
+                </div>
+            </Status>
+        )
+
+        <Switch>
+            <Route path='/about' component = {About} />
+            <Route path="/dashboard" component={Dashboard} />
+            <Route component={NotFound}/>
+        </Switch>
+    》代码整理
+        /**************服务端*************/
+        import { createServer } from 'http'
+        import React from 'react'
+        import ReactDOMServer from 'react-dom/server'
+        import {StaticRouter} from 'react-router'
+        import App from './App'
+
+        //开启服务
+        createServer((req,res) =>{
+            const context = {}
+
+            const html = ReactDOMServer.renderToString(
+                <StaticRouter
+                    location={req.url}
+                    context={context}
+                >
+                    <App/>
+                </StaticRouter>
+            );
+
+            if(context.url){
+                res.writeHead(301,{
+                    Location:context.url
+                })
+                res.end();
+            }else{
+                res.write(`
+                    <!doctype html>
+                    <div id="app">${html}</div>
+                `);
+                res.end();
+            }
+        }).listen(3000);
+
+        /**************客户端*************/
+        import ReactDOM from 'react-dom'
+        import {BrowserRouter} from 'react-router-dom'
+        import App from './App'
+        ReactDOM.render(
+            <BrowserRouter><App/></BrowserRouter>,document.getElementById('app')
+        );
+    》数据加载
+        const routes = [
+            {
+                path:"/",
+                component:Root,
+                loadData:() => getSomeData()
+            }
+        ]
+
+        import { routes } from './routes'
+        const App => (
+            <Switch>
+                {
+                    routes.map(route => (
+                        <Route {...route} />
+                    ))
+                }
+            </Switch>
+        );
+
+        import { matchPath } from 'react-router-dom'
+        const promises = [];
+        routes.some(route => {
+            const match = matchPath(req.url,route)
+            if(match) promises.push(route.loadData(match));
+
+            return match;
+        });
+        Promise.all(promises).then(data => {
+            //处理数据
+        });
+4.代码拆分
+    Code Splitting是一个非常酷的特性，它能让我们用户无需完整下载整个App即可使用。你可以将它认为是增量加载我们的应用。尽管有一些其他
+    工具也能实现相关特性，但在这里我们使用Webpack和bundle loader。
+    你可以通过<Bundle>来实现网站的code splitting。需要注意的是，router并没有为实现code splitting而做额外的工作。当你进入一个路由仅仅
+    意味着你渲染了一个组件，所以我们能在用户导航到某个路由时动态引入这个组件。你可以通过这种方式在应用的任何地方使用code splitting。
+    》如果一个模块是一个组件
+        这个组件需要一个名为load的属性，我们能够通过webpack bundle-loader获取。当组件获取一个新的load属性时，它将调用load，然后
+        把结果返回到state中，最后渲染这个模块。
+
+        import loadSomething from 'bundle-loader?lazy!./Something'
+        <Bundle load={ loadSomething }>
+            {
+                mod => (
+                    //做一些事情
+                )
+            }
+        </Bundle>
+
+        <Bundle load={ loadSomething }>
+            {
+                Comp => Comp ? <Comp/> : <Loading/>
+            }
+        </Bundle>
+
+        import React, { Component } from 'react'
+        class Bundle extends Component{
+            state = {
+                mod:null
+            }
+
+            componentWillMount (){
+                this.load(this.props);
+            }
+
+            componentWillReceiveProps(nextProps){
+                if(nextProps.load !== this.props.load){
+                    this.load(nextProps);
+                }
+            }
+
+            load(props) {
+                this.setState({
+                  mod: null
+                })
+                props.load((mod) => {
+                  this.setState({
+                    mod: mod.default ? mod.default : mod
+                  })
+                })
+              }
+
+              render() {
+                return this.props.children(this.state.mod)
+              }
+        }
+        export default Bundle;
+
+        <Bundle load = { () => import ('./something ')}>{ mod => ()}</Bundle>
+    》加载在渲染之后完成
+        Bundle组件最大的好处是当开启一个新页面时加载，并且他也是有助于预加载的。
+        你的应用加载时间是你自己决定的，他不需要在特定的路由，可能是用户不活跃时，也可能是进入某个路由时，也可能是初始化渲染之后等等。
+           import LoadAbout from 'bundle-loader?lazy!./router/About'
+           import loadDashboard from 'bundle-loader?lazy!./router/Dashborad'
+           import Bundle from './router/bundle'
+
+           const About = () => (
+               <Bundle load={ LoadAbout }>
+                   { About =>
+                       {
+                           return About ? <About/> :null
+                       }
+                   }
+               </Bundle>
+           );
+
+           const Dashboard = () => (
+               <Bundle load={ loadDashboard }>
+                   {
+                       Dashboard => {
+                           return Dashboard ? <Dashboard/> : null;
+                       }
+                   }
+               </Bundle>
+           );
+
+           class BundleTest extends React.Component{
+               componentDidMount(){//挂载之后 懒加载组件
+                   LoadAbout( () => {});
+                   loadDashboard( () => {});
+               }
+
+               render(){
+                   return <div>
+                       <h1>Welcome!</h1>
+                       <Router>
+                           <div>
+                               <Link to="/about">about</Link>
+                               <Link to="/dashboard">dashboard</Link>
+                               <hr/>
+                               <Route path='/about' component={ About }/>
+                               <Route path='/dashboard' component={ Dashboard }/>
+                           </div>
+                       </Router>
+                   </div>
+               }
+           }
+
+           export default BundleTest
+    》代码拆分与服务器渲染
+        我们尝试了几次的并且失败了
+            》你需要同步模块解析在服务器上，以便于你在初始化渲染的时候获取到这些模块
+            》您需要在呈现前将涉及到服务器呈现的所有绑定包加载，以便客户端呈现与服务器呈现相同的内容。
+              (最棘手的部分，我认为这是可能的，但这是我放弃的地方。)
+            》您需要异步解决客户端应用程序的其他生命。
+5.Scroll Restoration 滚动恢复
+    在早期版本的React Router中，我们提供了对滚动恢复的支持，从那时起人们就一直在要求它。
+    希望这个文档能够帮助您从滚动条和路由中获得所需的内容!
+    》Scroll to top
+        大多数情况你需要滚动到顶部，因为你有一个很长的也没，当url改变时，它会滚动到以前的位置。
+        <ScrollToTop>组件就可以实现。
+        import React from 'react'
+        import {withRouter} from 'react-router-dom'
+        class ScrollToTop extends React.Component{
+            componentDidUpdate(prevProps){
+                if( this.props.location !== prevProps.location ){
+                    window.scrollTo(0,0);
+                }
+            }
+
+            render(){
+                return this.props.children;
+            }
+        }
+        export default withRouter(ScrollToTop);
+6.测试
+    React路由依赖于React的context，这将影响你测试自己的组件
+    》context
+        如果你试图单元测试一个组件，它渲染了<Link>或<Route>。你将得到一些关于上下文的错误或警告。尽管你可能尝试
+        处理你的上下文，我们推荐你在<StaticRouter>或<MemoryRouter>中写单元测试。
+        class Sidebar extends Component{
+            render(){
+                return <div>
+                    <button onClick={ this.toggleExpand }>expand</button>
+                    <ul>
+                        {
+                            users.map( user => (
+                                <li>
+                                    <Link to={user.path}>{ user.name }</Link>//使用了<Link>
+                                </li>
+                            ))
+                        }
+                    </ul>
+                </div>
+            }
+        }
+
+        //不好的测试
+        test('it expands when the button is clicked', () => {
+          render(
+            <Sidebar/>
+          )
+          click(theButton)
+          expect(theThingToBeOpen)
+        })
+        //好的
+        test('it expands when the button is clicked', () => {
+          render(
+            <MemoryRouter>
+              <Sidebar/>
+            </MemoryRouter>
+          )
+          click(theButton)
+          expect(theThingToBeOpen)
+        })
+    》开始一个特殊的路由
+        <MemoryRouter>支持initialEntries和initialIndex属性，你能够在特定的地方启用一个应用程序(或应用程序的一部分)。
+        test('current user is active in sidebar', () => {
+          render(
+            <MemoryRouter initialEntries={[ '/users/2' ]}>
+              <Sidebar/>
+            </MemoryRouter>
+          )
+          expectUserToBeActive(2)
+        })
+    》导航栏
+        我们有许多路由工作的测试当这个url改变时，所以你可能不需要测试这些东西。但是如果你一定要测试这些，
+        因为一切都是在渲染中发生的，我们有一些简便的方式。
+        import { render, unmountComponentAtNode } from 'react-dom'
+        import React from 'react'
+        import { Route, Link, MemoryRouter } from 'react-router-dom'
+        import { Simulate } from 'react-addons-test-utils'
+
+        const renderTestSequence = ({
+          initialEntries,
+          initialIndex,
+          subject: Subject,
+          steps
+        }) => {
+          const div = document.createElement('div')
+
+          class Assert extends React.Component {
+
+            componentDidMount() {
+              this.assert()
+            }
+
+            componentDidUpdate() {
+              this.assert()
+            }
+
+            assert() {
+              const nextStep = steps.shift()
+              if (nextStep) {
+                nextStep({ ...this.props, div })
+              } else {
+                unmountComponentAtNode(div)
+              }
+            }
+
+            render() {
+              return this.props.children
+            }
+          }
+
+          class Test extends React.Component {
+            render() {
+              return (
+                <MemoryRouter
+                  initialIndex={initialIndex}
+                  initialEntries={initialEntries}
+                >
+                  <Route render={(props) => (
+                    <Assert {...props}>
+                      <Subject/>
+                    </Assert>
+                  )}/>
+                </MemoryRouter>
+              )
+            }
+          }
+
+          render(<Test/>, div)
+        }
+
+        const App = () => (
+          <div>
+            <Route exact path="/" render={() => (
+              <div>
+                <h1>Welcome</h1>
+              </div>
+            )}/>
+            <Route path="/dashboard" render={() => (
+              <div>
+                <h1>Dashboard</h1>
+                <Link to="/" id="click-me">Home</Link>
+              </div>
+            )}/>
+          </div>
+        )
+
+        it('navigates around', (done) => {
+
+          renderTestSequence({
+
+            subject: App,
+
+            steps: [
+
+              // initial render
+              ({ history, div }) => {
+                // assert the screen says what we think it should
+                console.assert(div.innerHTML.match(/Welcome/))
+
+                // now we can imperatively navigate as the test
+                history.push('/dashboard')
+              },
+
+              // second render from new location
+              ({ div }) => {
+                console.assert(div.innerHTML.match(/Dashboard/))
+
+                // or we can simulate clicks on Links instead of
+                // using history.push
+                Simulate.click(div.querySelector('#click-me'), {
+                  button: 0
+                })
+              },
+
+              // final render
+              ({ location }) => {
+                console.assert(location.pathname === '/')
+                // you'll want something like `done()` so your test
+                // fails if you never make it here.
+                done()
+              }
+            ]
+          })
+        })
+7.Redux集成
+    Redux时React生态系统里面一个重要的部分，我们希望使用React Router与Redux尽可能的无缝的使用两者。
+    React Router v4中，React Router Redux包是router项目中的一个部分，参考它进行集成。
+8.Static Routes
+    以前版本的React路由器使用静态路由来配置应用程序的路由。这允许在渲染之前检查和匹配路由。
+    由于v4移动到动态组件而不是路由configs，一些以前的用例变得不那么明显和棘手。
+9.API汇总
+    》<BrowserRouter>
+        <Router>使用h5提供的history API(pushState,replaceState和popState事件)来保持UI和URL的同步。
+        <BrowserRouter
+            basename: string //当前位置的基准URL。如果你的页面部署在服务器的二级子目录中，你需要将此属性设置到此子目录。
+                            //正确的URL格式是前面有一个前导斜杠，但是不能有尾部斜杠。
+            getUserConfirmation: func//当导航需要确认时执行的函数，默认使用window.confirm
+            forceRefresh: bool//当设置为true时，在导航的过程中整个页面将会刷新。只有当浏览器不支持h5的history API 才设置为true
+            keyLength: number//location.key的长度。默认是6
+            children: node//渲染单一子组件(元素)
+        >
+            <App/>
+        </BrowserRouter>
+    》<HashRouter>
+        HashRouter是一种特定的<Router>,HashRouter使用URL的hash(如：window.location.hash)来保持UI和URL的同步。
+        注意：使用hash的方式记录导航历史不支持location.key和location.state。在以前的版本中，我们为这种行为提供了
+        shim，但是仍有一些问题无法解决。任何依赖此行为的代码或插件都将无法正常使用。由于该技术仅用于支持传统
+        的浏览器，因此在用于浏览器时可以使用<BrowserHistory>代替。
+        <HashRouter
+            basename: string//当前位置的基准URL，正确的URL格式是前面有一个前导斜杠，但不能有尾部斜杠
+            getUserConfirmation: func//当导航需要确认时执行的函数，默认使用window.confirm
+            hashType: string//window.location.hash使用的hash类型，有如下几种：
+                            //"slash" - 后面跟一个斜杠，例如 #/ 和 #/sunshine/lollipops 默认值
+                            //"noslash" - 后面没有斜杠，例如 # 和 #sunshine/lollipops
+                            //"hashbang" - Google 风格的 “ajax crawlable”，例如 #!/ 和 #!/sunshine/lollipops
+            children:node //渲染单一子组件(元素)
+        ><App/></HashRouter>
+    》<Link>
+        为你的应用提供声明式的，无障碍的导航
+        <Link
+            to:string || object //string-->需要跳转到的路径(pathname)或地址(location)
+                                //object-->需要跳转到的地址(location)
+            replace:bool //true -->点击链接后将使用新地址替换掉访问的历史记录里面的原地址
+                        //false -->默认值，点击链接后将在原有访问历史记录的基础上添加一个新的记录
+        />
+        //String
+        <Link to='/about'/>
+        //Object
+        <Link to={
+            {
+                pathname:"/courses",
+                search:"?sort=name",
+                hash:"#the-hash",
+                state:{formDashboard:true}
+            }
+        } />
+    》<NavLink>
+        一个特殊的<Link>，当渲染它和正常的URL匹配时，它将添加样式属性
+        <NavLink
+            activeClassName: string//当链接被激活时，该类将被给。默认给的class是"active",它将和元素的className一起合并。
+            activeStyle: object//这样式将被使用在激活时
+            exact: bool//当为true时，只有url匹配正确时激活样式才会被应用
+            strict: bool//当为true时，pathname与URL匹配时将考虑尾部斜线，具体看<Route strict>
+            isActive: func//链接激活的执行函数，如果你想验证链接pathname与当前URL的pathname，它应该被使用。
+        />
+    》<Prompt>
+        用于提示用户在离开页面之前。当你的应用进入一个状态，你应该阻止用户离开，渲染<Prompt>即可。
+        <Prompt
+            message:string || function //string -->当用户离开页面时，显示的消息
+                                        //function -->当next location和用户试图导航时被调用，返回一个string的显示信息或返回true表示
+                                        //可以跳转。
+            when:bool//作为<Prompt>的条件渲染，when={true}--渲染 when={false}阻止其渲染
+        />
+    》<MemoryRouter>
+       <Router>保持你的URL在历史记录中，而他用于测试或没有浏览器的环境中如(React Native)。
+       <MemoryRouter
+            initialEntries: array//一个locations的历史堆栈数组。值可能是location的objects{pathname,search,hash,state}或
+                                //简单的string url
+            initialIndex: number//初始位置的location index 对应于initialEntries
+            getUserConfirmation: func//用于确认导航的函数。但直接使用<Prompt>时这个选项必须使用。
+            keyLength: number//location.key的长度，默认6
+            children: node//一个唯一的child元素为渲染
+       />
+    》<Redirect>
+        渲染一个<Redirect>将导航一个新的URL。这个新的URL将覆盖当前URL在历史记录中，像服务器的的重定向类似。
+        <Redirect
+            to:string || object//string -->重定向URL
+                                //object --> 重定向location
+            push:bool//当为true，redirect将push一个新的地址在历史纪录中而不是替换当前地址
+            from:string//一个触发redirect的from pathname。当在<Switch>里面使用<Redirect>时他能够被用来匹配location
+        />
+    》<Route>
+        这Route组件是在React路由中最重要的组件。它最基本的作用是渲染一些路由匹配的UI。
+        》Route 渲染方法
+            <Route
+                component//当location匹配是渲染的React组件
+                render:func//指定内联渲染 注意：component优先于render，所以不要同时使用他们
+                children:func//component和render都优先于它
+            />
+            //上面三个方法在同时只能使用一个
+        》Route props
+            <Route
+                path:string//任何有效(满足 path-to-regexp )的URL
+                exact:bool//当为true时，仅仅pathname和location.pathname匹配时才匹配成功
+                strict:bool//当为true时，匹配location.pathname的尾部斜杠
+                match
+                location
+                history
+            />
+            注意：strict能够强制被使用为location.pathname没有尾部斜杠，为了做到这个strict和exact都设置为true
+
+            //传参
+            <Route path="/user/:username" component={User}/>
+        》<Router>
+            一个共用的低级接口为所有的router组件。通常应用程序将使用高级路由器中的一个:
+                <BrowserRouter>
+                <HashRouter>
+                <MemoryRouter>
+                <NativeRouter>
+                <StaticRouter>
+            使用低级的<路由器>的最常见的用例是同步一个自定义的历史和一个像Redux或Mobx这样的状态管理lib。
+            请注意，这并不需要使用状态管理libs和React路由器，它只是为了深度集成。
+            <Router
+                history:object//用于导航的历史对象。
+                children:node//单一的child元素
+            />
+
+            import { Router } from 'react-router'
+            import createBrowserHistory from 'history/createBrowserHistory'
+
+            const history = createBrowserHistory()
+
+            <Router history={history}>
+              <App/>
+            </Router>
+        》<StaticRouter>
+            一个不改变location的<Router>
+            这在服务器端呈现场景中非常有用，因为用户并没有实际点击，所以位置实际上并没有改变。
+            因此,名称:静态的。当您需要插入一个位置并在呈现输出上做出断言时，它在简单测试中也很有用。
+            <StaticRouter
+                basename:string//所有位置的基本URL。正确格式化的basename应该有一个主要的斜杠，但是没有尾部斜杠。
+                location:string || object//string -->服务器接受的URL，可能是node服务的req.url
+                                        //location object { pathname, search, hash, state }
+                context:object//一个普通的JavaScript对象，记录渲染的结果。
+                children:node//单一的child元素
+            />
+            //服务端案例
+            import {createServer } from 'http'
+            import React from 'react'
+            import ReactDOMServer from 'react-dom/server'
+            import {StaticRouter} from 'react-router'
+
+            createServer((req,res) =>{
+                const context = {}//记录渲染结果
+
+                const html = ReactDOMServer.renderToString(
+                    <StaticRouter
+                        location = {req.url}
+                        context= { context }
+                    >
+                        <App/>
+                    </StaticRouter>
+                );
+
+                if(context.url){
+                    res.writeHead(302,{
+                        Location:context.url
+                    });
+                    res.end();
+                }else{
+                    res.write(html);
+                    res.end();
+                }
+            }).listen(3000);
+        》<Switch>
+            渲染第一个child<Route>或<Redirect>来匹配路径
+            <Switch
+                children:node
+            />
+            》这有什么不同与使用一堆<Route>
+                <Switch>渲染唯一的一个route。相反，每一个<Route>都匹配渲染在内的location。
+                案例：
+                    <Route path="/about" component={About}/>
+                    <Route path="/:user" component={User}/>
+                    <Route component={NoMatch}/>
+                //如果URL是/about,那么上面的组件都将被渲染，因为他们全都匹配这个路径。
+                import { Switch, Route } from 'react-router'
+
+                <Switch>
+                  <Route exact path="/" component={Home}/>
+                  <Route path="/about" component={About}/>
+                  <Route path="/:user" component={User}/>
+                  <Route component={NoMatch}/>
+                </Switch>
+                //现在，如果我们在/ about，< Switch >将开始寻找匹配的<路由>。
+                //将匹配，< Switch >将停止寻找匹配并呈现< about >。类似地，如果我们在/ michael，那么< User >将呈现。
+
+                //这对于动画过渡也很有用，因为匹配的< Route >被呈现在与前一个相同的位置。
+                <Fade>
+                  <Switch>
+                    {/* there will only ever be one child here */}
+                    <Route/>
+                    <Route/>
+                  </Switch>
+                </Fade>
+        》history
+            这里说的history与history object是react中的history包，他是React路由两个依赖之一。在各个环境中他提供了
+            几个不同的实现。
+            》browser history 一个DOM特性的实现，它利用web浏览器，支持h5的history API。
+            》hash history 一个DOM特性的实现，利用比较老的浏览器
+            》memory history 一个内存中的历史实现，在测试和非dom环境中有用，如：React Native
+
+            history对象的属性和方法：
+                》length -- number 历史堆栈中的条目数
+                》action -- string 当前行为(PUSH, REPLACE, or POP)
+                》location
+                    》pathname -- string URL
+                    》search -- string URL query string
+                    》hash -- string URL hash片段
+                    》state -- string 特定的状态state被提供如：push(path,state)当这个location被push到历史记录中时，仅仅在browser和memory history可用
+                》push(path, [state]) -- function push一个新的location进入历史记录
+                》replace(path, [state]) -- function 替换当前历史记录的location
+                》go(n) -- function 跳转到历史记录中的n
+                》goBack() -- go(-1)
+                》goForward() -- go(1)
+                》block(prompt) -- 防止导航
+
+            history是可变的
+                history是可变的因此推荐通过<Route>去改变location而不是使用history.location。
+        》location
+            location代表当前应用的位置。如：
+            {
+              key: 'ac3df4', // not with HashHistory!
+              pathname: '/somewhere'
+              search: '?some=search-string',
+              hash: '#howdy',
+              state: {
+                [userDefined]: true
+              }
+            }
+            》这个router提供location对象在这些地方：
+                》Route component 中的this.props.location
+                》Route render ({location})=>();
+                》Route children ({location}) => ();
+                》withRouter 中的this.pops.location
+                //history.location也是存在的，但是他是不推荐使用的，因为他是可变的
+            》上面的location对象是不会改变的，所以你能够适应它在生命hook中。它是有用的对于数据抓取和动画。
+                componentWillReceiveProps(nextProps) {
+                  if (nextProps.location !== this.props.location) {
+                    // navigated!
+                  }
+                }
+            》你可以提供location来代替string在下面的地方
+                》Web Link to
+                》Native Link to
+                》Redirect to
+                》history.push
+                》history.replace
+                通常，您只是使用一个字符串，但是如果您需要添加一些“location state”，当应用程序返回到特定位置时，
+                您可以使用location对象。如果您想要基于导航历史而不是仅使用路径(比如modals)，那么这将非常有用。
+                如：
+                const location = {
+                  pathname: '/somewhere'
+                  state: { fromDashboard: true }
+                }
+                <Link to={location}/>
+            》最后你能够使用location在下面的组件中
+                Route
+                Switch
+                这将阻止他们使用路由器状态中的实际位置。
+                这对于动画和未决的导航非常有用，或者任何时候您想要在不同的位置对组件进行欺骗，而不是实际的位置。
+        》match
+            match对象包含<Route path>匹配URL的信息。它的属性如下：
+            》params -- object key:value path后面根的参数
+            》isExact - true 整个URL匹配
+            》path -- string 匹配的URL <Route>
+            》url -- string <Link>的url
+
+            》获取match对象的地方
+                Route component -- this.props.match
+                Route render -- ({match}) => ()
+                Route children -- ({match}) =>()
+                withRouter -- this.props.match
+                matchPath 的返回值
+                //如果Route没有path，因此总是匹配，你能够得到最近的父组件的match，withRouter也是一样的。
+        》matchPath
+            它使你可以使用相同的<Route>的匹配代码，除了用在正常的render周期中，如：分析在服务器渲染之前的数据依赖
+            import { matchPath } from 'react-router'
+
+            const match = matchPath('/users/123', {
+              path: '/users/:id'
+              exact: true,//默认false
+              strict: false//默认false
+            })
+
+            matchPath(
+                pathname,//要匹配的路径，如果在服务器渲染 req.url
+                props//match数据
+            )
+        》withRouter
+            你可以通过withRouter高阶组件获取history对象的属性，最近<Route>匹配的。
+            withRouter将在每次路由改变时都重新渲染它的组件，与< Route >render属性:{match,location,history}相同。
+            import React, { PropTypes } from 'react'
+            import { withRouter } from 'react-router'
+
+            class ShowTheLocation extends React.Component {
+              static propTypes = {
+                match: PropTypes.object.isRequired,
+                location: PropTypes.object.isRequired,
+                history: PropTypes.object.isRequired
+              }
+
+              render() {
+                const { match, location, history } = this.props
+
+                return (
+                  <div>You are now at {location.pathname}</div>
+                )
+              }
+            }
+
+            const ShowTheLocationWithRouter = withRouter(ShowTheLocation)
+            注意：
+                如果您使用withRouter防止由shouldComponentUpdate阻塞的更新，他是重要的withRouter包裹这个实现了
+                shouldComponentUpdate的组件。如：Redux
+                    withRouter(connect(...)(MyComponent)
+        》context.router
+            React路由利用context.router来使得<Router>与<Route><Link><Prompt>等通信。
+            context.router不应该被认为是公共API。因为context本身只是一个实验性的API，在未来的React版本中可能改变，
+            所以你应该避免在你的组件中使用this.context.router。
+            相反，你能获取存储在上下文的属性通过props。通过withRouter来包裹<Route>组件或其他组件来达到效果。
+
+10.案例
+    》基本使用
+    》URL参数
+    》认证
+    》自定义链接
+    》阻止导航
+    》未匹配404
+    》路径递归
+    》侧边栏
+    》过渡动画
+
+
+
+
+
+
+
+
+
+
 
 
 
