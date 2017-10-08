@@ -183,9 +183,20 @@ import { Router, Route, hashHistory } from 'react-router';
 // import Paths from './router/paths'
 // ReactDom.render(<Paths/>,document.getElementById('app'));
 
-import NavAslide from './router/navAslide'
-ReactDom.render(<NavAslide/>,document.getElementById('app'));
+// import NavAslide from './router/navAslide'
+// ReactDom.render(<NavAslide/>,document.getElementById('app'));
 
+// import TransitionAnimate from './router/transitonAnimate'
+// ReactDom.render(<TransitionAnimate/>,document.getElementById('app'));
+
+// import FuzzyMatch from './router/fuzzyMatch'
+// ReactDom.render(<FuzzyMatch/>,document.getElementById('app'));
+
+// import RouterConfig from './router/routerConfig2'
+// ReactDom.render(<RouterConfig/>,document.getElementById('app'));
+
+import ModalGallery from './router/modalGallery'
+ReactDom.render(<ModalGallery/>,document.getElementById('app'));
 
 // var List = React.createClass({
 //     render: function() {
