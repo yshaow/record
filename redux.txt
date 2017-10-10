@@ -665,7 +665,121 @@
 
                 然后使用新的state更新UI。如果使用了React Redux这类的绑定库，这时就应该调用component.setState(newState)来更新。
     》搭配React
-        
+        注意：Redux和React之间没有关系。Redux支持React、Angular、Ember、Jquery甚至纯js。
+
+        尽管如此，Redux还是和React和Deku这类框架搭配起来用最好，因为这类框架允许你以state函数的形式来描述界面，Redux通过action
+        的形式来发起state变化。
+
+        》安装React Redux
+            Redux默认并不包含React绑定库，需要单独安装
+            npm install --save react-redux
+        》容器组件 Smart/Container Components和展示组件Dumb/Presentational Components
+            Redux的React绑定库是基于 容器组件和展示组件相分离 的开发思想。
+                            展示组件                容器组件
+            作用          描述如何展示(骨架、样式)  描述如何运行(数据获取、状态更新)
+            直接使用Redux 否                        是
+            数据来源      props                     监听Redux state
+            数据修改      从props调用回调函数       向Redux派发actions
+            调用方式      手动                      通常由React Redux生成
+
+            大部分的组件都应该是展示型的，但是一般需要少数的几个容器组件把它们和Redux store连接起来
+            技术上将你可以直接使用store.subscribe()来编写容器组件。但不建议这么做因为就无法使用React Redux带来的性能优化。
+            也因此不要手动写容器组件，都是使用React Redux的connect()方法来生成的。
+        》设计组件层次结构
+            》展示组件
+                TodoList 用于显示todos列表
+                    todos:Array以{text,completed}形式显示todo项数组
+                    onTodoClick(index:number)当todo项被点击时调用的回调函数
+                Todo 一个todo项
+                    text:string 显示的文本内容
+                    completed:boolean todo项是否显示删除线
+                    onClick() 当todo项被点击时调用的回调函数
+                Link 带有callback回调功能的链接
+                    onClick 点击链接时会触发
+                Footer 一个允许用户改变可见todo过滤器的组件
+                App 根组件，渲染其他的所有内容
+
+                这些组件只定义外观并不关心数据来源和如何改变，传入什么就渲染什么。如果你把代码从Redux迁移到别的架构，这些组件可以不做
+                任何改动直接使用。它们并不依赖于Redux。
+            》容器组件
+                还需要一些容器组件来把展示组件链接到Redux。如：展示型的TodoLIst组件需要一个类似的VisibleTodoList的容器来监听
+                Redux store变化并处理如何过滤出要显示的数据。为了实现状态过滤，需要实现FilterLink的容器组件来渲染Link并在点击时
+                触发对应的action：
+                VisibleTodoList 根据当前显示的状态来对todo列表进行过滤，并渲染TodoList
+                FilterLink 得到当前过滤器并渲染Link
+                    filter: string就是当前过滤的状态
+            》其他组件
+                有时候很难分清到底该使用容器组件还是展示组件，如：有时表单和函数严重耦合在一起，如：
+                    AddTodo 含有Add按钮的输入框
+                技术上将可以把他们分成两个组件，但一开始就这么做有点造，在一些非常小的组件里混用容器和展示时可以的。
+                当业务变复杂后，如何拆分就很明显了，所以现在就使用混合型的中。
+        》组件编码
+            》展示组件
+               //components
+            》容器组件
+                技术上讲，容器组件就是使用store.subscribe()从Redux state树中读取部分数据，并且通过props来把这些数据
+                提供给要渲染的组件。
+                你可以手工来开发容器组件，但建议使用React Redux的connect()方法来生成，这个方法做了性能优化来避免很多不必要的重复
+                渲染。这样你就不必为了性能而手动实现React性能优化建议中的shouldComponentUpdate方法了。
+
+                使用connect()前，需要先定义mapStateToProps这个函数来指定如何把当前Redux store state映射到展示组件的props中。
+                如VisibleTodoList需要计算传到TodoList中的todos，所以定义了根据state.visibilityFilter来过滤state.todos的方法
+                并在mapStateToProps中使用。
+                    const getVisibleTodos = (todos,filter) => {
+                        switch(filter){
+                            case 'SHOW_ALL':
+                                return todos;
+                            case 'SHOW_COMPLETED':
+                                return todos.filter(t => t.completed);
+                            case 'SHOW_ACTIVE':
+                                return todos.filter(t => !t.completed);
+                        }
+                    }
+
+                    const mapStateToProps = (state) => {
+                        return {
+                            todos:getVisibleTodos(state.todos,state.visibilityFilter)
+                        }
+                    }
+                除了读取state，容器组件还能分发action，类似的方式，可以定义mapDispatchToProps()方法接收dispatch()方法
+                并返回期望注入到展示组件的props中的回调方法。如：VisibleTodoList向TodoList组件注入一个叫onTodoClick的
+                props中，还希望onTodoClick能分发TOGGLE_TODO这个action：
+                    const mapDispatchToProps = (dispatch) => {
+                        return {
+                            onTodoClick: id => {
+                                dispatch(toggleTodo(id))
+                            }
+                        }
+                    }
+                最后使用connect()创建VisibleTodoList并传入这两个函数
+                    import {connect} from 'react-redux'
+
+                    const VisibleTodoList = connect(mapStateToProps,mapDispatchToProps)(TodoList);
+
+                    export default VisibleTodoList;
+                Todo案例容器组件：containers
+            》传入Store
+                所有容器都可以访问Redux store，所以可以手动监听它。一种方式是把它以props的形式传入到所有容器组件中。但这太麻烦了
+                因为必须要用store把展示组件包裹一层，仅仅是因为恰好咋组件树种渲染了一个容器组件
+                建议的方式是使用指定的React Redux组件的<Provider>来让所有容器组件都可以访问store，而不必显示地传递它，只需要在渲染
+                根组件时使用即可。
+                //index.js
+                import React from 'react'
+                import {render} from 'react-dom'
+                import {Provider} from 'react-redux'
+                import {createStore} from 'redux'
+                import todoApp from './reducers'
+                import App from './components/App'
+
+                let store = createStore(todoApp);
+                render(
+                    <Provider store={store}><App/></Provider>,document.getElementById('app');
+                );
+        》示例 Todo List
+5.高级
+    》异步Action
+
+
 
 
 
