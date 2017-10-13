@@ -8,11 +8,12 @@ import {addTodo,completeTodo,setVisibilityFilter,VisibilityFilters} from '../sto
 import AddTodo from '../components/AddTodo'
 import TodoList from '../components/TodoList'
 import Footer from '../components/Footer'
+import {createSelector} from 'reselect'
+import UndoRedo from './UndoRedo'
 
 class App extends React.Component{
   render(){
     const {dispatch,visibleTodos,visibilityFilter} = this.props
-
     return (
       <div>
         <AddTodo
@@ -32,6 +33,7 @@ class App extends React.Component{
             nextFilter => dispatch(setVisibilityFilter(nextFilter))
           }
         />
+        <UndoRedo />
       </div>
     );
   }
@@ -49,20 +51,36 @@ App.propTypes = {
   ]).isRequired
 }
 
-function selectTodos(todos,filter){
+// function selectTodos(todos,filter){
+//   switch(filter){
+//     case VisibilityFilters.SHOW_ALL:
+//       return todos
+//     case VisibilityFilters.SHOW_COMPLETED:
+//       return todos.filter(todo => todo.completed)
+//     case VisibilityFilters.SHOW_ACTIVE:
+//       return todos.filter(todo => !todo.completed)
+//   }
+// }
+
+//记忆功能selector
+const selectTodos = createSelector([
+  (state) => state.todos.present,
+  (state) => state.visibilityFilter
+],(todos,filter) => {
   switch(filter){
-    case VisibilityFilters.SHOW_ALL:
-      return todos
-    case VisibilityFilters.SHOW_COMPLETED:
-      return todos.filter(todo => todo.completed)
-    case VisibilityFilters.SHOW_ACTIVE:
-      return todos.filter(todo => !todo.completed)
+    case 'SHOW_ALL':
+      return todos;
+    case 'SHOW_COMPLETED':
+      return todos.filter(t => t.completed);
+    case 'SHOW_ACTIVE':
+      return todos.filter(t => !t.completed);
   }
-}
+})
 
 function select(state){
   return {
-    visibleTodos:selectTodos(state.todos,state.visibilityFilter),
+    // visibleTodos:selectTodos(state.todos,state.visibilityFilter),
+    visibleTodos:selectTodos(state),
     visibilityFilter:state.visibilityFilter
   }
 }

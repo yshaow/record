@@ -778,6 +778,1993 @@
         》示例 Todo List
 5.高级
     》异步Action
+        》Action
+            当调用异步API时，有两个非常关键的时刻：发起请求的时刻和接收响应的时刻(也可能是超时)
+            这两个时刻都可能会更改应用的state；为此你需要dispatch普通的 同步action。一般情况下，每个API
+            请求都需要dispatch至少三种action：
+            》一种通知reducer请求开始的action
+                对于这种action，reducer可能会切换一下state中的isFetching标记，以此来告诉UI来显示加载界面
+            》一种通知reducer请求成功的action
+                对于这个action，reducer可能会把接收到的新数据合并到state中，并重置isFetching。UI则会隐藏
+                加载界面，并显示接收到的数据。
+            》一种通知reducer请求失败的action
+                对于这种action，reducer可能会重置isFetching，另外有些reducer会保存这些失败信息，并在UI里显示出来。
+            为了区分这三种action，可能在action里面添加一个专门的status字段作为标记位
+            {type:"FETCH_POSTS"}
+            {type:"FETCH_POSTS",status:"error",error:"Oops"}
+            {type:"FETCH_POSTS",status:"success",response:{...}}
+            又或者为它们定义不同的type：
+            { type: 'FETCH_POSTS_REQUEST' }
+            { type: 'FETCH_POSTS_FAILURE', error: 'Oops' }
+            { type: 'FETCH_POSTS_SUCCESS', response: { ... } }
+        》同步Action创建函数
+            /**
+             * 同步action类型和action的创建函数
+             * @type {string}
+             */
+            export const SELECT_SUBREDDIT = 'SELECT_SUBREDDIT'
+            export function selectSubreddit (subreddit){
+              return {
+                type:SELECT_SUBREDDIT,
+                subreddit
+              }
+            }
+
+            export const INVALIDATE_SUBREDDIT = 'INVALIDATE_SUBREDDIT'
+            export function invalidatesubreddit(subreddt){
+              return {
+                type:INVALIDATE_SUBREDDIT,
+                subreddt
+              }
+            }
+
+            /**
+             * 定义异步请求的action
+             * @type {string}
+             */
+            export const REQUEST_POSTS = 'REQUEST_POSTS'
+            export function requestPosts(subreddit){
+              return {
+                type:REQUEST_POSTS,
+                subreddit
+              }
+            }
+
+            /**
+             * 定义异步响应的action
+             * @type {string}
+             */
+            export const RECEIVE_POSTS = 'RECEIVE_POSTS'
+            export function receivePosts(subreddit,json){
+              return {
+                type:RECEIVE_POSTS,
+                subreddit,
+                posts:json.data.children.map(child => child.data),
+                receivedAt:Date.now()
+              }
+            }
+        》设计state结构
+            如：Reddit头条
+            {
+              selectedsubreddit: 'frontend',
+              postsBySubreddit: {
+                frontend: {
+                  isFetching: true,//来显示进度条
+                  didInvalidate: false,//标记数据是否过期
+                  items: []//列表数据本身
+                },
+                reactjs: {
+                  isFetching: false,
+                  didInvalidate: false,
+                  lastUpdated: 1439478405547,//最后更新时间
+                  items: [
+                    {
+                      id: 42,
+                      title: 'Confusion about Flux and Relay'
+                    },
+                    {
+                      id: 500,
+                      title: 'Creating a Simple Application Using React JS and Flux Architecture'
+                    }
+                  ]
+                }
+              }
+            }
+        》处理Action
+            import {combineReducers} from 'redux'
+            import { SELECT_SUBREDDIT,INVALIDATE_SUBREDDIT,RECEIVE_POSTS,REQUEST_POSTS } from './actionsAsyn'
+
+            function selectedsubreddit(state='reactjs',action){
+              switch (action.type){
+                case SELECT_SUBREDDIT:
+                  return action.subreddit
+                default:
+                  return state;
+              }
+            }
+
+            function posts(state = {isFetching:false,didInvalidata:false,items:[]},action){
+              switch(action.type){
+                case INVALIDATE_SUBREDDIT:
+                  return Object.assign({},state,{
+                    didInvalidata:true
+                  })
+                case REQUEST_POSTS:
+                  return Object.assign({},state,{
+                    isFetching:true,
+                    didInvalidate:false
+                  })
+                case RECEIVE_POSTS:
+                  return Object.assign({},state,{
+                    isFetching:false,
+                    didInvalidata:false,
+                    items:action.posts,
+                    lastUpdated:action.receivedAt
+                })
+                default:
+                  return state;
+              }
+            }
+
+            function postsBySubreddit(state = {},action){
+              switch(action.type){
+                case INVALIDATE_SUBREDDIT:
+                case RECEIVE_POSTS:
+                case REQUEST_POSTS:
+                  return Object.assign({},state,{
+                    [action.subreddit]:posts(state[action.subreddit],action)
+                  })
+                default:
+                  return state;
+              }
+            }
+
+            const rootReducer = combineReducers({
+              postsBySubreddit,
+              selectedsubreddit
+            })
+
+            export default rootReducer
+        》异步action创建函数
+            如何把之前定义的同步action创建函数和网络请求结合起来？标准的做法是使用Redux Thunk中间件。要引入redux-thunk
+            这个专门的库才能使用。通过使用指定的middleware(中间件),action创建函数除了返回action对象外还可以返回函数，这时
+            这个action创建函数就成为来thunk。
+
+            当action创建函数返回函数时，这个函数会被Redux Thunk middleware执行。这个函数并不需要保存纯净，它还可以带有副作用
+            包括执行异步API。这个函数还可以dispatch action 就像dispatch前面定义的同步action一样。
+
+            //大多数浏览器还不支持fetch，建议使用isomorphic-fetch库
+            import fetch from 'isomorphic-fetch'
+
+            export const  REQUEST_POSTS = 'REQUEST_POSTS'
+            function requestPosts(subreddit){
+              return {
+                type:REQUEST_POSTS,
+                subreddit
+              }
+            }
+
+            export const RECEIVE_POSTS = 'RECEIVE_POSTS'
+            function receivePosts (subreddit,json){
+              return {
+                type:RECEIVE_POSTS,
+                subreddit,
+                posts:json.data.children.map(child => child.data),
+                receivedAt:Date.now()
+              }
+            }
+
+            /**
+             * thunk action创建函数
+             */
+            export function fetchPosts(subreddit){
+              /**
+               * Thunk middleware知道如何处理函数
+               * 把dispatch房费通过参数的形式传给函数 以此让它自己能dispatch action
+               */
+              return function(dispatch){
+                //首次dispatch 更新应用的state来通知API发起请求了
+                dispatch(requestPosts(subreddit));
+
+                /**
+                 * thunk middleware调用的函数可以有返回值，它会被当作dispatch方法的返回值传递
+                 * 这个案例中我们返回一个等待处理的promise，这不是redux middleware所必须的，但对于我们而言很方便
+                 */
+                return fetch(`http://www.subreddit.com/r/${subreddit}.json`)
+                  .then(response => response.json())
+                  .then(json =>{
+                      //可以多次dispatch
+                     //这里使用请求结果更新应用的state
+                      dispatch(receivePosts(subreddit,json));
+                    }
+                  )
+              }
+            }
+        》如何在dispatch机制中引入Redux Thunk middleware？ 使用applyMiddleware()即可
+            //index.js
+            import thunkMiddleware from 'redux-thunk'
+            import createLogger from 'redux-logger'
+            import {createStore,applyMiddleware} from 'redux'
+            import {selectSubreddit,fetchPosts} from './actions'
+            import rootReducer from './reducers'
+
+            const loggerMiddleware = createLogger();
+
+            const store = createStore(
+                rootReducer,
+                applyMiddleware(
+                    thunkMiddleware,//允许我们dispatch()函数
+                    loggerMiddleware//一个很便捷的middleware用来打印action日志
+                )
+            );
+            store.dispatch(selectSubreddit('reactjs'))
+            //thunk的优点是它的结果可以再次被dispatch
+            store.dispatch(fetchPost('reactjs')).then( ()=>
+                console.log(store.getState());
+            )
+        注意：异步action创建函数对于做服务端渲染非常方便，你可以创建一个store，dispatch一个异步action创建函数，这个action
+        创建函数又dispatch另一个异步action创建函数来为应用的一整块请求数据，同时在Promise完成和结束时才render界面。然后再render
+        前，store里就已经存在了需要的state。
+
+        Thunk middleware并不是Redux处理异步action的唯一方式：
+            你可以使用 redux-promise 或者 redux-promise-middleware 来 dispatch Promise 来替代函数。
+            你可以使用 redux-observable 来 dispatch Observable。
+            你可以使用 redux-saga 中间件来创建更加复杂的异步 action。
+            你可以使用 redux-pack 中间件 dispatch 基于 Promise 的异步 Action。
+            你甚至可以写一个自定义的 middleware 来描述 API 请求，就像这个 真实场景的案例 中的做法一样。
+    》异步数据流
+        默认情况下，createStore()所创建的Redux store没有使用middleware，所以只支持同步数据流。
+        你可以使用applyMiddleware()来增强createStore(),虽然这不是必须的，但它可以帮你用简便的方式来描述异步的action。
+
+        像redux-thunk或redux-promise这样支持异步的middleware都包装了store的dispatch()方法，以此来让你的dispatch一些除了action
+        以外的其他内容，例如：函数或者 Promise。你所使用的任何 middleware 都可以以自己的方式解析你 dispatch 的任何内容，并继续传递
+        actions 给下一个 middleware。比如，支持 Promise 的 middleware 能够拦截 Promise，然后为每个 Promise 异步地 dispatch 一对
+        begin/end actions。
+
+        当middleware链中的最后一个middleware开始dispatch action时，这个action必须是一个普通对象。这是同步式的redux数据流开始的地方。
+    》Middleware
+        Redux middleware提供的是位于action被发起之后，到达reducer之前的扩展点。你可以利用Redux middleware来进行日志记录，创建崩溃报告
+        调用异步接口或路由等等。
+        》理解Middleware
+            》记录日志
+                Redux的一个益处就是它让state的变化过程变得可预知和透明。每当一个action发起完成后，新的state就会被计算并保存下来。
+                state不能被自身修改，只能由特定的action引起变化。
+
+                》手动记录
+                    最直接的方案：在每次调用store.dispatch(action)前后手动记录被发起的action和新的state。
+                    注意：如果你使用 react-redux 或者类似的绑定库，最好不要直接在你的组件中操作 store 的实例。
+                          在接下来的内容中，仅仅是假设你会通过 store 显式地向下传递。
+                    let action = addTodo('Use Redux');
+
+                    console.log('dispatching',action);
+                    store.dispatch(action);
+                    console.log('next state',store.getState());
+                》封装Dispatch
+                    function dispatchAddLog(store,action){
+                          console.log('dispatching', action)
+                          store.dispatch(action)
+                          console.log('next state', store.getState())
+                    }
+                》Monkeypatching Dispatch
+                    直接替换store实例中的dispatch函数，Redux store只是一个包含一些方法的普通对象，因此我们可以对其dispatch进行拓展。
+                    let next = store.dispatch;
+                    store.dispatch = function dispatchAndLog(action){
+                        console.log('dispatching',action);
+                        let result = next(action);
+                        console.log('next state',store.getState());
+                        return result;
+                    }
+            》崩溃报告
+                如果我们想对dispatch附加超过一个的变换呢，在生产过程中报告js的错误，全局的window.onerror并不可靠
+                因为它在一些旧的浏览器中无法提供错误堆栈，而这个排除错误所需的至关重要的信息。
+                然而将日志记录和崩溃报告分离是很重要的，理想情况下，希望他们是两个不同的模块，也可能在不同的包中。
+                否则我们无法构建一个由这些工具组成的生态系统。
+                //日志记录
+                function patchStoreToAddLogging(store){
+                    let next = store.dispatch
+                    store.dispatch = function dispatchAndLog(action){
+                        console.log('dispatching',action);
+                        let result = next(action);
+                        console.log('next state',store.getState());
+                        return result;
+                    }
+                }
+
+                function patchStoreToAddCrashReporting(store){
+                    let nex = store.dispatch
+                    store.dispatch = function dispatchAndReportErrors(action){
+                        try{
+                            return next(action)
+                        }catch(err){
+                            console.error('捕获一个异常！',err);
+                            Raven.captureException(err,{
+                                extra:{
+                                    action,
+                                    state:store.getState()
+                                }
+                            });
+                            throw err;
+                        }
+                    }
+                }
+            》隐藏 Monkeypatching
+                Monkeypatching本质上是一种hack。将任意的方法替换成你想的样子，
+                function logger(store){
+                    let next = store.dispatch;
+                    return function dispatchAndLog(action){
+                        console.log('dispatching', action)
+                        let result = next(action)
+                        console.log('next state', store.getState())
+                        return result
+                    }
+                }
+                //在Redux内部提供一个可以将实际的monkeypatching应用到store.dispatch中的辅助方法
+                function applyMiddlewareByMonkeypatching(store,middlewares){
+                    middlewares = middlewares.slice()
+                  middlewares.reverse()
+
+                  // 在每一个 middleware 中变换 dispatch 方法。
+                  middlewares.forEach(middleware =>
+                    store.dispatch = middleware(store)
+                  )
+                }
+                //应用多个middleware
+                applyMiddlewareByMonkeypatching(store, [ logger, crashReporter ])
+            》移除Monkeypatching
+                为什么要替换原来的dispatch？这样我们就可以在后面直接调用它。
+                但另一个原因：就是每一middleware可以操作(或直接调用)前一个middleware包装过的store.dispatch:
+
+                function logger(store){
+                    //这里next必须指向前一个middleware返回的函数
+                    let next = store.dispatch
+                    return function dispatchAndLog(action){
+                        console.log('dispatching', action)
+                        let result = next(action)
+                        console.log('next state', store.getState())
+                        return result
+                    }
+                }
+                如果 applyMiddlewareByMonkeypatching 方法中没有在第一个 middleware 执行时立即替换掉 store.dispatch，
+                那么 store.dispatch 将会一直指向原始的 dispatch 方法。也就是说，第二个 middleware 依旧会作用在原始
+                的 dispatch 方法。
+
+                但是还有另一种方式来实现这种链式调用的效果。可以让middleware以方法参数的形式接收一个next()方法，而不是通过
+                store的实例去获取。
+                    function logger(store) {
+                      return function wrapDispatchToAddLogging(next) {
+                        return function dispatchAndLog(action) {
+                          console.log('dispatching', action)
+                          let result = next(action)
+                          console.log('next state', store.getState())
+                          return result
+                        }
+                      }
+                    }
+                //简化
+                const logger = store =>next => action => {
+                      console.log('dispatching', action)
+                      let result = next(action)
+                      console.log('next state', store.getState())
+                      return result
+                }
+                const crashReporter = store => next => action => {
+                  try {
+                    return next(action)
+                  } catch (err) {
+                    console.error('Caught an exception!', err)
+                    Raven.captureException(err, {
+                      extra: {
+                        action,
+                        state: store.getState()
+                      }
+                    })
+                    throw err
+                  }
+                }
+                这正是Redux middleware的样子，Middleware接收一个next()的dispatch函数，并返回一个dispatch函数
+                返回的函数会被作为下一个middleware的next()，以此类推。由于store中类似getState()的方法依旧非常有用
+                ，我们将store作为顶层的参数，使得它可以在所有的middleware中被调用。
+            》单纯的使用Middleware
+                可以写一个applyMiddleware方法替换掉原来的applyMiddlewareByMonkeypatching。在新的方法中，我们取得
+                最终完整被包装过的dispatch函数，并返回一个store的副本。
+                function applyMiddleware(store,middlewares){
+                      middlewares = middlewares.slice()
+                      middlewares.reverse()
+
+                      let dispatch = store.dispatch
+                      middlewares.forEach(middleware =>
+                        dispatch = middleware(store)(dispatch)
+                      )
+
+                      return Object.assign({}, store, { dispatch })
+                }
+                //这个与Redux中的applyMiddleware的实现已经很接近来，但是也有不同之处
+                    》它只暴露一个store API的子集给middleware：dispatch(action)和getState()
+                    》它用了一个非常巧妙的方式，以确保如果你在 middleware 中调用的是 store.dispatch(action)
+                      而不是 next(action)，那么这个操作会再次遍历包含当前 middleware 在内的整个 middleware 链。
+                      这对异步的 middleware 非常有用，正如我们在之前的章节中提到的。
+                    》为了保证你只能应用 middleware 一次，它作用在 createStore() 上而不是 store 本身。因此它的签名
+                      不是 (store, middlewares) => store， 而是 (...middlewares) => (createStore) => createStore。
+                》最终的middleware实现
+                    const logger = store => next => action => {
+                      console.log('dispatching', action)
+                      let result = next(action)
+                      console.log('next state', store.getState())
+                      return result
+                    }
+
+                    const crashReporter = store => next => action => {
+                      try {
+                        return next(action)
+                      } catch (err) {
+                        console.error('Caught an exception!', err)
+                        Raven.captureException(err, {
+                          extra: {
+                            action,
+                            state: store.getState()
+                          }
+                        })
+                        throw err
+                      }
+                    }
+                //将它们引用到Redux store中：
+                import { createStore, combineReducers, applyMiddleware } from 'redux'
+
+                let todoApp = combineReducers(reducers)
+                let store = createStore(
+                  todoApp,
+                  // applyMiddleware() 告诉 createStore() 如何处理中间件
+                  applyMiddleware(logger, crashReporter)
+                )
+                //现在任何被发送到store的action都会经过logger和crashReporter
+                //将经过logger和crashReporter两个middleware
+                store.dispatch(addTodo('Use Redux'))
+            》7个示例 -- middleware
+                //记录所有被发起的action以及产生的新的state
+                const logger = store => next => action => {
+                  console.group(action.type)
+                  console.info('dispatching', action)
+                  let result = next(action)
+                  console.log('next state', store.getState())
+                  console.groupEnd(action.type)
+                  return result
+                }
+
+                //在state更新完成和listener被通知之后发送崩溃报告
+                const crashReporter = store => next => action => {
+                  try {
+                    return next(action)
+                  } catch (err) {
+                    console.error('Caught an exception!', err)
+                    Raven.captureException(err, {
+                      extra: {
+                        action,
+                        state: store.getState()
+                      }
+                    })
+                    throw err
+                  }
+                }
+
+                //用{meta:{delay:N}}来让action延迟N毫秒，返回一个取消timeout的函数
+                const timeoutScheduler = store => next => action => {
+                  if (!action.meta || !action.meta.delay) {
+                    return next(action)
+                  }
+
+                  let timeoutId = setTimeout(
+                    () => next(action),
+                    action.meta.delay
+                  )
+
+                  return function cancel() {
+                    clearTimeout(timeoutId)
+                  }
+                }
+
+                //通过{meta:{raf:true}}让action在一个rAF循环帧中被发起，然后一个从队列中移除该action的函数
+                const rafScheduler = store => next => {
+                  let queuedActions = []
+                  let frame = null
+
+                  function loop() {
+                    frame = null
+                    try {
+                      if (queuedActions.length) {
+                        next(queuedActions.shift())
+                      }
+                    } finally {
+                      maybeRaf()
+                    }
+                  }
+
+                  function maybeRaf() {
+                    if (queuedActions.length && !frame) {
+                      frame = requestAnimationFrame(loop)
+                    }
+                  }
+
+                  return action => {
+                    if (!action.meta || !action.meta.raf) {
+                      return next(action)
+                    }
+
+                    queuedActions.push(action)
+                    maybeRaf()
+
+                    return function cancel() {
+                      queuedActions = queuedActions.filter(a => a !== action)
+                    }
+                  }
+                }
+
+                /**
+                 * 使你除了 action 之外还可以发起 promise。
+                 * 如果这个 promise 被 resolved，他的结果将被作为 action 发起。
+                 * 这个 promise 会被 `dispatch` 返回，因此调用者可以处理 rejection。
+                 */
+                const vanillaPromise = store => next => action => {
+                  if (typeof action.then !== 'function') {
+                    return next(action)
+                  }
+
+                  return Promise.resolve(action).then(store.dispatch)
+                }
+
+                /**
+                 * 让你可以发起带有一个 { promise } 属性的特殊 action。
+                 *
+                 * 这个 middleware 会在开始时发起一个 action，并在这个 `promise` resolve 时发起另一个成功（或失败）的 action。
+                 *
+                 * 为了方便起见，`dispatch` 会返回这个 promise 让调用者可以等待。
+                 */
+                const readyStatePromise = store => next => action => {
+                  if (!action.promise) {
+                    return next(action)
+                  }
+
+                  function makeAction(ready, data) {
+                    let newAction = Object.assign({}, action, { ready }, data)
+                    delete newAction.promise
+                    return newAction
+                  }
+
+                  next(makeAction(false))
+                  return action.promise.then(
+                    result => next(makeAction(true, { result })),
+                    error => next(makeAction(true, { error }))
+                  )
+                }
+
+                /**
+                 * 让你可以发起一个函数来替代 action。
+                 * 这个函数接收 `dispatch` 和 `getState` 作为参数。
+                 *
+                 * 对于（根据 `getState()` 的情况）提前退出，或者异步控制流（ `dispatch()` 一些其他东西）来说，这非常有用。
+                 *
+                 * `dispatch` 会返回被发起函数的返回值。
+                 */
+                const thunk = store => next => action =>
+                  typeof action === 'function' ?
+                    action(store.dispatch, store.getState) :
+                    next(action)
+
+                // 你可以使用以上全部的 middleware！（当然，这不意味着你必须全都使用。）
+                let todoApp = combineReducers(reducers)
+                let store = createStore(
+                  todoApp,
+                  applyMiddleware(
+                    rafScheduler,
+                    timeoutScheduler,
+                    thunk,
+                    vanillaPromise,
+                    readyStatePromise,
+                    logger,
+                    crashReporter
+                  )
+                )
+    》搭配React Router
+        》安装React Router
+            npm install --save react-router
+        》配置后备URL
+            在集成React Router之前，我们需要配置一下我们的开发服务器。显然我们的开发服务器无法感知配置在React Router
+            中的route；如：你想访问并刷新/todos,由于是一个单页面应用，你的开发服务器需要生成并返回index.html。
+
+            》配置Express
+                如果你使用的是 Express 来返回你的 index.html 页面，可以增加以下代码到你的项目中：
+                app.get('/*', (req,res) => {
+                  res.sendfile(path.join(__dirname, 'index.html'))
+                })
+            》配置 WebpackDevServer
+                如果你正在使用 WebpackDevServer 来返回你的 index.html 页面， 你可以增加如下配置到webpack.config.dev.js：
+                devServer: {
+                  historyApiFallback: true,
+                }
+        》连接React Router和Redux应用
+            》首先需要从React Router中导入<Router/>和<Route/>
+                import { Router, Route, browserHistory } from 'react-router';
+                在React应用中，通常你会用<Router />包裹<Route/>如此当URL变化时，<Router/>将会匹配到指定的路由，然后渲染路由绑定
+                的组件。<Route/>用来显示地把路由映射到应用的组件结构上，用path指定URL，用component指定路由命中URL后需要渲染的组件
+                const Root = () => (
+                  <Router>
+                    <Route path="/" component={App} />
+                  </Router>
+                );
+            》然后 从React Redux导入<Provider/>
+                <Provider/>是React Redux提供的高阶组件，用来让你将Redux绑定到React
+                import { Provider } from 'react-redux';
+                用<Provider/>包裹<Router/>以便于路由处理器可以访问store
+                const Root = ({ store }) => (
+                  <Provider store={store}>
+                    <Router>
+                      <Route path="/" component={App} />
+                    </Router>
+                  </Provider>
+                );
+            》通过React Router导航
+                React Router提供了<Link/>来实现导航功能
+                import React from 'react';
+                import { Link } from 'react-router';
+
+                const FilterLink = ({ filter, children }) => (
+                  <Link
+                    to={filter === 'all' ? '' : filter}
+                    activeStyle={{
+                      textDecoration: 'none',
+                      color: 'black'
+                    }}
+                  >
+                    {children}
+                  </Link>
+                );
+
+                export default FilterLink;
+            注意：
+                》Redux Router 是一个实验性质的库，它使得你的 URL 的状态和 redux store 内部状态保持一致。
+                  它有和 React Router 一样的 API，但是它的社区支持比 react-router 小。
+                》React Router Redux 将你的 redux 应用和 react-router 绑定在一起，并且使它们保持同步。
+                  如果没有这层绑定，你将不能通过时光旅行来回放 action。除非你需要这个，不然 React-router 和 Redux 完全可以分开操作。
+        》案例 Reddit
+6.技巧
+    》迁移到Redux
+        Redux不是一个单一的框架，而是一系列的约定和一些让他们协同工作的函数。你的Redux项目的主体代码甚至不需要使用Redux的API，
+        大部分时间你其实是在编写函数。
+        》从Flux项目迁移
+            Reducer抓住了Flux Store的本质，因此，将一个Flux项目逐步到Redux是可行的，无论你使用Flummox、Alt、transitional Flux还是
+            其他Flux库。
+            同样你也可以将Redux的项目通过相同的步骤迁移回上述的这些Flux框架。
+            迁移步骤：
+                》创建一个叫做createFluxStore(reducer)的函数，通过reducer函数适配你当前项目的Flux Store。从代码来看，这个函数很像
+                  Redux中createStore的实现。它的dispatch处理器应该根据不同的action来调用不同的reducer，保存新的state并抛出更新事件。
+                》通过创建createFluxStore(reducer)的方法来将每个Flux Store逐步重写为Reducer，这个过程中你的应用中其他部分代码感知不到
+                  任何变化，仍可以和原来一样使用Flux Store。
+                》当重写你的Store时，你会发现你应该避免一些明显违反Flux模式的使用方法，如：在Store中请求API或在Store中触发action，一旦基于
+                  Reducer来构建你的Flux代码，它会变得更易于理解。
+                》当你所有的Flux Store全部基于reducer来实现时，你就可以利用combineReducers(reducers)将多个reducer合并到一起，然后再应用里
+                  使用这个唯一的Redux Store。
+                》现在剩下的就是使用react-redux或者类似的库来处理你的UI部分
+                》最后你可以使用一些Redux的特性，例如利用middleware来进一步简化异步代码
+        》从Backbone项目迁移
+            Backbone的Model层与Redux有着巨大的差别，因此不建议从Backbone项目迁移到Redux。
+            如果可以的话最好的方法是彻底重写app的Model层。不过如果重写不可行，也可以试试使用
+            backbone-redux来逐步迁移，并使用Redux的store和backbone的model层以及collection保持同步。
+    》使用对象展开运算符 object spread operator
+        从不直接修改state是Redux的核心理念之一，所以你会发现自己总是在使用Object.assign()创建对象拷贝，
+        而拷贝中会包含新创建或更新过的属性值。
+        //todoApp中Object.assign()将会返回一个新的state对象而其中的visibilityFilter属性被更新了
+        function todoApp(state = initialState,action){
+            switch(action.type){
+                case SET_VISIBILITY_FILTER:
+                    return Object.assign({},state,{
+                        visibilityFilter:action.filter
+                    });
+                default:
+                    return state;
+            }
+        }
+        //使用对象展开运算符(将一个对象的可枚举属性拷贝到另一个对象) 来简化
+        function todoApp(state = initialState,action){
+            switch(action.type){
+                case SET_VISIBILITY_FILTER:
+                    return {...state,visibilityFilter:action.filter}
+                default:
+                    return state;
+            }
+        }
+        //目前对象展开运算符提案还处于ECMAScript state3草案阶段，若你想在产品中使用它的依靠转换编译器，如
+        Babel你可以使用es2015预设值，安装 babel-plugin-transform-object-rest-spread并将其单独添加到位于
+        .babelrc的plugins数组中。
+        {
+          "presets": ["es2015"],
+          "plugins": ["transform-object-rest-spread"]
+        }
+    》缩减样板代码
+        Redux很大一部分受到Flux的启发，而最常见的关于Flux的抱怨是必须写一大推的样板代码。
+        》Actions
+            用来描述在app中发生了什么的普通对象，并且是描述突变数据意图的唯一途径。
+            不得不dispatch的action对象并非是一个样板代码而是Redux的一个基本设计选择。
+            Action:{type:"ADD_TODO",text:"Use Redux"}
+            action拥有的一个不变的type是为了帮助reducer识别它们。推荐使用string而不是符号[Symbols]作为type是因为string
+            是可序列化的并且使用符合会使得记录和重演变得困难。
+
+            在Flux中传统的想法是将每个action type定义为string常量
+            const ADD_TODO = 'ADD_TODO'
+            //type定义常量的好处
+             》帮助维护命名一致性，因为所有的 action type 汇总在同一位置。
+             》有时，在开发一个新功能之前你想看到所有现存的 actions 。而你的团队里可能已经有人添加了你所需要的action，
+               而你并不知道。
+             》Action types 列表在 Pull Request 中能查到所有添加，删除，修改的记录。这能帮助团队中的所有人及时追踪新
+               功能的范围与实现。
+             》如果你在 import 一个 Action 常量的时候拼写错了，你会得到 undefined 。在 dispatch 这个 action 的时候，Redux
+               会立即抛出这个错误，你也会马上发现错误。
+        》Action Creators
+            另一个约定俗称的做法是通过创建函数生产action对象，而不是在你的dispatch的时候内联生产它们
+            如：
+            //不推荐
+            dispatch({
+                type:"ADD_TODO",
+                text:"Use Redux
+            });
+            //推荐
+            actionCreators.js
+            export function addTodo(text){
+                return {
+                    type:"ADD_TODO",
+                    text
+                }
+            }
+            AddTodo.js
+            import {addTodo} from './actionCreators';
+            dispatch(addTodo('Use Redux'));
+            //Action creators总被当作样板代码，其实你并不非的把他们写出来 如果你觉得更适合你的项目你可以选用对象
+            //字面量(即第一种)。然而写action creators是存在某种优势的，即可以使用redux-thunk中间件在返回函数时提前退出。
+        》Action Creators生成器
+            某些框架如Flummox自动从action creator函数定义生成了action type常量。这个想法是说你不需要同时定义ADD_TODO常量
+            和addTodo() action creator。这样的方法在底层也生成了action type常量，但他们是隐士生成的、间接的会造成混乱，因此
+            我们建议直接清晰的创建action type常量。
+
+            写简单的action creator很容易让人厌烦，且往往最终生成多余的样板代码，你可以写一个用于生成action creator的函数：
+            function makeActionCreator(type,...argNames){
+                return function(...args){
+                    let action = {type};
+                    argNames.forEach( (arg,index) => {
+                        action[argNames[index]] = args[index];
+                    });
+                    return action;
+                }
+            }
+
+            const ADD_TODO = 'ADD_TODO'
+            const EDIT_TODO = 'EDIT_TODO'
+            const REMOVE_TODO = 'REMOVE_TODO'
+
+            export const addTodo = makeActionCreator(ADD_TODO,'todo')
+            export const editTodo = makeActionCreator(EDIT_TODO,'id','todo')
+            export const removeTodo = makeActionCreator(REMOVE_TODO,'id');
+
+            //一些工具库也可以帮助生成action creator 如：redux-act和redux-actions。这些库可以有效减少你的样板代码并且遵守
+            //Flux Standard Action一类的标准。
+        》异步Action Creators
+            中间件让你在每个action对象dispatch出去之前，注入一个自定义逻辑来解释你的action对象。异步action是中间件的最常见用例。
+            如果没有中间件，dispatch只能接受一个普通对象，因此我们必须在components里面进行ajax调用。
+            //actionCreators.js
+            export function loadPostsSuccess(userId,response){
+                return {
+                    type:"LOAD_POSTS_SUCCESS",
+                    userId,
+                    response
+                }
+            }
+
+            export function loadPostFailure(userId,error){
+                return {
+                    type:"LOAD_POSTS",
+                    userId,
+                    error
+                }
+            }
+
+            export function loadPostsRequest(userId){
+                type:"LOAD_POSTS_REQUEST",
+                userId
+            }
+
+            //UserInfo.js
+            import {Component} from 'react'
+            import {connect} from 'react-redux'
+            import {loadPostsRequest,loadPostsSuccess,loadPostsFailure} from './actionCreators';
+
+            class Posts extends Component{
+                loadData(userId){
+                    //调用React Redux connect()注入props
+                    let {dispatch,posts} = this.props;
+
+                    if(posts[userId]){
+                        return;//缓存数据存在 直接返回
+                    }
+
+                    //发起请求 改变state的状态isFetching
+                    dispatch(loadPostsRequest(userId));
+
+                    //发起请求
+                    fetch(`http://myapi.com/users/${userId}/posts`).then(
+                        response => dispatch(loadPostsSuccess(userId, response)),
+                        error => dispatch(loadPostsFailure(userId, error))
+                    )
+                }
+
+                componentDidMount(){
+                    this.loadData(this.props.userId);
+                }
+
+                componentWillReceiveProps(nextProps){
+                    if(nextProps.userId !== this.props.userId){
+                        this.loadData(nextProps.userId);
+                    }
+                }
+
+                render(){
+                    if(this.props.isFetching) return <p>Loading...</p>;
+
+                    let posts = this.props.posts.map( post =>
+                        <Post post={post} key = {post.id}/>
+                    );
+                    return <div>{posts}</div>
+                }
+            }
+
+            export default connect( state => ({
+                posts:state.posts
+            }))(Posts);
+            //然而不同的components从同样的API端点请求数据，而且我们想要在多个components中重用一些逻辑(如：当缓存数据有效的时候提前退出)，
+            中间件让我们能写表达更清晰的、潜在的异步action creators。它允许我们dispatch普通对象之外的东西并解释它们的值，如：中间件能
+            "捕捉"到已经dispatch的Promises并把他们变为一对请求和成功/失败的action。
+
+            中间件最简单的例子是redux-thunk，'Thunk'中间件让你可以把action creators写成thunks，也就是返回函数的函数。这使得控制被反转了：
+            你会像一个参数一样取得dispatch，所以你也能写一个多次分发的action creator。
+            注意：Thunk只是一个中间件的例子，中间件不仅仅是关于"分发函数"的：而是关于你可以使用特定的中间件来分发任何该中间件可以处理的东西。
+                  例子中Thunk中间件添加了一个特定的行为用来分发函数，但这实际取决于你用的中间件。
+            //用redux-thunk重写上面代码
+            //actionCreators.js
+            export function loadPosts(userId){
+                //使用thunk中间件解释
+                return function(dispatch,getState){
+                    let {posts} = getState();
+                    if(posts[userId]){
+                        return;//使用数据缓存
+                    }
+
+                    dispatch({
+                        type:"LOAD_POSTS_REQUEST",
+                        userId
+                    });
+                    fetch(`http://myapi.com/users/${userId}/posts`).then(
+                          response => dispatch({
+                            type: 'LOAD_POSTS_SUCCESS',
+                            userId,
+                            response
+                          }),
+                          error => dispatch({
+                            type: 'LOAD_POSTS_FAILURE',
+                            userId,
+                            error
+                          })
+                        );
+                }
+            }
+            //UserInfo.js
+            import {Component} from 'react';
+            import {connect} from 'react-redux';
+            import {loadPosts} from 'actionCreators';
+            class Posts extends Component{
+                componentDidMount(){
+                    this.props.dispatch(loadPosts(this.props.userId));
+                }
+
+                componentWillReceiveProps(nextProps){
+                    if(nextProps.userId !== this.props.userId){
+                        this.props.dispatch(loadPosts(nextProps.userId));
+                    }
+                }
+
+                render(){
+                    if(this.props.isLoading){
+                        return <p>Loading...</p>
+                    }
+
+                    let posts = this.props.posts.map(post =>
+                        <Post post={post} key={post.id}/>
+                    );
+
+                    return <div>{posts}</div>
+                }
+            }
+            export default connect(state => ({
+                posts:state.posts
+            }))(Posts);
+
+            //最后你可以编写你自己的中间件，把上面的模式泛化
+            export function loadPosts(userId){
+                return {
+                    types:["LOAD_POSTS_REQUEST","LOAD_POSTS_SUCCESS",'LOAD_POSTS-FAILURE'],
+                    //检查缓存
+                    shouldCallAPI: state => !state.users[userId].
+                    //获取
+                    callAPI: () => fetch(`http://myapi.com/users/${userId}/posts`),
+                    //在actions开始 结束注入的参数
+                    payload:{userId}
+                }
+            }
+            //解释上面这个action的中间件
+            function callAPIMiddleware ({dispatch,getState}) {
+                return next => action => {
+                    const {
+                        types,
+                        callAPI,
+                        shouldCallAPI = () => true,
+                        payload = {}
+                    } = action;
+
+                    if(!types){
+                        return next(action);//正常的action 跳过
+                    }
+
+                    if(
+                        !Array.isArray(types) || types.length !== 3 ||
+                        !types.every(type => typeof type === 'string')
+                    ){
+                        throw new Error('Expected an array of three string types.');
+                    }
+
+                    if(typeof callAPI !== 'function'){
+                        throw new Error('Expected callAPI to be a function.')
+                    }
+
+                    if(!shouldCallAPI(getState())){
+                        return;
+                    }
+
+                    const [requestType,successType,failureType] = types;
+
+                    dispatch({
+                        ...payload,
+                        type:requestType
+                    });
+
+                    return callAPI().then(
+                        response => dispatch({
+                            ...payload,
+                            response,
+                            type:successType
+                        }),
+                        error => dispatch({
+                            ...payload,
+                            error,
+                            type:failureType
+                        })
+                    );
+                }
+            }
+            //在将上面的中间件传给applyMiddleware(...middlewares)一次以后，你能用相同的方式写你的API调用action creators：
+            export function loadPosts(userId) {
+              return {
+                types: ['LOAD_POSTS_REQUEST', 'LOAD_POSTS_SUCCESS', 'LOAD_POSTS_FAILURE'],
+                shouldCallAPI: (state) => !state.users[userId],
+                callAPI: () => fetch(`http://myapi.com/users/${userId}/posts`),
+                payload: { userId }
+              };
+            }
+
+            export function loadComments(postId) {
+              return {
+                types: ['LOAD_COMMENTS_REQUEST', 'LOAD_COMMENTS_SUCCESS', 'LOAD_COMMENTS_FAILURE'],
+                shouldCallAPI: (state) => !state.posts[postId],
+                callAPI: () => fetch(`http://myapi.com/posts/${postId}/comments`),
+                payload: { postId }
+              };
+            }
+
+            export function addComment(postId, message) {
+              return {
+                types: ['ADD_COMMENT_REQUEST', 'ADD_COMMENT_SUCCESS', 'ADD_COMMENT_FAILURE'],
+                callAPI: () => fetch(`http://myapi.com/posts/${postId}/comments`, {
+                  method: 'post',
+                  headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ message })
+                }),
+                payload: { postId, message }
+              };
+            }
+        》Reducers
+            Redux reducer用函数描述逻辑更新减少了样板代码里大量的Flux stores。函数比对象简单，比类更简单得多。
+            //Flux store
+            let _todos = []
+
+            const TodoStore = Object.assign({}, EventEmitter.prototype, {
+              getAll() {
+                return _todos
+              }
+            })
+
+            AppDispatcher.register(function (action) {
+              switch (action.type) {
+                case ActionTypes.ADD_TODO:
+                  let text = action.text.trim()
+                  _todos.push(text)
+                  TodoStore.emitChange()
+              }
+            })
+
+            export default TodoStore
+
+            //redux
+            export function todos(state = [],action){
+                switch(action.type){
+                    case ActionTypes.ADD_TODO:
+                        let text = action.text.trim();
+                        return [...state,text];
+                    default:
+                        return state;
+                }
+            }
+
+            》Reducers生成器
+                写一个函数将reducers表达为action types到handles的映射对象
+                //todos reducers
+                export const todos = createReducer([],{
+                    [ActionTypes.ADD_TODO](state,action){
+                        let text = action.text.trim();
+                        return [...state,text]
+                    }
+                })
+                //reducers 生成器
+                function createReducer(initialState,handlers){
+                    return function reducer(state = initialState,action){
+                        if (handlers.hasOwnProperty(action.type)) {
+                          return handlers[action.type](state, action);
+                        } else {
+                          return state;
+                        }
+                    }
+                }
+    》服务端渲染
+        服务端渲染一个很常见的场景是当用户(或搜索引擎爬虫)第一次请求页面时，用它来做初始渲染。当服务器接收到请求后，
+        它把需要的组件渲染成HTML字符串，然后把它返回给客户端(浏览器)，之后客户端会接手渲染控制全。
+
+        》服务端使用Redux
+            当在服务器使用Redux渲染时，一定要在响应中包含应用的state，这样客户端就可以把它作为初始state。这点至关重要。
+            因为如果在生成HTML前预加载了数据，希望客户端也能访问这些数据。否则客户端生成的HTML与服务器端返回的HTML就不会
+            匹配，客户端还需要重新加载数据。
+
+            把数据发送到客户端的步骤：
+                》为每次请求创建全新的Redux store实例
+                》按需dispatch一些action
+                》从store中取出state
+                》把state一同返回给客户端
+            在客户端使用服务器返回的state创建并初始化一个全新的Redux store，Redux在服务端唯一要做的事情：提供应用所需的初始state
+
+        》安装
+            Counter计数器案例
+            》安装依赖库
+                使用Express做web服务器
+                npm install --save express react-redux
+            》服务端开发
+                使用app.use挂载 Express middleware处理所有请求，每次服务器收到请求时都会调用handleRender函数。
+                另外如果使用ES6和jsx语法，需要使用Babel和React preset。
+                //server.js
+
+                》处理请求
+                    对每个请求创建一个新的Redux store实例。这个store唯一的作用是提供应用的初始的state
+
+                    渲染时使用<Provider>来包住根组件<App/>以此来让组件树中所有组件都能访问store。
+
+                    服务端渲染最关键的一步是：发送响应前渲染初始的HTML，需要React.renderToString()。
+                    然后使用store.getState()从store得到初始state。
+                    //handleRender.js
+                》注入初始组件的HTML和state
+                    服务端最后一步就是把初始组件的HTML和初始state注入到客户端能够渲染的模板中。如何传递state呢
+                    我们添加一个<script>标签来把preloadedState赋给window.__INITIAL_STATE__。
+                    客户端可以通过 window.__INITIAL_STATE__ 获取 preloadedState。
+
+                    同时使用script标签来引入打包后的js bundle文件。这是打包工具输出的客户端入口文件，以静态文件或URL的方式
+                    实现服务端开发中的热加载。
+                    //renderFullPage.js
+            》客户端开发
+                只需要从window.__INITIAL_STATE__得到初始state，并传给createStore()函数即可
+                //index.js
+                使用打包工具编译并打包文件到dist/bundle.js
+                当页面加载时，打包后的js会启动，并调用React.render()，然后与服务端渲染的HTML的data-react-id属性
+                做关联。
+                这会把新生成的 React 实例与服务端的虚拟 DOM 连接起来。因为同样使用了来自 Redux store 的初始 state，
+                并且 view 组件代码是一样的，结果就是我们得到了相同的 DOM。
+            》准备初始state
+                因为客户端只是执行收到的代码，刚开始的初始state可能是空的，然后根据需要获取state。在服务端渲染时同步执行的而且我们
+                只有一次渲染view的机会。在收到请求时，可能需要根据请求参数或外部state(访问API或数据库)计算后得到初始state。
+
+                》处理request参数
+                    服务端收到的唯一输入是来自浏览器的请求，在服务器启动时可能需要做一些配置(如：运行在开发环境还是生产环境)
+                    但这些配置是静态的。
+
+                    请求会包含在URL请求相关信息，包括请求参数，他们对于做React Router路由时可能会有用。也可能在请求头里面包含cookies
+                    ，鉴权信息或者 POST 内容数据。
+
+                    //基于请求参数得到初始state handleRender.js
+
+                》获取异步state
+                    服务端渲染常用的场景是处理异步state，因为服务端渲染天生是同步的，因此异步的数据获取操作对应到同步操作非常重要。
+
+                    //api请求代码 counter.js
+                》安全注意事项
+                    任何应用都应该对用户输入做安全处理以避免跨站脚本攻击(XSS)或代码注入
+                    可以考虑使用安全函数处理输入如Lvalidator.js
+    》编写测试
+        因为大部分的Redux代码都是函数，而大部分是纯函数，所以很好测试，不需要模拟。
+        》设置
+            建议使用Jest作为测试引擎。注意因为是在node环境下运行，所以你不能访问DOM。
+            npm install --save-dev jest
+
+            //若想结合Babel使用，你需要安装babel-jest:
+            npm install --save-dev babel-jest
+            //并且在.babelrc中启用ES2015的功能
+            {
+              "presets": ["es2015"]
+            }
+
+            //在package.json的scripts里加入
+            {
+              ...
+              "scripts": {
+                ...
+                "test": "jest",//单次运行
+                "test:watch": "npm test -- --watch"//每次文件改变时自动执行测试
+              },
+              ...
+            }
+        》Action创建函数 Action Creators
+            Redux里的action创建函数是会返回普通对象的函数。在测试action创建函数的时候我们想要测试是否调用了正确的action创建函数，
+            还有是否返回了正确的action。
+            案例：
+                export function addTodo(text) {
+                  return {
+                    type: 'ADD_TODO',
+                    text
+                  }
+                }
+                //测试
+                import * as actions from '../../actions/TodoActions'
+                import * as types from '../../constants/ActionTypes'
+
+                describe('actions', () => {
+                  it('should create an action to add a todo', () => {
+                    const text = 'Finish docs'
+                    const expectedAction = {
+                      type: types.ADD_TODO,
+                      text
+                    }
+                    expect(actions.addTodo(text)).toEqual(expectedAction)
+                  })
+                })
+        》异步Action创建函数
+            对于使用Redux Thunk或其他中间件的异步action创建函数，最好完全模拟Redux store来测试。你可以使用redux-mock-store把middleware
+            应用到模拟的store。也可以使用nock来模拟HTTP请求。
+            案例：
+            import fetch from 'isomorphic-fetch'
+            function fetchTodosRequest(){
+                return {
+                    type:FETCH_TODOS_REQUEST
+                }
+            }
+
+            function fetchTodosSuccess(body){
+                return {
+                    type:FETCH_TODOS_SUCCESS,
+                    body
+                }
+            }
+
+            function fetchTodosFailure(ex){
+                return {
+                    type:FETCH_TODOS_FAILURE,
+                    ex
+                }
+            }
+
+            export function fetchTodos(){
+                return dispatch => {
+                    dispatch(fetchTodosRequest());
+                    return fetch('http://example.com/todos')
+                    .then(res => res.json())
+                    .then(json => dispatch(fetchTodosSuccess(json.body)))
+                    .catch(ex => dispatch(fetchTodosFailure(ex)))
+                }
+            }
+            //测试
+            import configureMockStore from 'redux-mock-store'
+            import thunk from 'redux-thunk'
+            import * as actions from '../../actions/TodoActions'
+            import * as types from '../../constants/ActionTypes'
+            import nock from 'nock'
+            import expect from 'expect' // 你可以使用任何测试库
+
+            const middlewares = [ thunk ]
+            const mockStore = configureMockStore(middlewares)
+
+            describe('async actions', () => {
+              afterEach(() => {
+                nock.cleanAll()
+              })
+
+              it('creates FETCH_TODOS_SUCCESS when fetching todos has been done', () => {
+                nock('http://example.com/')
+                  .get('/todos')
+                  .reply(200, { body: { todos: ['do something'] }})
+
+                const expectedActions = [
+                  { type: types.FETCH_TODOS_REQUEST },
+                  { type: types.FETCH_TODOS_SUCCESS, body: { todos: ['do something']  } }
+                ]
+                const store = mockStore({ todos: [] })
+
+                return store.dispatch(actions.fetchTodos())
+                  .then(() => { // 异步 actions 的返回
+                    expect(store.getActions()).toEqual(expectedActions)
+                  })
+              })
+            })
+        》Reducers
+            Reducer把action应用到之前的state，并返回新的state。
+            案例：
+            import {ADD_TODO} from '../constants/ActionTypes'
+            const initialState = [
+                {
+                    text:"Use Redux",
+                    completed:false,
+                    id:0
+                }
+            ]
+
+            export default function todos(state = initialState,action){
+                switch(action.type){
+                    case ADD_TODO:
+                        return [
+                            {
+                                id:state.reduce( (maxId,todo) => Math.max(todo.id,maxId),-1) +1,
+                                completed:false,
+                                text:action.text
+                            },
+                            ...state
+                        ]
+                    default:
+                        return state;
+                }
+            }
+            //测试
+            import reducer from '../../reducers/todos'
+            import * as types from '../../constants/ActionTypes'
+
+            describe('todos reducer', () => {
+              it('should return the initial state', () => {
+                expect(
+                  reducer(undefined, {})
+                ).toEqual([
+                  {
+                    text: 'Use Redux',
+                    completed: false,
+                    id: 0
+                  }
+                ])
+              })
+
+              it('should handle ADD_TODO', () => {
+                expect(
+                  reducer([], {
+                    type: types.ADD_TODO,
+                    text: 'Run the tests'
+                  })
+                ).toEqual(
+                  [
+                    {
+                      text: 'Run the tests',
+                      completed: false,
+                      id: 0
+                    }
+                  ]
+                )
+
+                expect(
+                  reducer(
+                    [
+                      {
+                        text: 'Use Redux',
+                        completed: false,
+                        id: 0
+                      }
+                    ],
+                    {
+                      type: types.ADD_TODO,
+                      text: 'Run the tests'
+                    }
+                  )
+                ).toEqual(
+                  [
+                    {
+                      text: 'Run the tests',
+                      completed: false,
+                      id: 1
+                    },
+                    {
+                      text: 'Use Redux',
+                      completed: false,
+                      id: 0
+                    }
+                  ]
+                )
+              })
+            })
+        》Components
+            React components的优点是，一般都很小且依赖于props。因此测试起来很简便。
+            首先安装Enzyme，Enzyme底层使用了React Test Utilities，但是更方便，更易读，而且更强大。
+            npm install --save-dev enzyme
+            测试components要创建一个叫setup()的辅助方法，用来把模拟过的stubbed回调函数当作props传入。
+            然后使用React浅渲染组件。这样就可以依据是否调用了回调函数的断言来写独立的测试。
+            import React,{Component} from 'react'
+            import TodoTextInput from './TodoTextInput'
+
+            export default class Header extends Component{
+                handleSave(text){
+                    if(text.length !== 0){
+                        this.props.addTodo(text);
+                    }
+                }
+
+                render(){
+                    return (
+                        <header className='header'>
+                            <h1>todos</h1>
+                            <TodoTextInput newTodo={true}
+                                onSave = {this.handleSave.bind(this)}
+                                placeholder='What needs to be done?'
+                            />
+                        </header>
+                    )
+                }
+            }
+            //测试
+            import React from 'react'
+            import {shallow} from 'enzyme'
+            import Header from '../../components/Header'
+
+            function setup(){
+                const props = {
+                    addTodo:jest.fn()
+                }
+
+                const enzymeWrapper = shallow(<Header {...props} />);
+
+                return {
+                    props,
+                    enzymeWrapper
+                }
+            }
+            describe('components', () => {
+              describe('Header', () => {
+                it('should render self and subcomponents', () => {
+                  const { enzymeWrapper } = setup()
+
+                  expect(enzymeWrapper.find('header').hasClass('header')).toBe(true)
+
+                  expect(enzymeWrapper.find('h1').text()).toBe('todos')
+
+                  const todoInputProps = enzymeWrapper.find('TodoTextInput').props()
+                  expect(todoInputProps.newTodo).toBe(true)
+                  expect(todoInputProps.placeholder).toEqual('What needs to be done?')
+                })
+
+                it('should call addTodo if length of text is greater than 0', () => {
+                  const { enzymeWrapper, props } = setup()
+                  const input = enzymeWrapper.find('TodoTextInput')
+                  input.props().onSave('')
+                  expect(props.addTodo.mock.calls.length).toBe(0)
+                  input.props().onSave('Use Redux')
+                  expect(props.addTodo.mock.calls.length).toBe(1)
+                })
+              })
+            })
+        》连接组件
+            如果你使用了React Redux，可能你也同时再使用类似的connect()的higher-order components,将Redux state注入到常见的React组件中。
+            案例：
+            import {connect} from 'react-redux'
+            class App extends Component{}
+
+            export default connect(mapStateToProps)(App);
+
+            在单元测试中，一般会导入App组件
+            import App from './App'
+            但是，当这样导入时，实际上持有的是connect()返回的包装过的组件，而不是App组件本身。如果想测试它和Redux间的互动。
+            可以使用一个专为单元测试创建的store，将它包装在<Provider>中。但有时我们仅仅是想测试组件的渲染，并不想要这么
+            一个 Redux store。
+            import {connect} from 'react-redux'
+            //测试用的
+            export class App extends Component{...}
+            //app用
+            export default connect(mapDispatchToProps)(App);
+
+            //测试导入
+            import {App} from './App'
+        》中间件
+            中间件函数会对Redux中的dispatch的调用行为进行封装。因此需要通过模拟dispatch的调用行为来测试。
+            import * as types from '../../constants/ActionTypes'
+            import singleDispatch from '../../middleware/singleDispatch'
+
+            const createFakeStore = fakeData => ({
+              getState() {
+                return fakeData
+              }
+            })
+
+            const dispatchWithStoreOf = (storeData, action) => {
+              let dispatched = null
+              const dispatch = singleDispatch(createFakeStore(storeData))(actionAttempt => dispatched = actionAttempt)
+              dispatch(action)
+              return dispatched
+            }
+
+            describe('middleware', () => {
+              it('should dispatch if store is empty', () => {
+                const action = {
+                  type: types.ADD_TODO
+                }
+
+                expect(
+                  dispatchWithStoreOf({}, action)
+                ).toEqual(action)
+              })
+
+              it('should not dispatch if store already has type', () => {
+                const action = {
+                  type: types.ADD_TODO
+                }
+
+                expect(
+                  dispatchWithStoreOf({
+                    [types.ADD_TODO]: 'dispatched'
+                  }, action)
+                ).toNotExist()
+              })
+            })
+    》计算衍生数据
+        Reselect库可以创建可记忆的、可组合的selector函数。Reselect selectors可以用来高效地计算Redux store里面的衍生数据。
+        》可记忆的Selectors初衷
+            //containers/VisibleTodoList.js
+            import {connect} from 'react-redux'
+            import {toggleTodo} from '../actions'
+            import TodoList from '../components/TodoList'
+
+            const getVisibleTodos = (todos,filter) => {
+                switch(filter){
+                    case "SHOW_ALL":
+                        return todos;
+                    case 'SHOW_COMPLETED':
+                        return todos.filter ( t=> t.completed)
+                    case 'SHOW_ACTIVE':
+                        return todos.filter( t=> !t.completed)
+                }
+            }
+
+            const mapStateToProps = state => {
+                return {
+                    todos:getVisibleTodos(state.todos,state.visibilityFilter)
+                }
+            }
+
+            const mapDispatchToProps = dispatch => {
+                return {
+                    onTodoClick: id => {
+                        dispatch(toggleTodo(id))
+                    }
+                }
+            }
+
+            export default connect(mapStateToProps,mapDispatchToProps)(TodoList);
+            //mapStateToProps调用了getVisibleTodos来计算todos。运行没有问题，但是有一个缺点：每次当组件更新时都会重新计算todos。
+            如果state tree非常大或者计算量非常大，每次更新都重新计算可能会带来性能问题。Reselect能帮你省去这些没有必要的重新计算。
+
+        》创建可记忆的Selector
+            我们需要一个可记忆的selector来替代这个getVisibleTodos只有在state.todos或state.visibilityFilter变化时重新计算todos。
+            而其他部分变化时不做计算。
+
+            Reselect提供createSelector函数创建可记忆的selector。createSelector接收一个input-selectors数组和一个转换函数作为参数。
+            如果state tree的改变会引起input-selector值变化，那么selector会调用转换函数，传入input-selectors作为参数，并返回结果。
+            如果input-selectors的值和前一次的一样，它将会直接返回前一次的计算的数据，而不会在调用一次转换函数。
+
+            //定义一个可记忆的selector getVisibleTodos来替代上面的无记忆版本
+            selectors/index.js
+            import {createSelector} from 'reselect'
+
+            const getVisibilityFilter = state => state.visibilityFilter;
+            const getTodos = state => state.todos;
+
+            export const getVisibleTodos = createSelector(
+                [getVisibilityFilter,getTodos],
+                (visibilityFilter,todos) => {
+                    switch (visibilityFilter) {
+                      case 'SHOW_ALL':
+                        return todos
+                      case 'SHOW_COMPLETED':
+                        return todos.filter(t => t.completed)
+                      case 'SHOW_ACTIVE':
+                        return todos.filter(t => !t.completed)
+                    }
+                }
+            );
+        》组合Selector
+            可记忆的selector自身可以作为其它可记忆的selector的input-selector。
+            //如将getVisibleTodos作为另一个selector的input-selector
+            const getKeyword = state => state.keyword
+            const getVisibleTodosFilteredByKeyword = createSelector(
+                [getVisibleTodos,getKeyword],
+                (visibleTodos,keyword) => visibleTodos.filter(
+                    todo => todo.text.indexOf(keyword) > -1;
+                )
+            );
+        》连接Selector和Redux Store
+            如果你在使用React Redux，可以在mapStateToProps()中当正常函数来调用selectors
+            //containers/VisibleTodoList.js
+            import {connect} from 'react-redux'
+            import {toggleTodo} from '../actions'
+            import TodoList from '../components/TodoList'
+            import {getVisibleTodos} from '../selectors'
+
+            const mapStateToProps = state => {
+                return {
+                    todos:getVisibleTodos(state)
+                }
+            }
+
+            const mapDispatchToProps = dispatch => {
+                return {
+                    onTodoClick: id => {
+                        dispatch(toggleTodo(id))
+                    }
+                }
+            }
+
+            export default connect(mapStateToProps,mapDispatchToProps)(TodoList);
+        》在selectors中访问React Props
+            selector接收Redux store state以及props作为参数
+            //components/App.js
+            import React from 'react'
+            import Footer from './Footer'
+            import AddTodo from '../containers/AddTodo'
+            import VisibleTodoList from '../containers/VisibleTodoList'
+
+            const App = () => (
+              <div>
+                <VisibleTodoList listId="1" />
+                <VisibleTodoList listId="2" />
+                <VisibleTodoList listId="3" />
+              </div>
+            )
+            //selectors/todoSelectors.js
+            import {createSelector} from 'reselect'
+            const getVisibilityFilter = (state,props) => state.todoLists[props.listId].visibilityFilter;
+
+            const getTodos = (state,props) => state.todoLists[props.listId].todos;
+
+            const getVisibleTodos = createSelector(
+              [ getVisibilityFilter, getTodos ],
+              (visibilityFilter, todos) => {
+                switch (visibilityFilter) {
+                  case 'SHOW_COMPLETED':
+                    return todos.filter(todo => todo.completed)
+                  case 'SHOW_ACTIVE':
+                    return todos.filter(todo => !todo.completed)
+                  default:
+                    return todos
+                }
+              }
+            )
+            export default getVisibleTodos
+            //props可以通过mapStateToProps传递给getVisibleTodos:
+            const mapStateToProps = (state, props) => {
+              return {
+                todos: getVisibleTodos(state, props)
+              }
+            }
+
+            //使用带有多个visibleTodoList容器实例的getVisibleTodos selector不能使用函数记忆功能
+            containers/VisibleTodoList.js
+            import { connect } from 'react-redux'
+            import { toggleTodo } from '../actions'
+            import TodoList from '../components/TodoList'
+            import { getVisibleTodos } from '../selectors'
+
+            const mapStateToProps = (state, props) => {
+              return {
+                // 警告：下面的 selector 不会正确记忆
+                todos: getVisibleTodos(state, props)
+              }
+            }
+
+            const mapDispatchToProps = (dispatch) => {
+              return {
+                onTodoClick: (id) => {
+                  dispatch(toggleTodo(id))
+                }
+              }
+            }
+
+            const VisibleTodoList = connect(
+              mapStateToProps,
+              mapDispatchToProps
+            )(TodoList)
+
+            export default VisibleTodoList
+            注意：用createSelector创建的selector只有在参数集与之前的参数集相同时才会返回缓存值，如果我们交替的
+            渲染<VisibleTodoList listId='1'/>和<VisibleTodoList listId='2'/>，共享的selector将交替的接收listId:1与2
+            .这会导致每次调用时传入的参数不同。因此selector将始终重新计算而不是返回缓存的值。
+        》跨多组件的共享Selector
+            需要React Redux v4.3.0以上版本
+            为了跨越多个VisibleTodoList共享selector，并且正确的记忆。每个组件的实例需要有拷贝selector的私有版本。
+            //创建一个makeGetVisibleTodos的函数，在每次调用的时候返回一个getVisibleTodos selector的新拷贝
+            selectors/todoSelectors.js
+            import {createSelector} from 'reselect'
+            const getVisibilityFilter = (state, props) =>
+              state.todoLists[props.listId].visibilityFilter
+
+            const getTodos = (state, props) =>
+              state.todoLists[props.listId].todos
+
+            const makeGetVisibleTodos = () => {
+              return createSelector(
+                [ getVisibilityFilter, getTodos ],
+                (visibilityFilter, todos) => {
+                  switch (visibilityFilter) {
+                    case 'SHOW_COMPLETED':
+                      return todos.filter(todo => todo.completed)
+                    case 'SHOW_ACTIVE':
+                      return todos.filter(todo => !todo.completed)
+                    default:
+                      return todos
+                  }
+                }
+              )
+            }
+            //我们还需要一种每个容器方法自己私有的selector的方式。connect的mapStateToProps函数可以帮助我们
+            如果connect的mapStateToProps返回的不是一个对象而是一个函数，他将被用作为每个容器的实例创建一个单独
+            的mapStateToProps函数。
+                const makeMapStateToProps = () => {
+                    const getVisibleTodos = makeGetVisibleTodos()
+                    const mapStateToProps = (state, props) => {
+                        return {
+                          todos: getVisibleTodos(state, props)
+                        }
+                      }
+                      return mapStateToProps
+                }
+                //现在记忆功能就能够正常使用了
+                container/VisibleTodosList.js
+                import { connect } from 'react-redux'
+                import { toggleTodo } from '../actions'
+                import TodoList from '../components/TodoList'
+                import { makeGetVisibleTodos } from '../selectors'
+
+                const makeMapStateToProps = () => {
+                  const getVisibleTodos = makeGetVisibleTodos()
+                  const mapStateToProps = (state, props) => {
+                    return {
+                      todos: getVisibleTodos(state, props)
+                    }
+                  }
+                  return mapStateToProps
+                }
+
+                const mapDispatchToProps = (dispatch) => {
+                  return {
+                    onTodoClick: (id) => {
+                      dispatch(toggleTodo(id))
+                    }
+                  }
+                }
+
+                const VisibleTodoList = connect(
+                  makeMapStateToProps,
+                  mapDispatchToProps
+                )(TodoList)
+
+                export default VisibleTodoList
+    》实现撤销历史
+        》设计状态结构
+            撤销历史也是应用state的一部分，我们没有必要以不同的方式实现它。当你实现撤销和重做这个功能时，无论state如何随着时间
+            不断变化，你都需要追踪state在不同时刻的历史记录。
+
+            如：一个计数器应用的state结构
+            {
+                counter:10
+            }
+            //如果我们希望在这样一个应用中实现撤销和重做的话，我们必须保存更多的state以解决下面几个问题：
+            》撤销或重做留下了那些信息
+            》当前的状态是什么？
+            》撤销堆栈中过去(和未来)的状态是什么？
+            //为此我们对state结构做了以下修改
+            {
+                counter:{
+                    past: [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ],
+                    present: 10,
+                    future: []
+                }
+            }
+            //现在 按下撤销 恢复到过去的状态
+            {
+              counter: {
+                past: [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ],
+                present: 9,
+                future: [ 10 ]
+              }
+            }
+            //再次撤销
+            {
+              counter: {
+                past: [ 0, 1, 2, 3, 4, 5, 6, 7 ],
+                present: 8,
+                future: [ 9, 10 ]
+              }
+            }
+            //当按下重做 往未来的状态移动一步
+            {
+              counter: {
+                past: [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ],
+                present: 9,
+                future: [ 10 ]
+              }
+            }
+            //最终，当处于撤销堆栈中时，用户发起了一个操作(如：减少计数)，那么我们将会丢弃所有未来的信息
+            {
+              counter: {
+                past: [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ],
+                present: 8,
+                future: []
+              }
+            }
+            //在撤销堆栈中保存的数字 字符串 数组或是对象都不重要，因为整个结构始终保持一致
+
+            //它看起来通常都是这样
+            {
+                past:Array<T>,
+                present:T,
+                future:Array<T>
+            }
+        》设计算法
+            无论何种特定的数据类型，重做历史记录的state结构始终一致
+            {
+                past:Array<T>,
+                present:T,
+                future:Array<T>
+            }
+            //可以定义两个action来操作该state:UNDO和REDO。在reducer处理这两个action
+            》处理Undo
+                移除past中的**最后一个**元素
+                将上一步移除的元素赋予present
+                将原来的present插入到future的**最前面**
+            》处理Redo
+                移除future的*第一个*元素
+                将上一步移除的元素赋予present
+                将原来的present追加到past的*最后面*
+            》处理其他Action
+                将当前的present追加到past的最后面
+                将处理完的action所产生的新的state赋予present
+                清空future
+            //编写Reducers
+            const initialState = {
+                past:[],
+                present:null,//考虑如何初始化state
+                future:[]
+            }
+            function undoable(state = initialState,action){
+                const {past,present,future} = state;
+                switch(action.type){
+                    case "UNDO":
+                        const previous = past[past.length -1];
+                        const newPast = past.slice(0,past.length -1);
+                        return {
+                            past:newPast,
+                            present:previous,
+                            future:[present,...future]
+                        }
+                    case 'REDO':
+                        const next = future[0];
+                        const newFuture = future.slice(1);
+                        return {
+                            past:[...past,present],
+                            present:next,
+                            future:newFuture
+                        }
+                    default:
+                        //如何处理其他action
+                        return state;
+                }
+            }
+            //上面的代码无法实现其功能的
+        》初识Reducer Enhancers
+            reducer enhancer(higher order reducer)作为一个函数，接收reducer作为参数并返回一个新的reducer，这个新的reducer可以
+            处理新的action或维护更多的state亦或者将它无法处理的action委托给原始的reducer处理。combineReducers()也是reducer enhancer
+            因为它同样接收多个reducer并返回一个新的reducer。
+
+            //重写上面代码
+            function undoable(reducer){
+
+                //以一个空的action调用reducer来产生初始的state
+                const initialState = {
+                    past:[],
+                    present:reducer(undefined,{}),
+                    future:[]
+                }
+
+                //返回一个可以执行撤销和重做的新的reducer
+                return function (state = initialState,action){
+                    const {past,present,future} = state;
+
+                    switch(action.type){
+                        case 'UNDO':
+                            const previous = past[past.length -1];
+                            const newPast = past.slice(0,past.length -1);
+                            return {
+                                past:newPast,
+                                present:previous,
+                                future:[present,...future]
+                            }
+                        case 'REDO':
+                            const next = future[0]
+                            const newFuture =future.slice(1)
+                            return {
+                                past:[...past,present],
+                                present:next,
+                                future:newFuture
+                            }
+                        default:
+                            //将其他action委托给原始的reducer处理
+                            const newPresent = reducer(present,action);
+                            if(present === newPresent){
+                                return state;
+                            }
+
+                            return {
+                                past:[...past,present],
+                                present:newPresent,
+                                future:[]
+                            }
+                    }
+                }
+            }
+            //现在可以将任意的reducer封装到 可撤销的reducer enhancer，从而处理UNDO和REDO这两个action
+            //reducers
+            function todos(state = {},action){
+
+            }
+
+            //处理
+            const undoableTodos = undoable(todos);
+            import {createStore} from 'redux'
+            const store = createStore(undoableTodos);
+            store.dispatch({
+              type: 'ADD_TODO',
+              text: 'Use Redux'
+            })
+
+            store.dispatch({
+              type: 'ADD_TODO',
+              text: 'Implement Undo'
+            })
+
+            store.dispatch({
+              type: 'UNDO'
+            })
+            注意：当恢复一个state时，必须把present追加到当前state上。同时还需要检测past.length和future.length确定撤销和重做按钮是否可用。
+        》使用Redux Undo
+             该库可以为你的Redux状态树种的任何部分提供撤销和重做功能
+             》安装
+                npm install --save redux-undo
+             》封装Reducer
+                你需要通过undoable函数来强化你的reducer。如果之前导出的是todos reducer，那么现在你需要把这个reducer传给undoable()
+                然后把计算结果导出：
+                //reducers/todos.js
+                import undoable,{distinctState} from 'redux-undo'
+
+                const todos = (state = [],action) => {...}
+
+                export default const undoableTodos = undoable(todos,{
+                    filter:distinctState()//过滤器会忽略那些没有引起state变化的actions，可撤销的reducer还可以通过其他选项进行配置
+                    //如action type https://github.com/omnidan/redux-undo#configuration
+                })
+
+
+                //reducers/index.js
+                import { combineReducers } from 'redux'
+                import todos from './todos'
+                import visibilityFilter from './visibilityFilter'
+
+                const todoApp = combineReducers({
+                  todos,
+                  visibilityFilter
+                })
+
+                export default todoApp
+             //containers/VisibleTodoList.js
+             const mapStateToProps = (state) => {
+               return {
+                 todos: getVisibleTodos(state.todos.present, state.visibilityFilter)
+               }
+             }
+             //添加按钮
+             containers/UndoRedo.js
+             import React from 'react'
+             import { ActionCreators as UndoActionCreators } from 'redux-undo'
+             let UndoRedo = ({canUndo,canRedo,onUndo,onRedo}) => (
+                 <p>
+                    <button onClick={onUndo} disabled={!canUndo}>
+                      Undo
+                    </button>
+                    <button onClick={onRedo} disabled={!canRedo}>
+                      Redo
+                    </button>
+                  </p>
+             );
+             const mapStateToProps = (state) => {
+               return {
+                 canUndo: state.todos.past.length > 0,
+                 canRedo: state.todos.future.length > 0
+               }
+             }
+
+             const mapDispatchToProps = (dispatch) => {
+               return {
+                 onUndo: () => dispatch(UndoActionCreators.undo()),
+                 onRedo: () => dispatch(UndoActionCreators.redo())
+               }
+             }
+
+             UndoRedo = connect(
+               mapStateToProps,
+               mapDispatchToProps
+             )(UndoRedo)
+
+             export default UndoRedo
+             //你需要使用React Redux的connect函数生成容器组件，然后检测state.todos.past.length和state.todos.future.length来判断是否
+             启用撤销和重做按钮你不再需要给撤销和重做编写 action creators 了，因为 Redux Undo 已经提供了这些 action creators：
+
+             //现在把UndoRedo组件添加到App组件：
+             components/App.js
+             import React from 'react'
+             import Footer from './Footer'
+             import AddTodo from '../containers/AddTodo'
+             import VisibleTodoList from '../containers/VisibleTodoList'
+             import UndoRedo from '../containers/UndoRedo'
+
+             const App = () => (
+               <div>
+                 <AddTodo />
+                 <VisibleTodoList />
+                 <Footer />
+                 <UndoRedo />
+               </div>
+             )
+
+             export default App
+    》子应用隔离
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -16,9 +16,7 @@
     "serve:dist": "node server.js --env=dist",
     "start": "node server.js --env=dev",
     "test": "karma start",
-    "test:watch": "karma start --autoWatch=true --singleRun=false",
-    "jestTest": "jest",
-    "jestTest:watch": "npm jestTest -- --watch"
+    "test:watch": "karma start --autoWatch=true --singleRun=false"
   },
   "repository": "",
   "keywords": [],
@@ -41,7 +39,6 @@
     "file-loader": "^0.9.0",
     "glob": "^7.0.0",
     "isparta-instrumenter-loader": "^1.0.0",
-    "jest": "^21.2.1",
     "karma": "^1.0.0",
     "karma-chai": "^0.1.0",
     "karma-coverage": "^1.0.0",
@@ -69,14 +66,13 @@
     "express": "^4.16.2",
     "isomorphic-fetch": "^2.2.1",
     "normalize.css": "^4.0.0",
+    "qs": "^6.5.1",
     "react": "^15.0.0",
     "react-dom": "^15.0.0",
     "react-redux": "^5.0.6",
     "react-router": "^4.2.0",
     "redux": "^3.7.2",
     "redux-logger": "^3.0.6",
-    "redux-thunk": "^2.2.0",
-    "redux-undo": "^0.6.1",
-    "reselect": "^3.0.1"
+    "redux-thunk": "^2.2.0"
   }
 }
