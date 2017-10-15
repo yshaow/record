@@ -2754,7 +2754,64 @@
 
              export default App
     》子应用隔离
+        考虑一下这样的场景：有一个大应用(对应于<BigApp>组件)包含了很多小的子应用(subApp组件)
+        import React ,{Component} from 'react'
+        import SubApp from './subApp'
+        class BigApp extends Component{
+            render(){
+                return (
+                    <div>
+                        <SubApp/>
+                        <SubApp/>
+                        <SubApp/>
+                    </div>
+                )
+            }
+        }
+        //这些<SubApp>是完全独立的，它们并不会共享数据或action，也互不可见且不需要通信。
+        这时最好的做法是不要把它混入到标准 Redux 的 reducer 组件中。 对于一般型的应用，
+        是建议使用 reducer 组件。但对于 “应用集合”，“仪表板”，或者企业级软件这些把
+        多个本来独立的工具凑到一起打包的场景，可以试下子应用的方案。
 
+        子应用的方案还适用于有多个产品或垂直业务的大团队。小团队可以独立发布子应用或相互独立于自己的应用壳中。
+
+        //下面是connect过的子应用的根组件。像其他组件一样，它还可以渲染更多子组件，connect或没有connect的都可以
+        通常只要把它使用<Provider>渲染就够了
+        class App extends Component { ... }
+        export default connect(mapStateToProps)(App)
+        //但是如果不想让外部知道子应用的组件是Redux应用的话，可以不调用ReactDOM.render(<Provider><App/></Provider>)
+
+        //或可以在大应用中同时运行它的多个实例呢，还能保证每个在黑盒子里运行，外界对Redux无感知。
+        //为了使用React API来隐藏Redux的痕迹，在组件的构造方法里初始化store并把它包到一个特殊的组件中
+        import React ,{Component} from 'react'
+        import {Provider} from 'react-redux'
+        import reducer from './reducers'
+        import App from './App'
+        class SubApp extends Component{
+            constructor(props){
+                super(props);
+                this.store = createStore(reducer);
+            }
+
+            render(){
+                <Provider store={this.store}>
+                    <App/>
+                </Provider>
+            }
+        }
+        //这样每个实例都是独立的
+        //如果应用间需要共享数据，不推荐使用这个模式。但是如果大应用完全不需要访问子应用内部数据的话，
+        这是非常有用的，同时我们还想把Redux作为一种内部细节实现方式对外部隐藏。每个组件实例都有它自己
+        的store，所以它们彼此是不可见的。
+    》组织Reducer
+        Redux真的是一种十分简单的设计模式：所有你写的逻辑都集中在一个单独的函数中，并且执行这些逻辑的唯一
+        方式就是传给Redux一个能够描述当时情景的普通对象。Redux store调用这些逻辑函数，并传入当前的state tree
+        以及这些描述对象，返回新的state tree，接着Redux store便开始通知subscriber state tree已经改变了。
+
+        Redux设置了一些基本的限制来保证这些逻辑函数的正常工作，就像Reducers里面描述的一样，它必须有类似
+        (previousState,action) => newState这样的结构，它们通常被称为reducer函数并且必须是纯函数和可预测的。
+
+        》Reducer基础概念
 
 
 
