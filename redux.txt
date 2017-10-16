@@ -2812,6 +2812,1091 @@
         (previousState,action) => newState这样的结构，它们通常被称为reducer函数并且必须是纯函数和可预测的。
 
         》Reducer基础概念
+               一个Redux reducer函数需要具备：
+                    》应该有类似 (previousState,action) => newState特征的函数，函数的类型与Array.prototype.reduce(reducer,?initialValue)
+                      这个函数很相似。
+                    》应该是纯函数，纯函数意味着不能突变它的参数。这意味着state的更新应该在不可变得理念下完成，这就是说总是去返回一个新的更新后
+                      的对象而不是直接去修改原始的state tree。
+
+               》突变的弊端
+                    对于调试过程, Redux DevTools 期望重放 action 记录时能够输出 state 值，
+                    而不会改变任何其他的状态。突变或者异步行为会产生一些副作用，可能使调试过程中的行为被替换，导致破坏了应用。
+
+                    对于 React Redux connect 来说，为了确定一个组件（component）是否需要更新，它会检查从 mapStateToProps 中返回的
+                    值是否发生改变。为了提升性能，connect 使用了一些依赖于不可变 state 的方法。并且使用浅引用（shallow reference）
+                    来检测状态的改变。这意味着直接修改对象或者数组是不会被检测到的并且组件不会被重新渲染。
+        》Reducer和state的基本结构
+               》Reducer的基本结构
+                    首先必须明确的是：整个应用只有一个单一的reducer函数：这个函数是传给createStore的第一个参数。一个单一的reducer
+                    最终需要做以下几件事：
+                    》reducer第一次被调用的时候，state的值是undefined。reducer需要在action传入之前提供一个默认的state来处理这种情况
+                    》reducer需要先前的state和dispatch的action来决定需要做什么事。
+                    》若需要更改数据，应该用更新后的数据创建新的对象或数组并返回它们
+                    》如果没有什么更改，应该返回当前存在的state本身。
+                        function counter(state = 0, action) {
+                          switch (action.type) {
+                            case 'INCREMENT':
+                              return state + 1;
+                            case 'DECREMENT':
+                              return state - 1;
+                            default:
+                              return state;
+                          }
+                        }
+               》State的基本结构
+                    Redux鼓励你根据要管理的数据来思考你的应用程序。数据就是你应用的state，state的结构和组织方式通常会称为"shape"。
+                    在你组织reducer的逻辑时，state的shape通常扮演一个重要的角色。
+
+                    大多数应用会处理多种数据类型，通常可以分为三类：
+                    》域数据Domain data:应用需要展示 使用或修改的数据 如从服务器检索到的数据
+                    》应用状态 App State 特定于应用某个行为的数据
+                    》UI状态 UI State 控制UI如何展示的数据
+                    {
+                        domainData1 : {},
+                        domainData2 : {},
+                        appState1 : {},
+                        appState2 : {},
+                        ui : {
+                            uiState1 : {},
+                            uiState2 : {},
+                        }
+                    }
+        》拆分Reducer逻辑
+               拆分的函数分为三类：
+               》一些小的工具函数，包含一些可重用的逻辑片段
+               》用于处理特定情况下的数据更新的函数，参数处理(state,action)之外，通常还包括其他参数
+               》处理给定state切片的所有更新的函数，参数格式通常为(state,action)
+
+               reducer:任何符合(state,action) => newState格式的函数
+               root reducer:通常作为createStore第一个参数的函数，它是唯一的一个在所有reducer函数中必须符合(state,action) => newState格式的函数
+               slice reducer:一个负责处理状态树种一块切片数据的函数，通常会作为combineReducers函数的参数
+               case function:一个负责处理特殊action的更新逻辑的函数。可能是一个reducer函数，也可能需要其他参数才能正常工作。
+               higher-order reducer:一个以reducer函数作为参数，且或返回一个新的reducer函数的函数 如：combineReducers redux-undo。
+        》Reducer重构
+               使用函数分解Functional Decomposition 和 Reducer组合 Reducer Composition 重构Reducer
+               const initialState = {
+                   visibilityFilter : 'SHOW_ALL',
+                   todos : []
+               };
+
+
+               function appReducer(state = initialState, action) {
+                   switch(action.type) {
+                       case 'SET_VISIBILITY_FILTER' : {
+                           return Object.assign({}, state, {
+                               visibilityFilter : action.filter
+                           });
+                       }
+                       case 'ADD_TODO' : {
+                           return Object.assign({}, state, {
+                               todos : state.todos.concat({
+                                   id: action.id,
+                                   text: action.text,
+                                   completed: false
+                               })
+                           });
+                       }
+                       case 'TOGGLE_TODO' : {
+                           return Object.assign({}, state, {
+                               todos : state.todos.map(todo => {
+                                   if (todo.id !== action.id) {
+                                     return todo;
+                                   }
+
+                                   return Object.assign({}, todo, {
+                                       completed : !todo.completed
+                                   })
+                                 })
+                           });
+                       }
+                       case 'EDIT_TODO' : {
+                           return Object.assign({}, state, {
+                               todos : state.todos.map(todo => {
+                                   if (todo.id !== action.id) {
+                                     return todo;
+                                   }
+
+                                   return Object.assign({}, todo, {
+                                       text : action.text
+                                   })
+                                 })
+                           });
+                       }
+                       default : return state;
+                   }
+               }
+
+               //提取工具函数
+               //更新state工具函数
+               function updateObject(oldObj,newObj){
+                    return Object.assign({},oldObj,newObj);
+               }
+               function updateItemInArray(array,itemId,updateItemCallback){
+                const updatedItems = array.map(item => {
+                    if(item.id !== itemId) return item;
+
+                    const updatedItem = updateItemCallback(item);
+                    return updateItem;
+                })
+
+                return updatedItems;
+               }
+
+               //使用工具函数
+               function appReducer(state = initialState, action) {
+                   switch(action.type) {
+                       case 'SET_VISIBILITY_FILTER' : {
+                           return updateObject(state, {visibilityFilter : action.filter});
+                       }
+                       case 'ADD_TODO' : {
+                           const newTodos = state.todos.concat({
+                               id: action.id,
+                               text: action.text,
+                               completed: false
+                           });
+
+                           return updateObject(state, {todos : newTodos});
+                       }
+                       case 'TOGGLE_TODO' : {
+                           const newTodos = updateItemInArray(state.todos, action.id, todo => {
+                               return updateObject(todo, {completed : !todo.completed});
+                           });
+
+                           return updateObject(state, {todos : newTodos});
+                       }
+                       case 'EDIT_TODO' : {
+                           const newTodos = updateItemInArray(state.todos, action.id, todo => {
+                               return updateObject(todo, {text : action.text});
+                           });
+
+                           return updateObject(state, {todos : newTodos});
+                       }
+                       default : return state;
+                   }
+               }
+
+               //提取case reducer
+               function setVisibilityFilter(state, action) {
+                   return updateObject(state, {visibilityFilter : action.filter });
+               }
+
+               function addTodo(state, action) {
+                   const newTodos = state.todos.concat({
+                       id: action.id,
+                       text: action.text,
+                       completed: false
+                   });
+
+                   return updateObject(state, {todos : newTodos});
+               }
+
+               function toggleTodo(state, action) {
+                   const newTodos = updateItemInArray(state.todos, action.id, todo => {
+                       return updateObject(todo, {completed : !todo.completed});
+                   });
+
+                   return updateObject(state, {todos : newTodos});
+               }
+
+               function editTodo(state, action) {
+                   const newTodos = updateItemInArray(state.todos, action.id, todo => {
+                       return updateObject(todo, {text : action.text});
+                   });
+
+                   return updateObject(state, {todos : newTodos});
+               }
+
+               function appReducer(state = initialState, action) {
+                   switch(action.type) {
+                       case 'SET_VISIBILITY_FILTER' : return setVisibilityFilter(state, action);
+                       case 'ADD_TODO' : return addTodo(state, action);
+                       case 'TOGGLE_TODO' : return toggleTodo(state, action);
+                       case 'EDIT_TODO' : return editTodo(state, action);
+                       default : return state;
+                   }
+               }
+
+               //按域拆分数据
+                function setVisibilityFilter(visibilityState, action) {
+                    // 从技术上将，我们甚至不关心之前的状态
+                    return action.filter;
+                }
+
+                function visibilityReducer(visibilityState = 'SHOW_ALL', action) {
+                    switch(action.type) {
+                        case 'SET_VISIBILITY_FILTER' : return setVisibilityFilter(visibilityState, action);
+                        default : return visibilityState;
+                    }
+                };
+
+
+                function addTodo(todosState, action) {
+                    const newTodos = todosState.concat({
+                        id: action.id,
+                        text: action.text,
+                        completed: false
+                    });
+
+                    return newTodos;
+                }
+
+                function toggleTodo(todosState, action) {
+                    const newTodos = updateItemInArray(todosState, action.id, todo => {
+                        return updateObject(todo, {completed : !todo.completed});
+                    });
+
+                    return newTodos;
+                }
+
+                function editTodo(todosState, action) {
+                    const newTodos = updateItemInArray(todosState, action.id, todo => {
+                        return updateObject(todo, {text : action.text});
+                    });
+
+                    return newTodos;
+                }
+
+                function todosReducer(todosState = [], action) {
+                    switch(action.type) {
+                        case 'ADD_TODO' : return addTodo(todosState, action);
+                        case 'TOGGLE_TODO' : return toggleTodo(todosState, action);
+                        case 'EDIT_TODO' : return editTodo(todosState, action);
+                        default : return todosState;
+                    }
+                }
+
+                function appReducer(state = initialState, action) {
+                    return {
+                        todos : todosReducer(state.todos, action),
+                        visibilityFilter : visibilityReducer(state.visibilityFilter, action)
+                    };
+                }
+
+                //减少样板代码
+                function createReducer(initialState,handlers){
+                    return function reducer(state = initialState,action){
+                        if(handlers.hasOwnProperty(action.type)){
+                            handlers[action.type](state,action);
+                        }else{
+                            return state;
+                        }
+                    }
+                }
+
+                function setVisibilityFilter(visibilityState, action) {}
+
+                const visibilityReducer = createReducer('SHOW_ALL', {
+                    'SET_VISIBILITY_FILTER' : setVisibilityFilter
+                });
+
+                // 省略了内容
+                function addTodo(todosState, action) {}
+                function toggleTodo(todosState, action) {}
+                function editTodo(todosState, action) {}
+
+                const todosReducer = createReducer([], {
+                    'ADD_TODO' : addTodo,
+                    'TOGGLE_TODO' : toggleTodo,
+                    'EDIT_TODO' : editTodo
+                });
+
+                function appReducer(state = initialState, action) {
+                    return {
+                        todos : todosReducer(state.todos, action),
+                        visibilityFilter : visibilityReducer(state.visibilityFilter, action)
+                    };
+                }
+
+                //通过切片组合Reducer
+                // 可重用的工具函数
+
+                function updateObject(oldObject, newValues) {
+                    // 将空对象作为第一个参数传递给 Object.assign，以确保只是复制数据，而不是去改变数据
+                    return Object.assign({}, oldObject, newValues);
+                }
+
+                function updateItemInArray(array, itemId, updateItemCallback) {
+                    const updatedItems = array.map(item => {
+                        if(item.id !== itemId) {
+                            // 因为我们只想更新一个项目，所以保留所有的其他项目
+                            return item;
+                        }
+
+                         // 使用提供的回调来创建新的项目
+                        const updatedItem = updateItemCallback(item);
+                        return updatedItem;
+                    });
+
+                    return updatedItems;
+                }
+
+                function createReducer(initialState, handlers) {
+                  return function reducer(state = initialState, action) {
+                    if (handlers.hasOwnProperty(action.type)) {
+                      return handlers[action.type](state, action)
+                    } else {
+                      return state
+                    }
+                  }
+                }
+
+
+                // 处理特殊 case 的 Handler ("case reducer")
+                function setVisibilityFilter(visibilityState, action) {
+                    // 从技术上将，我们甚至不关心之前的状态
+                    return action.filter;
+                }
+
+                // 处理整个 state 切片的 Handler ("slice reducer")
+                const visibilityReducer = createReducer('SHOW_ALL', {
+                    'SET_VISIBILITY_FILTER' : setVisibilityFilter
+                });
+
+                // Case reducer
+                function addTodo(todosState, action) {
+                    const newTodos = todosState.concat({
+                        id: action.id,
+                        text: action.text,
+                        completed: false
+                    });
+
+                    return newTodos;
+                }
+
+                // Case reducer
+                function toggleTodo(todosState, action) {
+                    const newTodos = updateItemInArray(todosState, action.id, todo => {
+                        return updateObject(todo, {completed : !todo.completed});
+                    });
+
+                    return newTodos;
+                }
+
+                // Case reducer
+                function editTodo(todosState, action) {
+                    const newTodos = updateItemInArray(todosState, action.id, todo => {
+                        return updateObject(todo, {text : action.text});
+                    });
+
+                    return newTodos;
+                }
+
+                // Slice reducer
+                const todosReducer = createReducer([], {
+                    'ADD_TODO' : addTodo,
+                    'TOGGLE_TODO' : toggleTodo,
+                    'EDIT_TODO' : editTodo
+                });
+
+                // 顶层 reducer
+                const appReducer = combineReducers({
+                    visibilityFilter : visibilityReducer,
+                    todos : todosReducer
+                });
+    》combineReducers用法
+        使用combineReducer的时候的注意点：
+        》combineReducer只是一个工具函数，用于简化编写Redux reducer时最常见的场景。你没有必要一定在你的应用程序中使用它，它不会处理
+          每一种可能的场景。你完全可以不使用它来编写reducer或者对combinerReducer不能处理的情况编写自定义的reducer。
+        》虽然Redux本身并不管你的state是如何组织的，但是combineReducer强制约定来几个规则来帮助使用者避免常见的错误。
+        》combineReducers会调用所有的reducer，严格来说是它包装的所有reducer
+        》你可以在任何级别的reducer中使用combineReducer，不仅仅是在创建根reducer的时候。在不同地地方有多个组合的reducer是非常常见的，
+          它们组合到一起来创建根reducer。
+
+        》定义state结构
+            》createStore函数可以将preloadedState作为第二个参数，主要用于初始化那些在其他地方有持久化存储的state。如localStorage
+            》当state时undefined的时候返回initial state(定义reducer时的初始值)。
+
+        combineReducers接收拆分后的reducer函数组成的对象，并且创建出具有相同键对应状态对象的函数。
+        // reducers.js
+        export default theDefaultReducer = (state = 0, action) => state;
+
+        export const firstNamedReducer = (state = 1, action) => state;
+
+        export const secondNamedReducer = (state = 2, action) => state;
+
+
+        // rootReducer.js
+        import {combineReducers, createStore} from "redux";
+
+        import theDefaultReducer, {firstNamedReducer, secondNamedReducer} from "./reducers";
+
+
+        // 使用 ES6 的对象字面量简写方式定义对象结构
+        const rootReducer = combineReducers({
+            theDefaultReducer,
+            firstNamedReducer,
+            secondNamedReducer
+        });
+
+        const store = createStore(rootReducer);
+        console.log(store.getState());
+        // {theDefaultReducer : 0, firstNamedReducer : 1, secondNamedReducer : 2}
+    》combineReducers进阶
+        》结合Immutable.js对象使用reducers
+            目前combineReducers只能处理普通的js对象，对于把Immutable.js Map对象作为顶层state树的应用程序来说，可能无法使用combineReducers
+            管理应用状态。推荐 redux-immutable(https://github.com/gajus/redux-immutable)，这个第三方实现了一个能处理Immutable Map数据而非
+            普通的js都系的combineReducers。
+        》不同reducers之间共享数据
+            类似地，如果sliceReducerA为了处理特殊的action正好需要来自sliceReducerB的部分state数据或者sliceReducerB正好需要全部的state作为参数。
+            单单是combineReducers是无法解决这种问题的。
+            解决：把所需数据当额外参数的形式传递给自定义函数
+                function combinedReducer(state, action) {
+                    switch(action.type) {
+                        case "A_TYPICAL_ACTION" : {
+                            return {
+                                a : sliceReducerA(state.a, action),
+                                b : sliceReducerB(state.b, action)
+                            };
+                        }
+                        case "SOME_SPECIAL_ACTION" : {
+                            return {
+                                // 明确地把 state.b 作为额外参数进行传递
+                                a : sliceReducerA(state.a, action, state.b),
+                                b : sliceReducerB(state.b, action)
+                            }
+                        }
+                        case "ANOTHER_SPECIAL_ACTION" : {
+                            return {
+                                a : sliceReducerA(state.a, action),
+                                // 明确地把全部的 state 作为额外参数进行传递
+                                b : sliceReducerB(state.b, action, state)
+                            }
+                        }
+                        default: return state;
+                    }
+                }
+            方式2：共享片段数据更新，给action添加额外的数据 可以通过thunk函数或类似的方法轻松实现
+                function someSpecialActionCreator(){
+                    return (dispatch,getState) =>{
+                        const state = getState();
+                        const dataFromB = selectImportantDataFromB(state);
+
+                        dispatch({
+                            type : "SOME_SPECIAL_ACTION",
+                            payload : {
+                                dataFromB
+                            }
+                        });
+                    }
+                }
+            方式3：使用combineReducers组合reducer来处理简单的场景，每个reducer依旧只更新自己的数据，同时新加一个reducer来处理多块
+            数据交叉的复杂场景，最后写一个包裹函数依次调用这两类reducer并得到最终结果。
+                const combinedReducer = combineReducers({
+                    a : sliceReducerA,
+                    b : sliceReducerB
+                });
+
+                function crossSliceReducer(state, action) {
+                    switch(action.type) {
+                        case "SOME_SPECIAL_ACTION" : {
+                            return {
+                                // 明确地把 state.b 作为额外参数进行传递
+                                a : handleSpecialCaseForA(state.a, action, state.b),
+                                b : sliceReducerB(state.b, action)
+                            }
+                        }
+                        default : return state;
+                    }
+                }
+
+                function rootReducer(state, action) {
+                    const intermediateState = combinedReducer(state, action);
+                    const finalState = crossSliceReducer(intermediateState, action);
+                    return finalState;
+                }
+                //reduce-reducers可以简化以上操作流程。它接收多个reducer然后对它们依次执行reduce()操作，并把产生的中间值依次传递给下一个reducer。
+                    // 与上述手动编写的 `rootReducer` 一样
+                    const rootReducer = reduceReducers(combinedReducers, crossSliceReducer);
+                    值得注意的是，如果你使用 reduceReducers 你应该确保第一个 reducer 能够定义初始状态的 state 数据，因为后续的 reducers 通常会
+                    假定 state 树已经存在，也就不会为此提供默认状态。
+    》State范式化
+        》任何类型的数据在state中都有自己的表
+        》任何数据表应将各个项目存储在对象中，其中每个项目的ID作为key，项目本身作为value
+        》任何对单个项目的引用都应该根据存储项目的ID来完成
+        》ID数组应用用于排序
+
+        需要注意的是，范式化的 state 意味更多的组件被 connect，每个组件负责查找自己的数据，
+        这和小部分的组件被 connect，然后查找大部分的数据再进行向下传递数据是恰恰相反的。事实
+        证明，connect 父组件只需要将数据项的 Id 传递给 connect 的子对象是在 Redux 应用中优化 UI
+        性能的良好模式，因此保持范式化的 state 在提高性能方面起着关键作用。
+    》管理范式化数据
+        》简单合并
+            将action的内容合并到现有的state。在这种情况下，我们需要一个对数据的深拷贝。Lodash的merge方法可以处理这个
+            import merge from "lodash/object/merge";
+            function commentsById(state = {},action){
+                switch(action.type){
+                    default:{
+                           if(action.entities && action.entities.comments) {
+                            return merge({}, state, action.entities.comments.byId);
+                           }
+                           return state;
+                    }
+                }
+            }
+            //这样做会让reducer保持最小的工作量，但需要action creator在action dispatch之前做大量的工作来将数据转化成正确的形态。
+            在删除数据项时这种方式也是不适合的。
+        》reducer切片组合
+            如果我们有一个由切片reducer组成的嵌套数据，每个切片的reducer都需要知道如何响应这个action。因为我们需要让action
+            囊括所有的相关数据。比如更新相应的POst对象需要生成一个comment的id，然后使用id作为key创建一个新的comment对象，并且
+            创建一个新的comment对象，并且让这个comment的id包括所有的comment id列表。
+
+            //actions.js
+            function addComment(postId,commentText){
+                //生成comment ID
+                const commentId = generateId('comment');
+
+                return {
+                    type:"ADD_COMMENT",
+                    payload:{
+                        postId,
+                        commentId,
+                        commentText
+                    }
+                }
+            }
+
+            //reducers/posts.js
+            function addComment(state,action){
+                const {payload} = action;
+                const{postId,commentId} = payload;
+
+                const post = state[postId];
+
+                return {
+                    ...state,
+                    [postId]:{
+                        ...post,
+                        comments:post.comments.concat(commentId)
+                    }
+                }
+            }
+            function postsById(state = {}, action) {
+                switch(action.type) {
+                    case "ADD_COMMENT" : return addComment(state, action);
+                    default : return state;
+                }
+            }
+
+            function allPosts(state = [], action) {
+                // 省略，这个例子中不需要它
+            }
+
+            const postsReducer = combineReducers({
+                byId : postsById,
+                allIds : allPosts
+            });
+            // reducers/comments.js
+            function addCommentEntry(state, action) {
+                const {payload} = action;
+                const {commentId, commentText} = payload;
+
+                // 创建一个新的 Comment 对象
+                const comment = {id : commentId, text : commentText};
+
+                // 在查询表中插入新的 Comment 对象
+                return {
+                    ...state,
+                    [commentId] : comment
+                };
+            }
+
+            function commentsById(state = {}, action) {
+                switch(action.type) {
+                    case "ADD_COMMENT" : return addCommentEntry(state, action);
+                    default : return state;
+                }
+            }
+
+
+            function addCommentId(state, action) {
+                const {payload} = action;
+                const {commentId} = payload;
+                // 把新 Comment 的 ID 添加在 all IDs 的列表后面
+                return state.concat(commentId);
+            }
+
+            function allComments(state = [], action) {
+                switch(action.type) {
+                    case "ADD_COMMENT" : return addCommentId(state, action);
+                    default : return state;
+                }
+            }
+
+            const commentsReducer = combineReducers({
+                byId : commentsById,
+                allIds : allComments
+            });
+        》基于任务的更新
+            reducer仅仅是个函数，因此有无数种方法来拆分这个逻辑。使用切片reducer是最常见的，但也可以在更面向任务的结构中组织行为。
+            由于通常会涉及到更多嵌套的更新因此常常会使用 dot-prop-immutable、object-path-immutable 等库实现不可变更新。
+            import posts from './postsReducer'
+            import comments from './commentsReducer'
+            import dotProp from 'dot-prop-immutable'
+            import {combineReducers} from 'redux'
+            import reduceReducers from 'reduce-reducers'
+
+            const combinedReducer = combineReducers({
+                posts,
+                comments
+            });
+
+
+            function addComment(state, action) {
+                const {payload} = action;
+                const {postId, commentId, commentText} = payload;
+
+                // State here is the entire combined state
+                const updatedWithPostState = dotProp.set(
+                    state,
+                    `posts.byId.${postId}.comments`,
+                    comments => comments.concat(commentId)
+                );
+
+                const updatedWithCommentsTable = dotProp.set(
+                    updatedWithPostState,
+                    `comments.byId.${commentId}`,
+                    {id : commentId, text : commentText}
+                );
+
+                const updatedWithCommentsList = dotProp.set(
+                    updatedWithCommentsTable,
+                    `comments.allIds`,
+                    allIds => allIds.concat(commentId);
+                );
+
+                return updatedWithCommentsList;
+            }
+
+            const featureReducers = createReducer({}, {
+                ADD_COMMENT : addComment,
+            };
+
+            const rootReducer = reduceReducers(
+                combinedReducer,
+                featureReducers
+            );
+        》Redux-ORM
+            Redux-ORM库提供了一个非常有用的抽象层，用于管理Redux store中存储的范式化数据。它允许你声明Model类并定义它们之间的关系。
+            然后它可以为你的数据类型生成新表，充当用于查找数据的特殊选择器工具，并且对数据执行不可变更新。
+
+            有几种方法可以用Redux-ORM执行数据更新。首选Redux-ORM文档建议在每个Model子类上定义reducer函数，然后将自动生成的组合reducer
+            函数放到store中。
+
+            //models.js
+            import {Model,many,Schema} from 'redux-orm'
+            export class Post extends Model{
+                static get fields(){
+                    return {
+                        //定义一个多边关系，一个Post可以有多个Comments，
+                        comments:many('Comment')
+                    }
+                }
+
+                static reducer(state,action,Post){
+                    switch(action.type) {
+                          case "CREATE_POST" : {
+                            // 排队创建一个 Post 实例
+                            Post.create(action.payload);
+                            break;
+                          }
+                          case "ADD_COMMENT" : {
+                            const {payload} = action;
+                            const {postId, commentId} = payload;
+                            // 排队增加一个 Comment ID 和 Post 实例的联系
+                            Post.withId(postId).comments.add(commentId);
+                            break;
+                          }
+                    }
+                }
+            }
+
+            Post.modelName = "Post";
+
+            export class Comment extends Model {
+              static get fields() {
+                return {};
+              }
+
+              static reducer(state, action, Comment) {
+                switch(action.type) {
+                  case "ADD_COMMENT" : {
+                    const {payload} = action;
+                    const {commentId, commentText} = payload;
+
+                    // 排队创建一个 Comment 实例
+                    Comment.create({id : commentId, text : commentText});
+                    break;
+                  }
+                }
+
+                // Redux-ORM 将在返回后自动应用排队的更新
+              }
+            }
+            Comment.modelName = "Comment";
+
+            // 创建 Schema 实例，然后和 Post、Comment 数据模型挂钩起来
+            export const schema = new Schema();
+            schema.register(Post, Comment);
+
+
+            // main.js
+            import { createStore, combineReducers } from 'redux'
+            import {schema} from "./models";
+
+            const rootReducer = combineReducers({
+              // 插入 Redux-ORM 自动生成的 reducer，这将
+              // 初始化一个数据模型 “表”，并且和我们在
+              // 每个 Model 子类中定义的 reducer 逻辑挂钩起来
+              entities : schema.reducer()
+            });
+
+            // dispatch 一个 action 以创建一个 Post 实例
+            store.dispatch({
+              type : "CREATE_POST",
+              payload : {
+                id : 1,
+                name : "Test Post Please Ignore"
+              }
+            });
+
+            // dispath 一个 action 以创建一个 Comment 实例作为上个 Post 的子元素
+            store.dispatch({
+              type : "ADD_COMMENT",
+              payload : {
+                postId : 1,
+                commentId : 123,
+                commentText : "This is a comment"
+              }
+        });
+    //Redux-ORM库维护要应用的内部更新队列。这些更新是不可变更新，这个库简化了这个更新过程。
+    //使用Redux-ORM的另一个变化是用一个单一的case reducer作为抽象层
+    import {schema} from "./models";
+
+    // 假设这个 case reducer 正在我们的 “entities” 切片 reducer 使用，
+    // 并且我们在 Redux-ORM 的 Model 子类上没有定义 reducer
+    function addComment(entitiesState, action) {
+        const session = schema.from(entitiesState);
+        const {Post, Comment} = session;
+        const {payload} = action;
+        const {postId, commentId, commentText} = payload;
+
+        const post = Post.withId(postId);
+        post.comments.add(commentId);
+
+        Comment.create({id : commentId, text : commentText});
+
+        return session.reduce();
+    }
+    总之，Redux-ORM 提供了一组非常有用的抽象，用于定义数据类型之间的关系，
+    在我们的 state 中创建了一个 “表”，检索和反规划关系数据，以及将不可变更新应用于关系数据。
+
+    》Reducer逻辑复用
+        //假设想在程序中追踪多个计数器，分别命名为A B C。定义初始的counter reducer，然后使用combineReducer去设置状态。
+        function counter(state = 0,action){
+            switch (action.type) {
+                    case 'INCREMENT':
+                        return state + 1;
+                    case 'DECREMENT':
+                        return state - 1;
+                    default:
+                        return state;
+            }
+        }
+        const rootReducer = combineReducers({
+            counterA : counter,
+            counterB : counter,
+            counterC : counter
+        });
+        //这样设置有一个问题，因为combineReducers将会使用相同的action调用每个reducer，发送{type:"INCREMENT"}实际上将会
+        导致所有三个计数器的值被增加，而不仅仅是其中一个，我们需要一些方法去封装counter的逻辑以此来保证只有我们关心的计
+        数器被更新。
+
+        》使用高阶Reducer来定制行为
+            高阶reducer是一个接收reducer函数作为参数，并返回新的reducer函数的函数。
+            我们可以使用这种模式来创建特定版本的reducer函数，每个版本只响应特定的action
+
+            创建特定的reducer有两种最常见的方式，一个是使用给定的前缀或后缀生成新的action常量，另一个是
+            在action对象上附加额外的信息
+            //方式1
+            function createCounterWidthNamedType(counterName = ''){
+                return function counter (state = 0,action){
+                    switch (action.type) {
+                        case `INCREMENT_${counterName}`:
+                            return state + 1;
+                        case `DECREMENT_${counterName}`:
+                            return state - 1;
+                        default:
+                            return state;
+                    }
+                }
+            }
+            //方式2
+            function createCounterWithNameData(counterName = ''){
+                return function counter(state = 0,action){
+                    const {name} = action;
+                    if(name !== counterName) return state;
+
+                    switch (action.type) {
+                        case `INCREMENT`:
+                            return state + 1;
+                        case `DECREMENT`:
+                            return state - 1;
+                        default:
+                            return state;
+                    }
+                }
+            }
+            //现在我们应该可以使用它们任何一个去生成我们特定的计数器reducer，然后发送action
+            const rootReducer = combineReducers({
+                counterA : createCounterWithNamedType('A'),
+                counterB : createCounterWithNamedType('B'),
+                counterC : createCounterWithNamedType('C'),
+            });
+
+            store.dispatch({type : 'INCREMENT_B'});
+            console.log(store.getState());
+            // {counterA : 0, counterB : 1, counterC : 0}
+
+        //在某种程度上也可以改变这个方法，创建一个更加通用的高级reducer，它可以接收一个给定的reducer，一个名字或标识符
+            function counter(state = 0, action) {
+                switch (action.type) {
+                    case 'INCREMENT':
+                        return state + 1;
+                    case 'DECREMENT':
+                        return state - 1;
+                    default:
+                        return state;
+                }
+            }
+            function createNamedWrapperReducer(reducerFun,reducerName){
+                return (state,action) => {
+                    const {name} = action;
+                    const isInitializationCall = state === undefined;
+                    if(name !== reducerName && !isInitializationCall) return state;
+
+                    return reducerFun(state,action);
+                }
+            }
+            const rootReducer = combineReducers({
+                counterA : createNamedWrapperReducer(counter, 'A'),
+                counterB : createNamedWrapperReducer(counter, 'B'),
+                counterC : createNamedWrapperReducer(counter, 'C'),
+            });
+        //甚至还可以写一个通用的高阶reducer过滤器
+        function createFilteredReducer(reducerFun,reducerPredicate){
+            return (state,action) => {
+                const isInitializationCall = state === undefined;
+                const shouldRunWrappedReducer = reducerPredicate(action) || isInitializationCall;
+                return shouldRunWrappedReducer ? reducerFun(state,action) : state;
+            }
+        }
+        const rootReducer = combineReducers({
+            // 检查后缀
+            counterA : createFilteredReducer(counter, action => action.type.endsWith('_A')),
+            // 检查 action 中的额外数据
+            counterB : createFilteredReducer(counter, action => action.name === 'B'),
+            // 响应所有的 'INCREMENT' action，但不响应 'DECREMENT'
+            counterC : createFilteredReducer(counter, action => action.type === 'INCREMENT')
+        };
+    》不可变更新模式
+        》更新嵌套的对象
+            更新嵌套数据的关键是必须适当的复制和更新嵌套的每个级别。
+            //常见错误1：指向同一对象的新变量
+            定义一个新变量不会创建一个新的实际都系，它只创建另一个引用到同一对象
+            function updateNestedState(state,action){
+                let nestedState = state.nestedState;
+                // 错误: 这将导致直接修改已经存在的对象引用-不要这么做!
+                nestedState.nestedField = action.data;
+
+                return {
+                    ...state,
+                    nestedState
+                };
+            }
+            //这个函数正确返回来顶层状态对象的浅复制，但是变量nestedState依然指向以及存在的对象，这个状态被直接修改了
+            //常见错误2：仅仅在一个层级上做浅复制
+            function updateNestedState(state, action) {
+                // 问题: 这仅仅做了浅复制！
+                let newState = {...state};
+
+                // 错误: nestedState 仍然是同一个对象!
+                newState.nestedState.nestedField = action.data;
+
+                return newState;
+            }
+            //正确方法：复制嵌套数据的所有层级
+            function updateVeryNestedField(state, action) {
+                return {
+                    ....state,
+                    first : {
+                        ...state.first,
+                        second : {
+                            ...state.first.second,
+                            [action.someId] : {
+                                ...state.first.second[action.someId],
+                                fourth : action.someValue
+                            }
+                        }
+                    }
+                }
+            }
+        》在数组中插入和删除数据
+            通常一个js数组中内容使用变化的函数来修改如：push unshift,shift。因为我们不想再reducer中直接修改状态，这些通常应该被避免。
+            function insertItem(array,action){
+                return[
+                    ...array.slice(0,action.index),
+                    action.item,
+                    ...array.slice(action.index)
+                ]
+            }
+            function removeItem(array,action){
+                return [
+                    ...array.slice(0,action.index),
+                    ...array.slice(action.index+1)
+                ]
+            }
+            //只要首先我们做了复制，就可以安全的变化这个复制
+            function insertItem(array, action) {
+                let newArray = array.slice();
+                newArray.splice(action.index, 0, action.item);
+                return newArray;
+            }
+
+            function removeItem(array, action) {
+                let newArray = array.slice();
+                newArray.splice(action.index, 1);
+                return newArray;
+            }
+            //删除函数也可以是这样
+            function removeItem(array, action) {
+                return array.filter( (item, index) => index !== action.index);
+            }
+        》在一个数组中更新一个项目
+            更新数组的一项可以使用Array.map返回我们想要更新哪项的一个新值和其他项原先的值：
+            function updateObjectInArray(array, action) {
+                return array.map( (item, index) => {
+                    if(index !== action.index) {
+                        // 这不是我们关心的项-保持原来的值
+                        return item;
+                    }
+
+                    // 否则, 这是我们关心的-返回一个更新的值
+                    return {
+                        ...item,
+                        ...action.item
+                    };
+                });
+            }
+        》不可变更新工具库
+            因为编写不可变得更新代码可能变得乏味，所以许多工具程序库试图抽象出这个过程。这些库在API和用法上有所不同。
+            但都试图提供一种更短和更简洁的方式来编写这些更新。如：dot-prop-immutable使用字符串路径作为命令：
+            state = dotProp.set(state, `todos.${index}.complete`, true)
+    》初始化State
+        两种方法来初始化应用的state：
+            》可以使用createStore方法中的第二个可选参数 preloadedState。
+            》可以在reducer中为undefined的state参数指定默认的初始值。这个可以通过在reducer中添加一个明确的检查来完成，
+              也可以使用Es6的默认参数语法function myReducer(state = someDefaultValue,action)。
+        》概要
+            如果不使用combineReducers()或类似的代码，那么preloadedState总是会优先于reducer里面使用state=...；因为state传到
+            reducer里的事preloadState的state而不是undefined，所以ES6的默认参数并不起作用。
+
+            如果使用combineReducers()方法，那么这个行为就会有差别。那些指定了preloadedState的reducer会接收到那些对应的state。而其他
+            reducer将会接收到undefined并因此回到state=...这里获取指定的默认值。
+
+            通常情况下，通过 preloadedState 指定的 state 要优先于通过 reducer 指定 state。这样可以使通过 reducer 默认参数指定初始数据
+            显得更加的合理，并且当你从一些持久化的存储器或服务器更新 store 的时候，允许你更新已存在的数据（全部或者部分）。
+        》单一简单的Reducer
+            function counter(state = 0, action) {
+              switch (action.type) {
+              case 'INCREMENT': return state + 1;
+              case 'DECREMENT': return state - 1;
+              default: return state;
+              }
+            }
+            import { createStore } from 'redux';
+            let store = createStore(counter);
+            console.log(store.getState()); // 0
+
+            let store = createStore(counter, 42);
+            console.log(store.getState()); // 42
+        》组合多个Reducers
+            function a(state = 'lol', action) {
+              return state;
+            }
+
+            function b(state = 'wat', action) {
+              return state;
+            }
+
+            function combined(state = {}, action) {
+              return {
+                a: a(state.a, action),
+                b: b(state.b, action)
+              };
+            }
+
+            import { createStore } from 'redux';
+            let store = createStore(combined);
+            console.log(store.getState()); // { a: 'lol', b: 'wat' }
+
+            let store = createStore(combined, { a: 'horse' });
+            console.log(store.getState()); // { a: 'horse', b: 'wat' }
+7.Redux常见问题
+    》综合
+        》何时使用Redux
+            一般而言，如果随着时间的推移，数据处于合理的变动之中、需要一个单一的数据源、在 React
+            顶层组件 state 中维护所有内容的办法已经无法满足需求，这个时候就需要使用 Redux 了。
+        》Redux只能搭配React使用？
+            Redux 能作为任何 UI 层的 store。通常是与 React 或 React Native 搭配使用，但是也可以绑定
+            Angular、 Angular 2、 Vue、 Mithril 等框架使用。 Redux 提供的订阅机制，可以与任何代码集成。
+            这就是说，在结合 UI 随 state 变化的声明式视图时（如 React 或者其他相似的库），Redux 就发挥它的最大作用。
+        》Redux需要特定的编译工具支持吗？
+            Redux 写法遵循 ES6 语法，但在发布时被 Webpack 和 Babel 编译成了 ES5，所以在使用时可以忽略 JavaScript
+            的编译过程。 Redux 也提供了 UMD 版本，可以直接使用而不需要任何编译过程。
+            https://github.com/reactjs/redux/tree/master/examples/counter-vanilla(ES5的用法)
+    》Reducer
+        》如何在reducer之间共享state？combineReducers是必须的吗？
+            Redux store 推荐的结构是将 state 对象按键值切分成 “层”（slice） 或者 “域”（domain），
+            并提供独立的 reducer 方法管理各自的数据层。就像 Flux 模式中的多个独立 store 一样， Redux
+            为此还提供了 combineReducers 工具来简化该模型。应当注意的是， combineReducers 不是 必须的，
+            它仅仅是通过简单的 JavaScript 对象作为数据，让 state 层能与 reducer 一一关联的函数而已。
+
+            //reducer之间共享数据，但是combineReducers不允许这种行为，方式：
+            》如果一个 reducer 想获取其它 state 层的数据，往往意味着 state 树需要重构，需要让单独的 reducer 处理更多的数据。
+            》你可能需要自定义方法去处理这些 action，用自定义的顶层 reducer 方法替换 combineReducers。你可以使用类似于 reduce-reducers
+              的工具运行 combineReducers 去处理尽可能多的 action，同时还要为存在 state 交叉部分的若干 action 执行更专用的 reducer。
+            》类似于 redux-thunk 的 异步 action 创建函数 能通过 getState() 方法获取所有的 state。 action 创建函数能从 state 中检索到额
+              外的数据并传入 action，所以 reducer 有足够的信息去更新所维护的 state 层。
+        》处理action必须用switch语句吗？
+            不是。在 reducer 里面你可以使用任何方法响应 action。 switch 语句是最常用的方式，当然你也可以用 if、功能查找表、
+            创建抽象函数等。事实上，虽然 Redux 要求每个 action 对象都有一个 type 的字段，但是你的 reducer 逻辑不必一定要依
+            赖它做处理。也就是说，标准方法肯定是用基于 type 的 switch 语句或者查找表。
+    》组织state
+        》必须将所有state都维护在Redux中吗？可以用React的setState()方法吗？
+            没有 “标准”。有些用户选择将所有数据都在 Redux 中维护，那么在任何时刻，应用都是完全有序及可控的。
+            也有人将类似于“下拉菜单是否打开”的非关键或者 UI 状态，在组件内部维护。适合自己的才是最好的。
+
+            使用局部组件状态是更好的。作为开发者应该决定使用何种state来组装你的应该，每个state的生存范围是什么。在
+            两者之间做好平衡。
+
+            》那些数据放入Redux的经验法则
+                应用的其他部分是否关心这个数据
+                是否需要根据需要在原始数据的基础上创建衍生数据
+                相同的数据是否被用作驱动多个组件
+                能否将状态恢复到特定时间点
+                是否要缓存数据
+        》可以将store的state设置为函数、promise或者其他非序列化的值吗
+            强烈推荐只在 store 中维护普通的可序列化对象、数组以及基本数据类型。虽然从 技术 层面上将非序列化项保存在
+            store 中是可行的，但这样会破坏 store 内容持久化和恢复能力，以及会干扰时间旅行。
+
+            如果你不关心数据持久化和时间旅行，那么完全欢迎把不可以持久化的数据放入 Redux 的 Store 中存储。最终，他是你
+            的应用程序，如何实现完全取决于你自己。与其他很多 Redux 的事情一样，你需要明白权衡所需。
+        》如何在state中组织嵌套以及重复数据
+            当数据存在 ID、嵌套或者关联关系时，应当以 “范式化” 形式存储：对象只能存储一次，ID 作为键值，对象间通过 ID
+            相互引用。将 store 类比于数据库，每一项都是独立的 “表”。normalizr 、 redux-orm 此类的库能在管理规范化数据
+            时提供参考和抽象。
+    》创建Store
+        
 
 
 

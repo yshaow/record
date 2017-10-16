@@ -2,11 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="068c142f-31e1-4953-93da-befd977f3c6f" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/encodings.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/watcherTasks.xml" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/modules.xml" afterPath="$PROJECT_DIR$/.idea/modules.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/record.iml" afterPath="$PROJECT_DIR$/.idea/record.iml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/redux.txt" afterPath="$PROJECT_DIR$/redux.txt" />
     </list>
@@ -22,12 +17,12 @@
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
   <component name="FileEditorManager">
-    <leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file leaf-file-name="redux.txt" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/redux.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="138">
-              <caret line="2814" column="0" lean-forward="false" selection-start-line="2814" selection-start-column="0" selection-end-line="2814" selection-end-column="0" />
+            <state relative-caret-position="159">
+              <caret line="3898" column="8" lean-forward="false" selection-start-line="3898" selection-start-column="8" selection-end-line="3898" selection-end-column="8" />
               <folding />
             </state>
           </provider>
@@ -143,12 +138,14 @@
   </component>
   <component name="NodeModulesDirectoryManager">
     <handled-path value="$PROJECT_DIR$/react/node_modules" />
+    <handled-path value="$PROJECT_DIR$/redux/node_modules" />
+    <handled-path value="$PROJECT_DIR$/serverRender/node_modules" />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-45" />
-    <option name="y" value="481" />
-    <option name="width" value="1700" />
-    <option name="height" value="441" />
+    <option name="x" value="52" />
+    <option name="y" value="534" />
+    <option name="width" value="1924" />
+    <option name="height" value="466" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -180,8 +177,8 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scope" />
       <pane id="Scratches" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -319,16 +316,20 @@
       <workItem from="1507801716764" duration="599000" />
       <workItem from="1507857236685" duration="21236000" />
       <workItem from="1508051014228" duration="2428000" />
+      <workItem from="1508115398090" duration="343000" />
+      <workItem from="1508115849949" duration="139000" />
+      <workItem from="1508116074578" duration="20977000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="300543000" />
+    <option name="totallyTimeSpent" value="322002000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-45" y="481" width="1700" height="441" extended-state="0" />
+    <frame x="52" y="534" width="1924" height="466" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16787003" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16771488" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -675,8 +676,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/redux.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="138">
-          <caret line="2814" column="0" lean-forward="false" selection-start-line="2814" selection-start-column="0" selection-end-line="2814" selection-end-column="0" />
+        <state relative-caret-position="159">
+          <caret line="3898" column="8" lean-forward="false" selection-start-line="3898" selection-start-column="8" selection-end-line="3898" selection-end-column="8" />
           <folding />
         </state>
       </provider>
