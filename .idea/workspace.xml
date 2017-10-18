@@ -21,8 +21,8 @@
       <file leaf-file-name="redux.txt" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/redux.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="159">
-              <caret line="3898" column="8" lean-forward="false" selection-start-line="3898" selection-start-column="8" selection-end-line="3898" selection-end-column="8" />
+            <state relative-caret-position="93">
+              <caret line="4819" column="53" lean-forward="false" selection-start-line="4819" selection-start-column="53" selection-end-line="4819" selection-end-column="53" />
               <folding />
             </state>
           </provider>
@@ -142,8 +142,8 @@
     <handled-path value="$PROJECT_DIR$/serverRender/node_modules" />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="52" />
-    <option name="y" value="534" />
+    <option name="x" value="-17" />
+    <option name="y" value="77" />
     <option name="width" value="1924" />
     <option name="height" value="466" />
   </component>
@@ -163,6 +163,8 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -177,8 +179,6 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -318,15 +318,17 @@
       <workItem from="1508051014228" duration="2428000" />
       <workItem from="1508115398090" duration="343000" />
       <workItem from="1508115849949" duration="139000" />
-      <workItem from="1508116074578" duration="20977000" />
+      <workItem from="1508116074578" duration="21575000" />
+      <workItem from="1508202939899" duration="13609000" />
+      <workItem from="1508288281908" duration="13147000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="322002000" />
+    <option name="totallyTimeSpent" value="349356000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="52" y="534" width="1924" height="466" extended-state="0" />
+    <frame x="-17" y="77" width="1924" height="466" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16771488" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -676,8 +678,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/redux.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="159">
-          <caret line="3898" column="8" lean-forward="false" selection-start-line="3898" selection-start-column="8" selection-end-line="3898" selection-end-column="8" />
+        <state relative-caret-position="93">
+          <caret line="4819" column="53" lean-forward="false" selection-start-line="4819" selection-start-column="53" selection-end-line="4819" selection-end-column="53" />
           <folding />
         </state>
       </provider>

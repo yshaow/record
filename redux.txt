@@ -3896,40 +3896,925 @@
             相互引用。将 store 类比于数据库，每一项都是独立的 “表”。normalizr 、 redux-orm 此类的库能在管理规范化数据
             时提供参考和抽象。
     》创建Store
-        
+        》可以创建多个store吗，应该这么做吗？能在组件中直接引用store并使用吗？
+            》在Redux中使用多个store的理由
+                对应用进行性能分析时，解决由于过于频繁更新部分state引起的性能问题
+                在更大的应用中Redux只是作为一个组件，这种情况下你也许更倾向于为每个根组件创建单独的store。
+
+            然而，创建新的 store 不应成为你的第一反应，特别是当你从 Flux 背景迁移而来。首先尝试组合 reducer，
+            只有当它无法解决你的问题时才使用多个 store。
+
+            类似的，虽然你 能 直接导入并获取 store 实例，但这并非 Redux 的推荐方式。当你创建 store 实例并从组件
+            导出，它将变成一个单例。这意味着将很难把 Redux 应用封装成一个应用的子组件，除非这是必要的，或者为了
+            实现服务端渲染需要为每一个请求创建单独的 store 实例。
+
+            借助 React Redux，由 connect() 生成的包装类实际上会检索存在的 props.store，但还是推荐将根组件包装在
+            <Provider store={store}> 中，这样传递 store 的任务都交由 React Redux 处理。这种方式，我们不用考虑 store
+             模块的导入、 Redux 应用的封装，后期支持服务器渲染也将变得更为简便。
+        》在store enhancer中可以存在多个middleware链吗？在middleware方法中，next和dispatch之间的区别？
+            Redux middleware 就像一个链表。每个 middleware 方法既能调用 next(action) 传递 action 到下一个 middleware，
+            也可以调用 dispatch(action) 重新开始处理，或者什么都不做而仅仅终止 action 的处理进程。
+
+            创建 store 时， applyMiddleware 方法的入参定义了 middleware 链。定义多个链将无法正常执行，因为它们的
+            dispatch 引用显然是不一样的，而且不同的链也无法有效连接到一起。
+        》怎样只订阅state的一部分变更？如何将分发的action作为订阅的一部分？
+            Redux 提供了独立的 store.subscribe 方法用于通知监听器 store 的变更信息。监听器的回调方法并没有把当前的 state 作为入参，
+            它仅仅代表了 有些数据 被更新。订阅者的逻辑中调用 getState() 获取当前的 state 值。
+
+            新的 state 没有传递给监听者，目的是简化 store enhancer 的实现，比如 Redux DevTools。此外，订阅者旨在响应 state 值本身，
+            而非 action。当 action 很重要且需要特殊处理时，使用 middleware。
+        》Action
+            》为何type必须是字符串，或者至少可以被序列化？为什么action类型应该作为常量
+                和 state 一样，可序列化的 action 使得若干 Redux 的经典特性变得可能，比如时间旅行调试器、
+                录制和重放 action。若使用 Symbol 等去定义 type 值，或者用 instanceof 对 action 做自检查都
+                会破坏这些特性。字符串是可序列化的、自解释型，所以是更好的选择。注意，如果 action 目的是在
+                 middleware 中处理，那么使用 Symbols、 Promises 或者其它非可序列化值也是 可以 的。 action
+                 只有当它们正真到达 store 且被传递给 reducer 时才需要被序列化。
+
+                 因为性能原因，我们无法强制序列化 action，所以 Redux 只会校验 action 是否是普通对象，以及 type
+                 是否定义。其它的都交由你决定，但是确保数据是可序列化将对调试以及问题的重现有很大帮助。
+
+                 封装并集聚公共代码是程序规划时的核心概念。虽然可以在任何地方手动创建 action 对象、手动指定 type 值，
+                 定义常量的方式使得代码的维护更为方便。如果将常量维护在单独的文件中，在 import 时校验，能避免偶然的拼写错误
+            》是否存在reducer和action之间的一对一映射
+                不存在。建议的方式是编写独立且很小的 reducer 方法去更新指定的 state 部分，这种模式被称为 “reducer 合成”。
+
+            》怎样表示类似AJAX请求的副作用？为何需要action创建函数 thunks 以及middleware类似的东西去处理异步行为
+                与第三方的交互被认为是 “副作用”
+
+                最简单也是最常用的方法就是使用 Redux Thunk middleware，这样就能用更为复杂或者异步的逻辑书写 action 创建函数。
+                另一个被广泛使用的方法是 Redux Saga，你可以用 generator 书写类同步代码，就像在 Redux 应用中使用 “后台线程”
+                或者 “守护进程”。还有一个方法是 Redux Loop，它允许 reducer 以声明副作用的方式去响应 state 变化，并让它们
+                分别执行，从而反转了进程。除此之外，还有 许多 其它开源的库和理念，都有各自针对副作用的管理方法。
+            》是否应该在action创建函数中连续分发多个action
+                关于如何构建 action 并没有统一的规范。使用类似 Redux Thunk 的异步 middleware 支持了更多的场景，
+                比如分发连续多个独立且相关联的 action、 分发 action 指示 AJAX 请求的阶段、 根据 state 有条件的
+                分发 action、甚至分发 action 并随后校验更新的 state。
+    》性能
+        》每个action都调用了所有的reducer会不会很慢。
+            我们应当清楚的认识到 Redux store 只有一个 reducer 方法。 store 将当前的 state 和分发的 action 传递给这个
+             reducer 方法，剩下的就让 reducer 去处理。
+
+             如果你仍然关心 reducer 的性能，可以使用类似 redux-ignore 和 reduxr-scoped-reducer 的工具，确保只有某几个 reducer
+             响应特定的 action。你还可以使用 redux-log-slow-reducers 进行性能测试。
+        》在reducer中必须对state进行深拷贝吗？拷贝state不会很慢吗？
+            以不可变的方式更新 state 意味着浅拷贝，而非深拷贝。相比于深拷贝，浅拷贝更快，因为只需复制很少的字段和对象，
+            实际的底层实现中也只是移动了若干指针而已。
+        》怎样减少store更新事件的数量
+            Redux 在 action 分发成功（例如，action 到达 store 被 reducer 处理）后通知订阅者。在有些情况下，减少订阅者被
+            调用的次数会很有用，特别在当 action 创建函数分发了一系列不同的 action 时。
+
+            如果你在使用 React，你可以写在 ReactDOM.unstable_batchedUpdates() 以提高同步分发的性能，但这个 API 是实验性质的，
+            可能会在以后的版本中移除，所以也不要过度依赖它。
+        》仅有 “一个 state 树” 会引发内存问题吗？分发多个 action 会占用内存空间吗？
+            首先，在原始内存使用方面，Redux 和其它的 JavaScript 库并没有什么不同。
+            唯一的区别就是所有的对象引用都嵌套在同一棵树中，而不是像类似于 Backbone 那样保存在不同的模型实例中。
+            第二，与同样的 Backbone 应用相比，典型的 Redux 应用可能使用 更少 的内存，因为 Redux 推荐使用普通的
+                  JavaScript 对象和数组，而不是创建模型和集合实例。
+            最后，Redux 仅维护一棵 state 树。不再被引用的 state 树通常都会被垃圾回收。
+    》React Redux
+        》为何组件没有被重新渲染或者mapStateToProps没有运行
+            目前来看，导致组件在 action 分发后却没有被重新渲染，最常见的原因是对 state 进行了直接修改。
+        》为何组件频繁的重新渲染
+            React Redux 采取了很多的优化手段，保证组件直到必要时才执行重新渲染。一种是对 mapStateToProps 和
+            mapDispatchToProps 生成后传入 connect 的 props 对象进行浅层的判等检查。遗憾的是，如果当 mapStateToProps
+            调用时都生成新的数组或对象实例的话，此种情况下的浅层判等不会起任何作用。
+        》怎样使mapStateToProps执行更快
+            尽管 React Redux 已经优化并尽量减少对 mapStateToProps 的调用次数，加快 mapStateToProps 执行并减少其执行
+            次数仍然是非常有价值的。普遍的推荐方式是利用 Reselect 创建可记忆（memoized）的 “selector” 方法。这样，
+            selector 就能被组合在一起，并且同一管道（pipeline）后面的 selector 只有当输入变化时才会执行。意味着你可以
+            像筛选器或过滤器那样创建 selector，并确保任务的执行时机。
+        》为何不在被连接的组件中使用this.props.dispatch
+            connect() 方法有两个主要的参数，而且都是可选的。第一个参数 mapStateToProps 是个函数，让你在数据变化时从 store 获取数据，并作为 props 传到组件中。
+            第二个参数 mapDispatchToProps 依然是函数，让你可以使用 store 的 dispatch 方法，通常都是创建 action 创建函数并预先绑定，那么在调用时就能直接分发 action。
+
+            如果在执行 connect() 时没有指定 mapDispatchToProps 方法，React Redux 默认将 dispatch 作为 prop 传入。所以当你指定方法时，
+            dispatch 将 不 会自动注入。如果你还想让其作为 prop，需要在 mapDispatchToProps 实现的返回值中明确指出。
+        》应该只链接到顶层组件吗 或者可以在组件树种链接到不同组件吗
+            目前的最佳实践是将组件按照 “展现层（presentational）” 或者 “容器（container）” 分类，
+            并在合理的地方抽象出一个连接的容器组件
+8.词汇表
+    》State
+        type State = any
+        顶层state或为一个对象，或像Map那样的键值集合，也可以是任意的数据类型。然而你应该尽可能确保state可以被序列化，而不要把什么
+        数据都放进去导致无法轻松地把state转成JSON
+    》Action
+        type Action = Object
+        action 必须拥有一个 type 域，它指明了需要被执行的 action type。Type 可以被定义为常量，然后从其他 module 导入。
+        比起用 Symbols 表示 type，使用 String 是更好的方法，因为 string 可以被序列化。
+    》Reducer
+        type Reducer<State,Action> = (state,action) => state;
+        不要再reducer中有API调用
+    》dispatch函数
+        type BaseDispatch = (Action) => Action
+            Base dispatch function 总是同步地把 action 与上一次从 store 返回的 state 发往 reducer，
+            然后计算出新的 state。它期望 action 会是一个可以被 reducer 消费的普通对象。
+        type Dispatch = (Action | AsyncAction) => any
+            Middleware 封装了 base dispatch function，允许 dispatch function 处理 action 之外的异步 action。
+            Middleware 可以改变、延迟、忽略 action 或异步 action，也可以在传递给下一个 middleware 之前对它们进行解释。
+    》Action Creator
+        type ActionCreator = (...args: any) => Action | AsyncAction
+        Action Creator 很简单，就是一个创建 action 的函数。不要混淆 action 和 action creator 这两个概念。
+        Action 是一个信息的负载，而 action creator 是一个创建 action 的工厂。
+    》异步Action
+        type AsyncAction = any
+        异步 action 是一个发给 dispatching 函数的值，但是这个值还不能被 reducer 消费。在发往 base dispatch()
+        function 之前，middleware 会把异步 action 转换成一个或一组 action。异步 action 可以有多种 type，这取
+        决于你所使用的 middleware。它通常是 Promise 或者 thunk 之类的异步原生数据类型，虽然不会立即把数据传递给
+         reducer，但是一旦操作完成就会触发 action 的分发事件。
+    》Middleware
+        type MiddlewareAPI = { dispatch: Dispatch, getState: () => State }
+        type Middleware = (api: MiddlewareAPI) => (next: Dispatch) => Dispatch
+        Middleware 是一个组合 dispatch function 的高阶函数，返回一个新的 dispatch function，通常将异步 actions 转换成 action。
+    》Store
+        type Store = {
+            dispatch:Dispatch，//base dispatch function。
+            getState:() => State,// 返回当前 store 的 state。
+            subscribe:(listener: () =>void) => () =>void,//注册一个 state 发生变化时的回调函数。
+            replaceReducer:(reducer:Reducer) => void// 可用于热重载和代码分割。通常你不需要用到这个 API。
+        }
+    》Store Creator
+        type StoreCreator = (reducer: Reducer, initialState: ?State) => Store
+    》Store enhancer
+        type StoreEnhancer = (next: StoreCreator) => StoreCreator
+        Store enhancer 是一个组合 store creator 的高阶函数，返回一个新的强化过的 store creator。
+        这与 middleware 相似，它也允许你通过复合函数改变 store 接口。
+9.Redux的API
+    》顶级暴露的方法
+        》createStore(reducer, [preloadedState], [enhancer])
+            //创建一个Redux store来以存放应用中所有的state，应用中应有且仅有一个store
+            参数：
+                》reducer <Function> 接收两个参数，分别是当前的state树和要处理的action 返回新的state树
+                》preloadedState <any> 初始时的state，在同构应用中，你可以决定是否把服务端传来的state 传入，或者从之前
+                  保存的用户会话中恢复一个传给它。如果你使用combineReducers创建reducer，它必须是一个普通对象，与传入的keys
+                  保持同样的结构，否则你可以自由传入任何reducer可以理解的内容
+                》enhancer <Function> Store enhancer是一个组合store creator的高阶函数，返回一个新的强化过的store creator。
+                  这与middleware相似，它也允许你通过复合函数改变store接口。
+            返回值
+                store 保存了应用所有state的对象。改变state的唯一方法是dispatch action。你也可以subscribe监听state的变化然后更新UI。
+
+            案例
+                import { createStore } from 'redux'
+                function todos(state = [] ,action){
+                    switch(action.type){
+                        case "ADD_TODO":
+                            return state.concat([action.text]);
+                        default:
+                            return state;
+                    }
+                    let store = createStore(todos,['Use Redux']);
+                    store.dispatch({
+                        type:"ADD_TODO",
+                        text:"Read the docs"
+                    });
+                }
+
+                console.log(store.getState())
+                // [ 'Use Redux', 'Read the docs' ]
+            注意：
+                》应用中不要创建多个store 相反，使用combineReducers来把多个reducer创建成一个根reducer。
+                》你可以决定state的格式，你可以使用普通对象或者Immutable这类的实现。
+                》如果 state 是普通对象，永远不要修改它！比如，reducer 里不要使用 Object.assign(state, newData)，
+                  应该使用 Object.assign({}, state, newData)。这样才不会覆盖旧的 state。如果可以的话，也可以使用
+                  对象拓展操作符（object spread spread operator 特性中的 return { ...state, ...newData }
+                》对于服务端运行的同构应用，为每一个请求创建一个store实例，以此让store相隔离。dispatch一系列请求数据的
+                  action到store实例上，等待请求完成后再服务端渲染应用。
+                》当store创建后，Redux会dispatch一个action到reducer上来用初始的state来填充store。你不需要处理这个action。
+                  但要记住，如果第一个参数也是传入的state 如果是undefined，reducer应该返回初始的state值。
+                》要使用多个store增强器的时候，可能需要使用compose
+
+        》combineReducers(reducers)
+            随着应用变得复杂，需要对reducer函数进行拆分，拆分后的每一块独立负责管理state的一部分。
+            combineReducers辅助函数的作用是：把一个由多个不同reducer函数作为value的object，合并成一个最终的reducer函数，然后
+            就可以对这个reducer调用createStore。
+
+            合并后的reducer可以调用各个子reducer，并把它们的结果合并成一个state对象。state对象的结构由传入的多个reducer的key决定。
+            state如:{
+                reducer1,
+                reducer2
+            }
+            通过为传入对象的reducer命名不同来控制state key的命名：
+            combineReducers({
+                todos:myTodosReducer
+            });
+            //state结构
+            {
+                todos
+            }
+
+            通常的做法是命名reducer，然后state再去分割那些信息，因此可以使用ES6的简写方法：
+            combineReducers({ counter, todos })等价于：combineReducers({ counter: counter, todos: todos })。
+
+            参数
+                reducers <Object> 一个对象，它的值value对应不同的reducer函数，这些reducer函数后面会被合并成一个
+                ，key对应生成的state属性
+            返回值
+                Function 一个调用reducers对象里所有reducer的reducer，并且构造一个与reducers对象结构相同的state对象。
+            注意：
+                每个传入combineReducers的reducer都需要满足以下规则：
+                    》所有未匹配到的 action，必须把它接收到的第一个参数也就是那个 state 原封不动返回。
+                    》永远不能返回 undefined。当过早 return 时非常容易犯这个错误，为了避免错误扩散，遇到这种情况时 combineReducers 会抛异常。
+                    》如果传入的 state 就是 undefined，一定要返回对应 reducer 的初始 state。
+            示例
+                //reducers/todos.js
+                export default function todos(state = [], action) {
+                  switch (action.type) {
+                  case 'ADD_TODO':
+                    return state.concat([action.text])
+                  default:
+                    return state
+                  }
+                }
+                //reducers/counter.js
+                export default function counter(state = 0, action) {
+                  switch (action.type) {
+                  case 'INCREMENT':
+                    return state + 1
+                  case 'DECREMENT':
+                    return state - 1
+                  default:
+                    return state
+                  }
+                }
+                //reducers/index.js
+                import { combineReducers } from 'redux'
+                import todos from './todos'
+                import counter from './counter'
+
+                export default combineReducers({
+                  todos,
+                  counter
+                })
+                //App.js
+                import { createStore } from 'redux'
+                import reducer from './reducers/index'
+
+                let store = createStore(reducer)
+                console.log(store.getState())
+                // {
+                //   counter: 0,
+                //   todos: []
+                // }
+
+                store.dispatch({
+                  type: 'ADD_TODO',
+                  text: 'Use Redux'
+                })
+                console.log(store.getState())
+                // {
+                //   counter: 0,
+                //   todos: [ 'Use Redux' ]
+                // }
+            注意：
+                本方法只是起辅助作用！你可以自行实现不同功能的 combineReducers，甚至像实现其它函数一样，明确地写一个根 reducer 函数，
+                用它把子 reducer 手动组装成 state 对象。
+
+                在 reducer 层级的任何一级都可以调用 combineReducers。并不是一定要在最外层。实际上，你可以把一些复杂的子 reducer 拆分
+                成单独的孙子级 reducer，甚至更多层。
+
+        》applyMiddleware(...middlewares)
+            使用包含自定义功能的middleware来扩展Redux是一种推荐方式。Middleware可以让你包装store的dispatch方法来达到你想要的目的。
+            同时middleware还拥有可组合这一关键特性，多个middleware可以被组合到一起使用，形成middleware链。其中每个middleware都不需要
+            关心链中它前后middleware的任何信息。
+
+            Middleware最常见的使用场景是无需引用大量代码或依赖类似Rx的第三方库实现异步actions。这种方式可以让你像dispatch一般的actions
+            那样dispatch异步actions。
+
+            如：redux-thunk 支持 dispatch function，以此让 action creator 控制反转。被 dispatch 的 function 会接收 dispatch 作为参数，
+                并且可以异步调用它。这类的 function 就称为 thunk。
+                另一个 middleware 的示例是 redux-promise。它支持 dispatch 一个异步的 Promise action，并且在 Promise resolve 后可以
+                dispatch 一个普通的 action。
+            Middleware 并不需要和 createStore 绑在一起使用，也不是 Redux 架构的基础组成部分， 它仍被作为扩展 dispatch 的唯一标准的方式。
+
+            参数
+                ...middlewares：遵循Redux middleware API的函数。每个middleware接受Store的 dispatch 和 getState函数作为命名参数，并返回一个函数。
+                该函数会被传入 被称为 next 的下一个middleware的dispatch方法，并返回一个接受action的新函数，这个函数可以直接调用next(action),或者
+                在其他需要的时候调用，甚至根本不去调用它。调用链中的最后一个middleware会接受真实的store的dispatch方法作为next参数，并借此结束调用
+                链。
+                所以middleware得函数签名：({getState,dispatch}) => next => action。
+            返回值
+                Function 一个应用了middleware后的store enhancer。这个store enhancer的签名是 createStore => createStore,
+                但是最简单的使用方法就是直接作为最后一个enhancer参数传递给 createStore()函数。
+            示例
+                //自定义Logger Middleware
+                import {createStore,applyMiddleware} from 'redux'
+                import todos from './reducers'
+
+                function logger ({getState}){
+                    return next => action => {
+                        console.log('will dispatch',action);
+
+                        //调用middleware链中下一个middleware的dispatch。
+                        let returnValue = next(action);
+                        console.log('state after dispatch',getState());
+
+                        //一般会是action本身除非后面的middleware修改了它
+                        return returnValue;
+                    }
+                }
+                //使用middleware
+                let store = createStore(todos,['Use Redux'],applyMiddleware(logger));
+                //结果
+                store.dispatch({
+                  type: 'ADD_TODO',
+                  text: 'Understand the middleware'
+                })
+                // (将打印如下信息:)
+                // will dispatch: { type: 'ADD_TODO', text: 'Understand the middleware' }
+                // state after dispatch: [ 'Use Redux', 'Understand the middleware' ]
+
+                //使用Thunk Middleware来做异步Action
+                import {createStore,combineReducers,applyMiddleware} from 'redux'
+                import thunk from 'redux-thunk'
+                import * as reducers from './reducers'
+
+                //获取根reducer
+                let reducer = combineReducers(reducers);
+
+                //为createStore注入middleware
+                let store = createStore(reducer,applyMiddleWare(thunk));
+
+                function fetchSecretSauce(){
+                    return fetch('https://www.google.com/search?q=secret+sauce');
+                }
+
+                //action creator
+                function makeASandwich(forPerson, secretSauce) {
+                  return {
+                    type: 'MAKE_SANDWICH',
+                    forPerson,
+                    secretSauce
+                  }
+                }
+
+                function apologize(fromPerson, toPerson, error) {
+                  return {
+                    type: 'APOLOGIZE',
+                    fromPerson,
+                    toPerson,
+                    error
+                  }
+                }
+
+                function withdrawMoney(amount) {
+                  return {
+                    type: 'WITHDRAW',
+                    amount
+                  }
+                }
+                //上述action不使用middleware都能被dispatch
+                store.dispatch(withdrawMoney(100))
+
+                //对于异步action -- 使用Thunk 它是一个返回函数的函数
+                function makeASandwichWithSecretSauce（forPerson）{
+                    //返回一个接受dispatch的函数，Thunk middleware知道如何把异步thunk action转为普通aciton
+                    return function (dispatch){
+                        return fetchSecretSauce().then(
+                            sauce => dispatch(makeASandwich(forPerson, sauce)),
+                            error => dispatch(apologize('The Sandwich Shop', forPerson, error))
+                        );
+                    }
+                }
+
+                //Thunk middleware可以让我们像dispatch 普通action一样dispatch异步的thunk action
+                store.dispatch(
+                  makeASandwichWithSecretSauce('Me')
+                )
+
+                //它甚至负责回传thunk被dispatch后的返回值,可以继续串连Promise
+                store.dispatch(
+                  makeASandwichWithSecretSauce('My wife')
+                ).then(() => {
+                  console.log('Done!')
+                });
+
+                //实际上，可以写一个普通的action和异步action的action creator 而且可以使用Promise来控制数据流
+                function makeSandwichesForEverybody(){
+                    return function (dispatch,getState){
+                        if(!getState().sandwiches.isShopOpen){
+                            return Promise.resolve();//返回Promise并不是必须的，但是是一个很好的约定 为了让调用者能够在异步的 dispatch 结果上直接调用 .then() 方法。
+                        }
+
+                        //可以dispatch普通action对象和其他thunk 这样我们就可以在一个数据流中组合多个异步action
+                        return dispatch(
+                                      makeASandwichWithSecretSauce('My Grandma')
+                                ).then(() =>
+                                      Promise.all([
+                                        dispatch(makeASandwichWithSecretSauce('Me')),
+                                        dispatch(makeASandwichWithSecretSauce('My wife'))
+                                      ])
+                                ).then(() =>
+                                      dispatch(makeASandwichWithSecretSauce('Our kids'))
+                                ).then(() =>
+                                      dispatch(getState().myMoney > 42 ?
+                                        withdrawMoney(42) :
+                                        apologize('Me', 'The Sandwich Shop')
+                                      )
+                                )
+                    }
+                }
+                //这在服务端渲染时很有用，因为我可以等到数据准备好了同步渲染应用
+                import { renderToString } from 'react-dom/server'
+
+                store.dispatch(
+                  makeSandwichesForEverybody()
+                ).then(() =>
+                  response.send(renderToString(<MyApp store={store} />))
+                )
+
+                //也可以在任何导致组件的props变化时 dispatch一个异步thunk action
+                import { connect } from 'react-redux'
+                import { Component } from 'react'
+
+                class SandwichShop extends Component {
+                  componentDidMount() {
+                    this.props.dispatch(
+                      makeASandwichWithSecretSauce(this.props.forPerson)
+                    )
+                  }
+
+                  componentWillReceiveProps(nextProps) {
+                    if (nextProps.forPerson !== this.props.forPerson) {
+                      this.props.dispatch(
+                        makeASandwichWithSecretSauce(nextProps.forPerson)
+                      )
+                    }
+                  }
+
+                  render() {
+                    return <p>{this.props.sandwiches.join('mustard')}</p>
+                  }
+                }
+
+                export default connect(
+                  state => ({
+                    sandwiches: state.sandwiches
+                  })
+                )(SandwichShop);
+
+                注意：
+                    Middleware只是包装了store的dispatch方法，任何middleware能做的事情都可以通过手动包装dispatch调用来实现，但是
+                    放在同一个地方统一管理会使整个项目的扩展变得容易的多。
+
+                    如果除了 applyMiddleware，你还用了其它 store enhancer，一定要把 applyMiddleware 放到组合链的前面，因为 middleware
+                    可能会包含异步操作。
+
+                    如果你想有条件的使用middleware，记住只import需要的部分
+                    let middleware = [ a, b ]
+                    if (process.env.NODE_ENV !== 'production') {
+                      let c = require('some-debug-middleware')
+                      let d = require('another-debug-middleware')
+                      middleware = [ ...middleware, c, d ]
+                    }
+
+                    const store = createStore(
+                      reducer,
+                      preloadedState,
+                      applyMiddleware(...middleware)
+                    )
+                    //这样做有利于打包时去掉不需要的模块，减小打包文件大小。
+
+        》bindActionCreators(actionCreators, dispatch)
+            把action creators转成拥有同名keys的对象，但使用dispatch把每个action creator包围起来，这样可以直接调用它们。
+
+            一般情况下你可以直接在Store实例上调用dispatch。如果你在React中使用Redux，react-redux会提供dispatch函数让你直接
+            调用它。
+
+            唯一使用bindActionCreators的场景：当你需要把action creator往下传递到一个组件上，却不想让这个组件觉察到Redux的存在。
+            而且不希望把Redux store或dispatch传给它。
+
+            参数：
+                actionCreators <Function | Object> 一个action creator或者键值是action creators的对象
+                dispatch <Function>一个dispatch函数 由Store实例提供
+            返回值
+                Function 或 Object 一个与原对象类似的对象，只不过这个对象中的每个函数值都可以直接dispatch action。
+                如果传入的是一个函数作为actionCreators返回的也是一个函数。
+
+            示例
+                //TodoActionCreators.js
+                export function addTodo(text) {
+                  return {
+                    type: 'ADD_TODO',
+                    text
+                  };
+                }
+
+                export function removeTodo(id) {
+                  return {
+                    type: 'REMOVE_TODO',
+                    id
+                  };
+                }
+                //SomeComponent.js
+                import {Component} from 'react'
+                import {bindActionCreators} from 'redux'
+                import {connect} from 'react-redux'
+                import * as TodoActionCreators from './TodoActionCreators';
+                console.log(TodoActionCreators);
+                // {
+                //   addTodo: Function,
+                //   removeTodo: Function
+                // }
+
+                class TodoListContainer extends Component{
+                    componentDidMount(){
+                        //由react-redux注入
+                        let {dispatch} = this.props;
+                        //执行action
+                        dispatch(TodoActionCreators.addTodo('Use Redux'));
+                    }
+
+                    render(){
+                        // 由 react-redux 注入：
+                        let { todos, dispatch } = this.props;
+
+                        //应用bindActionCreators
+                         let boundActionCreators = bindActionCreators(TodoActionCreators, dispatch);
+                         console.log(boundActionCreators);
+                             // {
+                             //   addTodo: Function,
+                             //   removeTodo: Function
+                             // }
+                         return (
+                            <TodoList todos={todos} {...boundActionCreators} />//子组件中直接调用 而不用有Redux的存在
+                         );
+
+                         //一种可以替换bindActionCreators的做法 直接把dispatch函数和action creators作为props传递给子组件
+                         //return <TodoList todos={todos} dispatch={dispatch} />;
+                    }
+                }
+                export default connect( state => ({todos:state.todos}))(TodoListContainer);
+        》compose(...functions)
+            从右到左来组合多个函数
+            这是函数式编程中的方法，为了方便被放到了Redux里。
+            当需要把多个store增强器依次执行的时候需要用到它。
+
+            参数：
+                需要合成的多个函数，预计每个函数都接收一个参数，它的返回值将作为一个参数提供给它左边的函数，依次类推。
+                例外是最右边的参数可以接受到个参数，因为他将为由此产生的函数提供签名
+                compose(funcA,funcB,funcC) 即 compose(funcA(funcB(funcC())))
+            返回值
+                Function 从右到左把接受到的函数合成后的最终函数
+            示例
+                import {createStore,combineReducers,applyMiddleware,compose} from 'redux'
+                import thunk from 'redux-thunk'
+                import DevTools from './containers/DevTools'
+                import reducer from '../reducers/index'
+
+                const store = createStore(
+                    reducer,
+                    compose(
+                        applyMiddleware(thunk),
+                        DevTools.instrument()
+                    )
+                );
+        //引入方式 -- 所有的顶级暴露方法
+        ES6
+        import { createStore } from 'redux';
+
+        ES5 commonJs
+        var createStore = require('redux').createStore;
+
+        ES5 UMD build
+        var createStore = Redux.createStore;
+    》Store API
+        Store就是用来维持应用所有的state树的一个对象。改变store内state的唯一途径是对他dispatch一个action。
+
+        Store不是类，它只是有几个方法的对象，要创建它，只需要把根部的reducer函数给createStore。
+
+        》getState()
+            返回应用当前的state树，它与store的最后一个reducer返回值相同
+        》dispatch(action)
+            分发action，这是触发state变化的唯一途径。会使用当前getState()的结果和传入的action以同步方式的调用store的reduce
+            函数。返回值会被作为下一个state，从现在开始，这就成为了getState()的返回值，同时变化监听器会被触发。
+
+            注意：
+                在reducer内部调用dispatch时将会抛出错误提示"Reducer 内不能 dispatch action",在 Redux 里，只会在根 reducer 返
+                回新 state 结束后再会调用事件监听器，因此，你可以在事件监听器里再做 dispatch。惟一使你不能在 reducer 中途 dispatch
+                的原因是要确保 reducer 没有副作用。如果 action 处理会产生副作用，正确的做法是使用异步 action 创建函数。
+
+            参数：
+                action 描述应用变化的普通对象。Action 是把数据传入 store 的惟一途径，所以任何数据，无论来自 UI 事件，
+                网络回调或者是其它资源如 WebSockets，最终都应该以 action 的形式被 dispatch。按照约定，action 具有
+                type 字段来表示它的类型。type 也可被定义为常量或者是从其它模块引入。最好使用字符串，而不是 Symbols
+                作为 action，因为字符串是可以被序列化的。除了 type 字段外，action 对象的结构完全取决于你。
+            返回值
+                要dispatch的action
+
+            注意：
+                使用createStore创建的纯正store只支持普通对象类型的action，而且会立即传到reducer来执行。
+                但是如果用applyMiddleware来套住createStore时，middleware 可以修改 action 的执行，并支持执行 dispatch intent（意图）。
+                Intent 一般是异步操作如 Promise、Observable 或者 Thunk。
+
+                Middleware 是由社区创建，并不会同 Redux 一起发行。你需要手动安装 redux-thunk 或者 redux-promise 库。
+                你也可以创建自己的 middleware。
+            示例
+                import {createStore} from 'redux'
+                let store = createStore(todos,['Use Redux']);
+                function addTodo(text){
+                    return {
+                        type:"ADD_TODO",
+                        text
+                    }
+                }
+                store.dispatch(addTodo('Read the docs'));
+        》subscribe(listener)
+            添加一个变化监听器，每当dispatch action的时候就会执行，state树中的一部分可能已经变化，你可以在回调函数里
+            调用getState()来拿当前state。
+
+            可以在变化监听器里面进行dispatch(),但需要注意下面事项：
+                》监听器调用 dispatch() 仅仅应当发生在响应用户的 actions 或者特殊的条件限制下，虽然没有任何条件去调用 dispatch()
+                  在技术上是可行的，但是随着每次 dispatch() 改变 store 可能会导致陷入无穷的循环。
+                》订阅器（subscriptions） 在每次 dispatch() 调用之前都会保存一份快照。当你在正在调用监听器（listener）的时候订阅
+                  (subscribe)或者去掉订阅（unsubscribe），对当前的 dispatch() 不会有任何影响。但是对于下一次的 dispatch()，无论嵌
+                  套与否，都会使用订阅列表里最近的一次快照。
+                》订阅器不应该注意到所有 state 的变化，在订阅器被调用之前，往往由于嵌套的 dispatch() 导致 state 发生多次的改变。
+                  保证所有的监听器都注册在 dispatch() 启动之前，这样，在调用监听器的时候就会传入监听器所存在时间里最新的一次 state。
+
+                这是一个底层 API。多数情况下，你不会直接使用它，会使用一些 React（或其它库）的绑定。如果你想让回调函数执行的时候使用当前的
+                state，你可以 把 store 转换成一个 Observable 或者写一个定制的 observeStore 工具。
+
+            参数
+                listener <Function>：每当dispatch action的时候都会执行的回调。state 树中的一部分可能已经变化。你可以在回调函数里调用 getState() 来拿到当前
+                state。store 的 reducer 应该是纯函数，因此你可能需要对 state 树中的引用做深度比较来确定它的值是否有变化。
+            返回值
+                Function 一个可以解绑变化监听器的函数
+            示例
+                function select(state){
+                    return state.some.deep.property
+                }
+                let currentValue
+                function handleChange(){
+                    let previousValue = currentValue;
+                    currentValue = select(store.getState());
+
+                    if(previousValue !== currentValue){
+                        console.log('Some deep nested property changed from', previousValue, 'to', currentValue);
+                    }
+                }
+
+                let unsubscribe = store.subscribe(handleChange);
+
+                //移除监听
+                unsubscribe();
+        》getReducer()
+        》replaceReducer(nextReducer)
+            替换store当前用来计算state的reducer。
+            这是一个高级API，只有在你需要实现代码分隔，而且需要立即加载一些reducer的时候才可能会用到它。
+            在实现Redux热加载机制的时候也可能会用到。
+
+            参数：
+                reducer <Function> store会使用的下一个reducer。
+10.React Redux API
+    本库并不是Redux内置的，需要单独安装，但是一般会和Redux一起使用。
+    它是Redux官方提供的React绑定库，具有高效且灵活的特性。
+
+    安装
+        React Redux依赖React0.14或更新版本。
+        npm install --save react-redux
+    React Native
+        从React Native .18发布之后，4.x版本的React Redux能搭配React Native一起开发。
+        如果你在使用 4.x 版本的 React Redux 和 React Native 一起开发遇到问题时，请先运行 npm ls react
+        确保你的 node_modules 中没有 React 的复制品。我们建议你使用 npm@3.x 来更好地规避这类问题。
+    API
+        》<Provider>
+            使组件层级中的connect()方法能够获得Redux store。正常情况下，你的根组件应该嵌套在<Provider>中才能使用connect()方法。
+
+            如果你真的不想把根组件嵌套在<Provider>中你可以把store作为props传递到每一个被connect()包装的组件，但是我们只推荐你在单元
+            测试中对store进行伪造或者在非完全基于React的代码中才这么做。正常情况下，你应该使用<Provider>。
+
+            属性：
+                store<Redux Store>:应用程序中唯一的Redux store对象
+                children<ReactElement>：组件层级的根组件
+            示例
+                ReactDOM.render(
+                  <Provider store={store}>
+                    <MyRootComponent />
+                  </Provider>
+                  ,
+                  rootEl
+                )
+
+                ReactDOM.render(
+                    <Provider store={store}>
+                        <Router history={history}>
+                          <Route path="/" component={App}>
+                            <Route path="foo" component={Foo}/>
+                            <Route path="bar" component={Bar}/>
+                          </Route>
+                        </Router>
+                    </Provider>
+                    ,
+                    document.getElementById('root')
+                );
+        》connect([mapStateToProps], [mapDispatchToProps], [mergeProps], [options])
+            连接React组件与Redux store。
+            连接操作不会改变原来的组件类，反而返回一个新的已与Redux store连接的组件类
+
+            参数
+                mapStateToProps (state,[ownProps]):stateProps <Function>：如果定义该参数，组件会监听
+                Redux store的变化。任何时候，只要Redux store发生改变，mapStateToProps函数就会被调用。
+
+                该回调函数必须返回一个纯对象，这个对象会与组件的props合并。
+
+                如果你省略了这个参数，你的组件将不会监听Redux store。
+
+                如果指定了该回调函数的第二个参数ownProps，则该参数的值为传递到组件的props，而且只要组件接受到新的props，
+                mapStateToProps也会被调用。
+
+                注意：在高级章节中，你需要更好地去控制渲染的性能，所用到的 mapStateToProps() 会返回一个函数。在这种情况下，
+                      那个函数将被作为 mapStateToProps() 在独有的组件实例中调用。这样就允许你在每一个实例中去记录。
 
 
+                mapDispatchToProps(dispatch,[ownProps]):dispatchProps <Object | Function>如果传递的是一个对象，那么每个定义在该对象
+                的函数都将被作为Redux action creator,对象所定义的方法名将作为属性名；每个方法将返回一个新的函数，函数中dispatch方法
+                会将action creator的返回值作为参数执行。这些属性会被合并到组件的props中。
+
+                如果传递的是一个函数，该函数将接受一个dispatch函数，然后由你来决定如何返回一个对象，这个对象通过dispatch函数与action
+                creator以某种方式绑定在一起(也许你会用到Redux的辅助函数bindActionCreators())。如果你省略这个mapDispatchToProps参数，默认
+                dispatch会注入到你的组件props中。如果指定了该回调函数中第二个参数ownProps，该参数的值为传递到props，而且只要组件接受到新
+                props，mapDispatchToProps也会被调用
 
 
+                mergeProps(stateProps,dispatchProps,ownProps):props <Function>如果指定了这个参数mapStateToProps()与mapDispatchToProps()
+                的执行结果和组件自身的props将传入到这个回调函数中。该回调函数返回的对象将作为props传递到被包装的组件中。
+
+                你也许可以用这个回调函数，根据组件的props来筛选部分state数据，或者把props中的某个特定变量与action creator绑定在一起。
+
+                如果你省略这个参数默认情况下返回Object.assign({}, ownProps, stateProps, dispatchProps)的结果。
 
 
+                options <Object>如果指定了这个参数可以定制connector的行为
+                    pure = true<Boolean>，默认true。如果为true，connector将执行shouldComponentUpdate并浅对比mergeProps的结果，避免不必要的更新，
+                    前提是当前组件是一个纯组件它不依赖任何的输入或state而只依赖于props和Redux store的state。
+                    withRef = false<Boolean>,默认值为false。如果true，connector会保存一个对被包装组件实例的引用，该引用通过getWrappedInstance()方法获取。
 
+                注意，如果定义一个包含强制性参数函数(这个函数的长度为1)时，ownProps不会传到mapStateToProps 和 mapDispatchToProps中。
+                如：
+                    function mapStateToProps(state){
+                        console.log(state); // state
+                        console.log(arguments[1]); // undefined
+                    }
+                    const mapStateToProps = (state, ownProps = {}) => {
+                      console.log(state); // state
+                      console.log(ownProps); // undefined
+                    }
+                    //当函数没有强制性的参数或两个参数时将接受到ownProps
+                    const mapStateToProps = (state, ownProps) => {
+                      console.log(state); // state
+                      console.log(ownProps); // ownProps
+                    }
 
+                    function mapStateToProps() {
+                      console.log(arguments[0]); // state
+                      console.log(arguments[1]); // ownProps
+                    }
 
+                    const mapStateToProps = (...args) => {
+                      console.log(args[0]); // state
+                      console.log(args[1]); // ownProps
+                    }
+            返回值
+                根据配置信息，返回一个注入了state和action creator的React组件
 
+            静态属性
+                WrappedComponent<Component> 传递到connect()函数的原始组件类
 
+            静态方法
+                组件原来的静态方法都被提升到被包装的React组件
 
+            实例方法
+                getWrappedInstance(): ReactComponent
+                仅当connect()函数的第四个参数options设置来{withRef:true}才返回被包装的组件实例
 
+            备注
+                函数将被调用两次，第一次设置参数，第二次是组件与Redux store连接
+                    connect(mapStateToProps, mapDispatchToProps, mergeProps)(MyComponent)。
 
+                connect函数不会修改传入的React组件，返回的是一个新的已与Redux store连接的组件而且你应该使用这个新组件。
 
+                mapStateToProps函数接受整个Redux store的state作为props，然后返回一个传入到组件props的对象，该函数被称为
+                selector。
 
+            示例
+                //只注入dispatch 不监听store
+                export default connect()(TodoApp);
 
+                //注入全部没有订阅store的action creators(addTodo,completeTodo)
+                import * as actionCreators from './actionCreators'
+                export default connect(null,actionCreators)(TodoApp);
 
+                //注入dispatch和全局state
+                    //不要这样做，这会导致每次action都触发整个TodoApp重新渲染，性能得到影响。
+                    //最好在多个组件上使用connect()每个组件只监听它所关联的部分state
+                    export default connect(state => state)(TodoApp);
 
+                //注入dispatch和todos
+                export default connect(state => ({todos:state.todos}))(TodoApp);
 
+                //注入todos和所有action creator
+                import * as actionCreators from './actionCreators'
+                export default connect(state => ({todos:state.todos}),actionCreators)(TodoApp);
 
+                //注入todos并把所有action creator作为actions属性也注入组件中
+                    import * as actionCreators from './actionCreators'
+                    import { bindActionCreators } from 'redux'
 
+                    function mapStateToProps(state) {
+                      return { todos: state.todos }
+                    }
 
+                    function mapDispatchToProps(dispatch) {
+                      return { actions: bindActionCreators(actionCreators, dispatch) }
+                    }
 
+                    export default connect(mapStateToProps, mapDispatchToProps)(TodoApp)
+                //注入todos和指定的action creator(addTodo)
+                    import { addTodo } from './actionCreators'
+                    import { bindActionCreators } from 'redux'
 
+                    function mapStateToProps(state) {
+                      return { todos: state.todos }
+                    }
 
+                    function mapDispatchToProps(dispatch) {
+                      return bindActionCreators({ addTodo }, dispatch)
+                    }
 
+                    export default connect(mapStateToProps, mapDispatchToProps)(TodoApp);
 
+                //注入todos并把todoActionCreators作为todoActions属性、counterActionCreators作为counterActions 属性注入到组件中
+                    import * as todoActionCreators from './todoActionCreators'
+                    import * as counterActionCreators from './counterActionCreators'
+                    import { bindActionCreators } from 'redux'
 
+                    function mapStateToProps(state) {
+                      return { todos: state.todos }
+                    }
 
+                    function mapDispatchToProps(dispatch) {
+                      return {
+                        todoActions: bindActionCreators(todoActionCreators, dispatch),
+                        counterActions: bindActionCreators(counterActionCreators, dispatch)
+                      }
+                    }
 
+                    export default connect(mapStateToProps, mapDispatchToProps)(TodoApp)
 
+                //注入todos并把todoActionCreators与counterActionCreators一同作为actions属性注入到组件中
+                    import * as todoActionCreators from './todoActionCreators'
+                    import * as counterActionCreators from './counterActionCreators'
+                    import { bindActionCreators } from 'redux'
 
+                    function mapStateToProps(state) {
+                      return { todos: state.todos }
+                    }
 
+                    function mapDispatchToProps(dispatch) {
+                      return {
+                        actions: bindActionCreators(Object.assign({}, todoActionCreators, counterActionCreators), dispatch)
+                      }
+                    }
 
+                    export default connect(mapStateToProps, mapDispatchToProps)(TodoApp)
 
+                //注入todos并把所有todoActionCreators 和counterActionCreators 作为props注入到组件中
+                    import * as todoActionCreators from './todoActionCreators'
+                    import * as counterActionCreators from './counterActionCreators'
+                    import { bindActionCreators } from 'redux'
+
+                    function mapStateToProps(state) {
+                      return { todos: state.todos }
+                    }
+
+                    function mapDispatchToProps(dispatch) {
+                      return bindActionCreators(Object.assign({}, todoActionCreators, counterActionCreators), dispatch)
+                    }
+
+                    export default connect(mapStateToProps, mapDispatchToProps)(TodoApp)
+
+                //根据组件的props注入特定用户的todos
+                    import * as actionCreators from './actionCreators'
+
+                    function mapStateToProps(state, ownProps) {
+                      return { todos: state.todos[ownProps.userId] }
+                    }
+
+                    export default connect(mapStateToProps)(TodoApp)
+
+                //根据组件的props注入特定用户的todos并把props.userId传入到action中
+                    import * as actionCreators from './actionCreators'
+
+                    function mapStateToProps(state) {
+                      return { todos: state.todos }
+                    }
+
+                    function mergeProps(stateProps, dispatchProps, ownProps) {
+                      return Object.assign({}, ownProps, {
+                        todos: stateProps.todos[ownProps.userId],
+                        addTodo: (text) => dispatchProps.addTodo(ownProps.userId, text)
+                      })
+                    }
+
+                    export default connect(mapStateToProps, actionCreators, mergeProps)(TodoApp)
+//教程 https://github.com/react-guide/redux-tutorial-cn
