@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="068c142f-31e1-4953-93da-befd977f3c6f" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/redux.txt" afterPath="$PROJECT_DIR$/redux.txt" />
-    </list>
+    <list default="true" id="068c142f-31e1-4953-93da-befd977f3c6f" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
     <ignored path="$PROJECT_DIR$/tmp/" />
@@ -142,8 +139,8 @@
     <handled-path value="$PROJECT_DIR$/serverRender/node_modules" />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-17" />
-    <option name="y" value="77" />
+    <option name="x" value="293" />
+    <option name="y" value="130" />
     <option name="width" value="1924" />
     <option name="height" value="466" />
   </component>
@@ -183,7 +180,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../react-dzdp" />
     <property name="HbShouldOpenHtmlAsHb" value="" />
     <property name="nodejs_interpreter_path" value="D:/tools/node/node" />
     <property name="settings.editor.selected.configurable" value="preferences.keymap" />
@@ -320,15 +317,15 @@
       <workItem from="1508115849949" duration="139000" />
       <workItem from="1508116074578" duration="21575000" />
       <workItem from="1508202939899" duration="13609000" />
-      <workItem from="1508288281908" duration="13147000" />
+      <workItem from="1508288281908" duration="13762000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="349356000" />
+    <option name="totallyTimeSpent" value="349971000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-17" y="77" width="1924" height="466" extended-state="0" />
+    <frame x="293" y="130" width="1924" height="466" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16771488" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />

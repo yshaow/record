@@ -1,0 +1,768 @@
+/************************React Native***********************/
+http://reactnative.cn/docs/0.49/getting-started.html
+1.搭建开发环境
+    1.1 Windows
+      》Android
+        安装
+            必需的软件
+            》Chocolatey(https://chocolatey.org/) -- 是windows上的包管理器，类似于linux上的yum和apt-get
+
+                命令：
+                @powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))" && SET PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin
+                以管理员身份运行命令窗口，无法安装也无所谓，它只是一个包管理器
+            》Python2
+                使用Chocolatey来安装Python2，目前不支持Python3版本
+                choco install python2
+            》Node
+                安装NodeJS
+                choco install nodejs.install
+
+                安装完node后建议设置npm镜像，注意：不要使用cnpm cnpm安装的模块路径比较奇怪，packager不能正常识别
+                npm config set registry https://registry.npm.taobao.org --global
+                npm config set disturl https://npm.taobao.org/dist --global
+            》  Yarn、React Native的命令行工具(react-native-cli)
+                Yarn是Facebook提供的替代npm的工具，可以加速node模块的下载。
+                React Native的命令行工具用于执行创建、初始化、更新项目、运行打包服务packager等任务
+
+                npm install -g yarn react-native-cli
+
+                安装完yarn后同理设置镜像源
+                yarn config set registry https://registry.npm.taobao.org --global
+                yarn config set disturl https://npm.taobao.org/dist --global
+
+                如果遇到EACCES: permission denied权限错误，可以尝试下面命令(Linux系统)：
+                sudo npm install -g yarn react-native-cli
+
+                安装完yarn之后可以使用yarn代替npm：
+                    yarn 代替 npm install 命令
+                    yarn add 第三方库名 代替 npm install --save 第三方库名
+
+                注意：目前npm5存在安装新库时会删除其他库的问题，导致项目无法正常运行，所以尽量使用yarn代替npm操作。
+            》Android Studio -- http://developer.android.com/sdk/index.html
+                React Native目前需要Android Studio2.0或更高版本
+                Android Studio需要Java Development Kit [JDK]1.8或更高版本。你可以在命令行中输入 javac -version查看你当前安装的
+                JDK版本。
+                choco install jdk8或apt-get install default-jdk
+
+                Android Studio包含了运行和测试React Native应用所需要的Android SDK和模拟器。
+                注意：除非特别注明，请不要改动安装过程中的选项，如：Android Studio默认安装了Android Support Repository，而这
+                也是React Native必须的--否则react-native run-android时会报appcompat-v7包找不到的错误。
+
+                确定所有安装都勾选了 尤其是android SDK 和Android Device Emulator。
+                在初步安装完成后选择Custom安装项
+                    》检测已安装的组件尤其是模拟器和HAXM加速驱动
+                    》安装完成后，在Android Studio的欢迎界面中选择 Configure --》SDK Manager。
+                        在SDK Platforms窗口中选择Show Package Details
+                            然后再Android 6.0(Marshmallow)中勾选
+                                Google APIs
+                                Android SDK Platform 23
+                                Intel x86 Atom System Image
+                                Intel x86 Atom_64 System Image
+                                Google APIs Intel x86 Atom_64 System Image
+
+                        》在SDK Tools窗口中选择Show Package Details
+                            然后再Android SDK Build Tools中勾选Android SDK Build-Tools 23.0.1 -- 必须包含有这个版本。如果其他
+                            插件需要其他版本，你可以同时安装其他多个版本。然后勾选底部的Android Support Repository。
+
+                ANDROID_HOME环境变量：
+                    确保该环境变量指向了android的SDK路径(新建中配置)
+
+            推荐安装的工具
+                Gradle Daemon
+                    开启Gradle Daemon可以极大地提升java代码的增量编译速度
+                    (if not exist "%USERPROFILE%/.gradle" mkdir "%USERPROFILE%/.gradle") && (echo org.gradle.daemon=true >> "%USERPROFILE%/.gradle/gradle.properties")
+
+                    将Android SDK的Tools目录添加到PATH变量中
+                        你可以把Android SDK的tools和platform-tools目录添加到PATH变量中，以便在终端中运行一些Android工具，例如android avd或是adb logcat等。
+
+                Git
+                    choco install git
+                    注意勾选"Run Git from Windows Command Prompt"，这样才会把git命令添加到PATH环境变量中。
+
+                Genymotion -- https://www.genymotion.com/
+                    比起Android Studio自带的原装模拟器，Genymotion是一个性能更好的选择，但它只对个人用户免费。
+
+                    Genymotion需要依赖VirtualBox虚拟机，下载选项中提供了包含VirtualBox和不包含的选项。
+                    创建一个新模拟器并启动
+                    启动React Native应用后，可以按下F1来打开开发者菜单。
+
+                Visual Studio Emulator for Android
+                    是利用Hyper-v技术进行硬件加速的免费android模拟器，也是Android Studio自带的原装模拟器之外的一个很好的选择。
+                    而且你并不需要安装Visual Studio。在用于React Native开发前，你需要先在注册表中进行一些修改
+
+                        打开运行命令（按下Windows+R键）
+                        输入regedit.exe然后回车
+                        在注册表编辑器中找到HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Android SDK Tools条目
+                        右键点击Android SDK Tools，选择新建 > 字符串值
+                        名称设为Path
+                        双击Path，将其值设为你的Android SDK的路径。（例如C:\Program Files\Android\sdk）
+            测试安装
+                react-native init myProject
+                cd myProject
+                react-native run-android
+                提示：你可以使用--version参数创建指定版本的项目。例如react-native init MyApp --version 0.44.3。注意版本号必须精确到两个小数点。
+
+            修改项目
+                使用你喜欢的文本编辑器打开App.js并随便改上几行
+                按两下R键，或是用Menu键（通常是F2，在Genymotion模拟器中是⌘+M）打开开发者菜单，然后选择 Reload JS 就可以看到你的最新修改。
+                在终端下运行adb logcat *:S ReactNative:V ReactNativeJS:V可以看到你的应用的日志。
+      》iOS 不支持
+    1.2 Linux
+      》Android
+        必须软件
+            Node
+            Yarn、React Native的命令行工具（react-native-cli）
+                npm install -g yarn react-native-cli
+                yarn config set registry https://registry.npm.taobao.org --global
+                yarn config set disturl https://npm.taobao.org/dist --global
+            Android Studio
+                ANDROID_HOME环境变量
+                    具体的做法是把下面的命令加入到~/.bashrc、~/.bash_profile文件中。如果你使用的是其他的shell，则选择对应的配置文件:
+                    export ANDROID_HOME=~/Library/Android/sdk
+                    然后使用下列命令使其立即生效（否则重启后才生效）：
+                    source ~/.bash_profile
+                    可以使用echo $ANDROID_HOME检查此变量是否已正确设置。
+        推荐工具
+            Watchman
+                是Facebook提供的监视文件系统变更的工具，安装此工具可以提高开发时的性能（packager可以快速捕捉文件的变化从而实现实时刷新）。
+                安装watchman还可以避免node的一个与文件监视有关的bug。
+
+                在终端输入一下命令来编译并安装watchman:
+                    git clone https://github.com/facebook/watchman.git
+                    cd watchman
+                    git checkout v4.5.0  # 这是本文发布时的最新版本，请自行选择更新的版本
+                    ./autogen.sh
+                    ./configure
+                    make
+                    sudo make install
+            Flow
+                是一个静态的js类型检测工具。你在很多示例中看到的奇奇怪怪的冒号问号，以及方法参数中像类型一样的写法，
+                都是属于这个flow工具的语法。这一语法并不属于ES标准，只是Facebook自家的代码规范。
+                所以新手可以直接跳过（即不需要安装这一工具，也不建议去费力学习flow相关语法）。
+                npm install -g flow-bin
+            Gradle Daemon
+                开启Gradle Daemon可以极大地提升java代码的增量编译速度。
+                touch ~/.gradle/gradle.properties && echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
+            Android模拟器加速器
+                如果你的系统支持KVM，那就应该安装Intel的Android模拟器加速器。
+            将Android SDK的Tools目录添加到PATH变量中
+                你可以把Android SDK的tools和platform-tools目录添加到PATH变量中，以便在终端中运行一些Android工具，例如android avd或是adb logcat等。
+                在~/.bashrc或是~/.bash_profile文件中添加：
+                # 你的具体路径可能有所不同，请自行确认。
+                PATH="~/Android/Sdk/tools:~/Android/Sdk/platform-tools:${PATH}"
+                export PATH
+            Git
+                sudo apt-get install git-all
+            Nuclide
+                Nuclide（此链接需要科学上网）是由Facebook提供的基于atom的集成开发环境，可用于编写、运行和 调试React Native应用。
+                我们更推荐使用WebStorm或Sublime Text来编写React Native应用。
+            Genymotion
+                比起Android Studio自带的原装模拟器，Genymotion是一个性能更好的选择，但它只对个人用户免费。
+
+                下载和安装Genymotion（genymotion需要依赖VirtualBox虚拟机，下载选项中提供了包含VirtualBox和不包含的选项，请按需选择）。
+                打开Genymotion。如果你还没有安装VirtualBox，则此时会提示你安装。
+                创建一个新模拟器并启动。
+                启动React Native应用后，可以按下F1来打开开发者菜单。
+        测试安装
+            react-native init AwesomeProject
+            cd AwesomeProject
+            react-native run-android
+      》iOS
+        不支持
+    1.3 macOS
+        》Android
+            必须软件
+                Homebrew -- Mac系统的包管理器，用于安装Nodejs和一些其他必须的工具软件
+                    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+                    注意：在Max OS X10.11版本中homebrew在安装软件时可能会碰到/usr/local目录不可写的权限问题。可以使用下面的命令修复：
+                        sudo chown -R `whoami` /usr/local
+                Node
+                    brew install node
+                    npm config set registry https://registry.npm.taobao.org --global
+                    npm config set disturl https://npm.taobao.org/dist --global
+                Yarn、React Native的命令行工具（react-native-cli）
+                    npm install -g yarn react-native-cli
+                    yarn config set registry https://registry.npm.taobao.org --global
+                    yarn config set disturl https://npm.taobao.org/dist --global
+
+                    如果你看到EACCES: permission denied这样的权限报错，那么请参照上文的homebrew译注，修复/usr/local目录的所有权：
+                    sudo chown -R `whoami` /usr/local
+                Android Studio
+                    ANDROID_HOME环境变量
+                        确保ANDROID_HOME环境变量正确地指向了你安装的Android SDK的路径。具体的做法是把下面的命令加入到~/.bash_profile文件中：
+                        (译注：~表示用户目录，即/Users/你的用户名/，而小数点开头的文件在Finder中是隐藏的，并且这个文件有可能并不存在。请在
+                        终端下使用vi ~/.bash_profile命令创建或编辑。）。
+                        如果你的命令行不是bash，而是例如zsh等其他，请使用对应的配置文件。
+                        export ANDROID_HOME=~/Library/Android/sdk
+
+                        然后使用下列命令使其立即生效（否则重启后才生效）：
+                        source ~/.bash_profile
+                        可以使用echo $ANDROID_HOME检查此变量是否已正确设置。
+            推荐安装工具
+                Watchman
+                    Watchman是由Facebook提供的监视文件系统变更的工具。安装此工具可以提高开发时的性能（packager可以快速捕捉文件的变化从而实现实时刷新）。译注：此工具官方虽然是推荐安装，
+                    但在实践中，我们认为此工具是必须安装，否则可能无法正常开发。
+                    brew install watchman
+                Flow
+                    Flow是一个静态的JS类型检查工具。译注：你在很多示例中看到的奇奇怪怪的冒号问号，以及方法参数中像类型一样的写法，都是属于这个flow工具的语法。这一语法并不属于ES标准，只是Facebook自家的代码规范。
+                    所以新手可以直接跳过（即不需要安装这一工具，也不建议去费力学习flow相关语法）。
+                    brew install flow
+                将Android SDK的Tools目录添加到PATH变量中
+                    你可以把Android SDK的tools和platform-tools目录添加到PATH变量中，以便在终端中运行一些Android工具，例如android avd或是adb logcat等。具体做法仍然是在~/.bash_profile中添加：
+                    export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+                Git
+                    brew install git
+                Nuclide
+                Genymotion
+                Gradle Daemon
+                    touch ~/.gradle/gradle.properties && echo "org.gradle.daemon=true" >> ~/.gradle/gradle.properties
+            测试安装
+                react-native init AwesomeProject
+                cd AwesomeProject
+                react-native run-android
+        》iOS
+            必须软件
+                Homebrew
+                    /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+                Node
+                    brew install node
+                    npm config set registry https://registry.npm.taobao.org --global
+                    npm config set disturl https://npm.taobao.org/dist --global
+                Yarn、React Native的命令行工具（react-native-cli）
+                    npm install -g yarn react-native-cli
+                    yarn config set registry https://registry.npm.taobao.org --global
+                    yarn config set disturl https://npm.taobao.org/dist --global
+                Xcode
+                    React Native目前需要Xcode 8.0 或更高版本。你可以通过App Store或是到Apple开发者官网上下载。这一步骤会同时安装Xcode IDE和Xcode的命令行工具。
+                    虽然一般来说命令行工具都是默认安装了，但你最好还是启动Xcode，并在Xcode | Preferences | Locations菜单中检查一下是否装有某个版本的Command Line Tools。Xcode的命令行工具中也包含一些必须的工具，比如git等。
+            推荐安装工具 -- 同上
+2.Hello World
+    React Native的基础组件是原生组件而非web组件。
+    import React from 'react'
+    import {Text} from 'react-native'
+    class HelloWorldApp extends React.Component{
+        render(){
+            return <Text>Hello world !</Text>
+        }
+    }
+3.Props属性
+    大多数组件在创建时就可以使用各种参数来进行定制。用于定制的这些参数就称为props属性。
+    如下面的source以及style：
+    import React from 'react'
+    import {AppRegistry,Image} from 'react-native'
+    class Bananas extends React.Component{
+        render(){
+            let pic = {
+                uri:'https://upload.wikimedia.org/wikipedia/commons/d/de/Bananavarieties.jpg'
+            }
+
+            return (
+                <Image source={pic} style={ {width:193,height:110} }/>
+            );
+        }
+    }
+    AppRegistry.registerComponent('Bananas',() => Bananas);
+    注意：iOS上http的问题：https://segmentfault.com/a/1190000002933776
+
+    自定义的组件也可以使用props。通过在不同场景使用不同的属性定制，可以尽量提高自定义组件的复用范畴。
+    import React from 'react'
+    import {AppRegistry,Text,View} from 'react-native'
+    class Greeting extends React.Component{
+        render(){
+            return (
+                <Text>Hello {this.props.name}</Text>
+            );
+        }
+    }
+
+    class LotsOfGreetings extends React.Component{
+        render(){
+            return (
+                //View组件常常用作其他组件的容器，来帮助控制布局和样式
+                <View style={ {alignItems:'center'} }>
+                    <Greeting name='Rexxar'/>
+                </View>
+            );
+        }
+    }
+    AppRegistry.registerComponent('LotsOfGreetings',() => LotsOfGreetings);
+4.State状态
+    使用两种数据来控制一个组件：props和state。props是在父组件中指定，而且一经指定，在被指定的组件的生命周期中则不再改变。
+    对于需要改变的数据我们需要使用state。
+    import React from 'react'
+    import {AppRegistry,Text,View} from 'react-native'
+    class Blink extends Component{
+        constructor(props){
+            super(props);
+            this.state = {showText:true}
+
+            setInterval( () => {
+                this.setState(previousState => {
+                    return {showText:!previousState.showText}
+                })
+            },1000);
+        }
+
+        render(){
+            let display = this.state.showText ? this.props.text : '';
+
+            return (
+                <Text>{display}</Text>
+            );
+        }
+    }
+    class BlinkApp extends React.Component{
+        render(){
+            return (
+                <View>
+                    <Blink text='I love to blink'/>
+                </View>
+            );
+        }
+    }
+    AppRegistry.registerComponent('BlinkApp',() => BlinkApp);
+5. 样式
+    在React Native中，你并不需要学习什么特殊的语法来定义样式。我们仍然是使用JS来写样式。所有的核心组件都接受名为style的
+    属性，这些样式名基本上是遵循web上的css的命名，只是按照JS的语法要求使用驼峰命名法，如将background-color改为backgroundColor。
+
+    style属性可以是一个普通的js对象。也可以传入一个数组--在数组中位置居后的样式对象比居前的优先级更高，这样可以间接实现样式的继承。
+
+    在实际开发中组件的样式会越来越复杂，建议使用StyleSheet.create来集中定义组件的样式。
+    import React from 'react'
+    import {AppRegistry,StyleSheet,Text,View} from 'react-native'
+
+    class LotsOfStyles extends React.Component{
+        render(){
+            return (
+                <View>
+                    <Text style={styles.red}>just red</Text>
+                    <Text style={styles.bigblue}>just bigblue</Text>
+                    <Text style={[styles.bigblue, styles.red]}>bigblue, then red</Text>
+                    <Text style={[styles.red, styles.bigblue]}>red, then bigblue</Text>
+                </View>
+            );
+        }
+    }
+
+    const styles = StyleSheet.create({
+        bigblue:{
+            color:'blue',
+            fontWeight:'bold',
+            fontSize:30
+        },
+        red:{
+            color:'red'
+        }
+    });
+    AppRegistry.registerComponent('LotsOfStyles',() => LotsOfStyles);
+6.高度和宽度
+    组件的高度和宽度决定了其在屏幕上显示的尺寸。
+    指定宽高：
+        最简单的给组件设定尺寸的方式就是在样式中指定固定的width和height。React Native中的尺寸都是无单位的，表示的是与
+        设备像素密度无关的逻辑像素点。
+        import React from 'react'
+        import {AppRegistry,View} from 'react-native'
+        class FixedDimensionsBasics extends Component {
+            render(){
+                return (
+                    <View>
+                        <View style={{width: 50, height: 50, backgroundColor: 'powderblue'}} />
+                    </View>
+                );
+            }
+        }
+        //注册应用registerComponent后才能正确渲染，只把应用作为一个整体注册一次，而不是每个组件/模块都注册
+        AppRegistry.registerComponent('AwesomeProject', () => FixedDimensionsBasics);
+        //上面给组件设置尺寸是一种常见的模式，比如要求在不同尺寸的屏幕上都显示成一样的大小。
+    弹性Flex宽高：
+        在组件样式中使用flex可以使其在可利用的空间中动态地扩展或收缩，一般而言我们会使用flex:1来指定某个组件扩展以撑满
+        所有剩余的空间，如果有多个并列的子组件使用了flex:1,则这些子组件会评分父容器中剩余的空间。如果这些并列的子组件的
+        flex值不一样，则谁的值更大，谁占据剩余空间的比例就更大（即占据剩余空间的比等于并列组件间flex值的比）。
+
+        组件能够撑满剩余空间的前提是其父容器的尺寸不为零。如果父容器即没有固定的width和height也没有设定flex，则父容器的尺寸为零。
+        其子组件如果使用flex也是无法显示的。
+        import React, { Component } from 'react';
+        import { AppRegistry, View } from 'react-native';
+
+        class FlexDimensionsBasics extends Component {
+          render() {
+            return (
+              <View style={{flex: 1}}>
+                <View style={{flex: 1, backgroundColor: 'powderblue'}} />
+                <View style={{flex: 2, backgroundColor: 'skyblue'}} />
+                <View style={{flex: 3, backgroundColor: 'steelblue'}} />
+              </View>
+            );
+          }
+        };
+
+        AppRegistry.registerComponent('AwesomeProject', () => FlexDimensionsBasics);
+7.使用Flexbox布局
+    在React Native中使用flexbox规则来指定某个组件的子元素的布局。Flexbox可以在不同屏幕尺寸上提供一致的布局结构。
+    一般来说使用flexDirection、alignItems、justifyContent三个样式属性就已经满足大多数布局需求。
+
+    React Native中的Flexbox的工作原理和web上的CSS基本一致，当然也存在少许差异。首先是默认值不同：
+    flexDirection的默认值是column而不是row，而flex也只能指定一个数字值。
+
+    》Flex Direction
+        在组件的style中指定flexDirection可以决定布局的主轴。子元素是应该沿着水平轴(row)方向排列还是沿着竖直轴(column)方向
+        排列。默认是竖直轴(column)方向。
+        import React from 'react'
+        import {AppRegistry,View} from 'react-native'
+        class FlexDirectionBasics extends React.Component{
+            render(){
+                return (
+                    <View style={ {flex:1,flexDirection:"row"} }>
+                        <View style={{width: 50, height: 50, backgroundColor: 'powderblue'}} />
+                        <View style={{width: 50, height: 50, backgroundColor: 'skyblue'}} />
+                        <View style={{width: 50, height: 50, backgroundColor: 'steelblue'}} />
+                    </View>
+                );
+            }
+        }
+        AppRegistry.registerComponent('AwesomeProject', () => FlexDirectionBasics);
+    》Justify Content
+        在组件的style中指定justifyContent可以决定其子元素沿着主轴的排列方式。子元素是应该靠近主轴的起始端还是末尾段，亦或者均匀分布
+        对应的值：flex-start、center、flex-end、space-around以及space-between。
+        import React, { Component } from 'react';
+        import { AppRegistry, View } from 'react-native';
+
+        class JustifyContentBasics extends Component {
+          render() {
+            return (
+              // 尝试把`justifyContent`改为`center`看看
+              // 尝试把`flexDirection`改为`row`看看
+              <View style={{
+                flex: 1,
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+              }}>
+                <View style={{width: 50, height: 50, backgroundColor: 'powderblue'}} />
+                <View style={{width: 50, height: 50, backgroundColor: 'skyblue'}} />
+                <View style={{width: 50, height: 50, backgroundColor: 'steelblue'}} />
+              </View>
+            );
+          }
+        };
+
+        AppRegistry.registerComponent('AwesomeProject', () => JustifyContentBasics);
+    》Align Items
+        在组件的style中指定alignItems可以决定其子元素沿着次轴(与主轴垂直的轴，如主轴方向是row 则次轴方向为column)的排列方式。
+        子元素是应该靠近次轴的起始端还是末尾段亦或者均匀分布：flex-start、center、flex-end以及stretch。
+        注意：要是stretch选项生效的话，子元素在次轴方向上不能有固定的尺寸。
+        import React, { Component } from 'react';
+        import { AppRegistry, View } from 'react-native';
+
+        class AlignItemsBasics extends Component {
+          render() {
+            return (
+              // 尝试把`alignItems`改为`flex-start`看看
+              // 尝试把`justifyContent`改为`flex-end`看看
+              // 尝试把`flexDirection`改为`row`看看
+              <View style={{
+                flex: 1,
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+                <View style={{ height: 50, backgroundColor: 'powderblue'}} />
+                <View style={{ height: 50, backgroundColor: 'skyblue'}} />
+                <View style={{ height: 50, backgroundColor: 'steelblue'}} />
+              </View>
+            );
+          }
+        };
+
+        AppRegistry.registerComponent('AwesomeProject', () => AlignItemsBasics);
+8.处理文本输入
+    TextInput是一个允许用户输入文本的基础组件，它有一个名为onChangeText的属性，此属性接受一个函数，而此函数会在文本变化时
+    被调用。另外还有一个名为onSubmitEditing的属性，会在文本被提交时(用户按下软键盘上的提交键)调用。
+    //如实时翻译单词
+    import React from 'react'
+    import {AppRegistry,Text,TextInput,View} from 'react-native';
+
+    class PizzaTranslator extends React.Component{
+        constructor(props){
+            super(props);
+            this.state = {text:''}
+        }
+
+        render(){
+            return (
+                <View style={{padding:10}}>
+                    <TextInput
+                        style={{height:40}}
+                        placeholder='Type here to translate!'
+                        onChangeText={
+                            text => this.State({text})
+                        }
+                    />
+                    <Text style={ {padding:10,fontSize:42} }>
+                        {this.state.text.split(' ').map(
+                            word => word && '🍕'
+                        ).join(' ')}
+                    </Text>
+                </View>
+            );
+        }
+    }
+    AppRegistry.registerComponent('PizzaTranslator', () => PizzaTranslator);
+9.如何使用滚动视图
+    ScrollView是一个通用的可滚动的容器，你可以在其中放入多个组件和视图，而且这些组件并不需要是同类型的。ScrollView不仅
+    可以垂直滚动，还能水平滚动，通过horizontal属性来设置。
+    //创建一个垂直滚动的ScrollView
+    import React, { Component } from 'react';
+    import{ AppRegistry, ScrollView, Image, Text, View } from 'react-native'
+
+    class IScrolledDownAndWhatHappenedNextShockedMe extends Component {
+      render() {
+          return(
+            <ScrollView>
+              <Text style={{fontSize:96}}>Scroll me plz</Text>
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Text style={{fontSize:96}}>If you like</Text>
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Text style={{fontSize:96}}>Scrolling down</Text>
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Text style={{fontSize:96}}>What's the best</Text>
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Text style={{fontSize:96}}>Framework around?</Text>
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Image source={require('./img/favicon.png')} />
+              <Text style={{fontSize:80}}>React Native</Text>
+            </ScrollView>
+        );
+      }
+    }
+    AppRegistry.registerComponent(
+      'IScrolledDownAndWhatHappenedNextShockedMe',
+      () => IScrolledDownAndWhatHappenedNextShockedMe);
+
+    ScrollView适合用来显示数量不多的滚动元素。放置在ScrollView中的所有组件都会被渲染，哪怕有些组件因为内容太长被挤出了
+    屏幕外。如果你需要实现较长的滚动列表，那么应该使用功能差不多但性能更好的ListView组件。
+10. 如何使用长列表
+    React Native提供了几个适用于展示长列表数据的组件，一般而言我们会选用FlatList或SectionList。
+
+    FlatList组件用于显示一个垂直的滚动列表，其中的元素之间结构近似而仅数据不同。
+
+    FlatList更适用于长列表数据且元素个数可以增删和ScrollView不同的是FlatList并不立即渲染所有元素，而是优先渲染屏幕上可见的元素。
+
+    FlatList组件必须的两个属性是data和renderItem。data是列表的数据元素，而renderItem是从数据源中逐个解析数据然后返回一个设定好
+    格式的组件来渲染。
+    //案例
+    import React from 'react';
+    import {AppRegistry,FlatList,StyleSheet,Text,View} from 'react-native'
+    export default class FlatListBasics extends React.Component{
+        render(){
+            return (
+                <View style={styles.container}>
+                    <FlatList
+                        data={[
+                            {key: 'Devin'},
+                            {key: 'Jackson'},
+                            {key: 'James'},
+                            {key: 'Joel'},
+                            {key: 'John'},
+                            {key: 'Jillian'},
+                            {key: 'Jimmy'},
+                            {key: 'Julie'},
+                        ]}
+                        renderItem = { {item} => <Text style={ styles.item }>{item.key}</Text>}
+                    />
+                </View>
+            );
+        }
+    }
+    const styles = StyleSheet.create({
+      container: {
+       flex: 1,
+       paddingTop: 22
+      },
+      item: {
+        padding: 10,
+        fontSize: 18,
+        height: 44,
+      },
+    })
+
+    AppRegistry.registerComponent('AwesomeProject', () => FlatListBasics);
+
+    //SectionList
+    import React from 'react'
+    import {AppRegistry,SectionList,StyleSheet,Text,View} from 'react-native'
+    export default class SectionListBasics extends React.Component{
+        render(){
+            return (
+                <View style={styles.container}>
+                    <SectionList
+                        sections={
+                          [
+                            {title: 'D', data: ['Devin']},
+                            {title: 'J', data: ['Jackson', 'James', 'Jillian', 'Jimmy', 'Joel', 'John', 'Julie']},
+                          ]
+                        }
+                        renderItem = { {item}=> <Text style={styles.item}>{item}</Text>}
+                        renderSectionHeader={ {section} => <Text style={styles.sectionHeader}>{section.title}</Text>}
+                    />
+                </View>
+            );
+        }
+    }
+    const styles = StyleSheet.create({
+      container: {
+       flex: 1,
+       paddingTop: 22
+      },
+      sectionHeader: {
+        paddingTop: 2,
+        paddingLeft: 10,
+        paddingRight: 10,
+        paddingBottom: 2,
+        fontSize: 14,
+        fontWeight: 'bold',
+        backgroundColor: 'rgba(247,247,247,1.0)',
+      },
+      item: {
+        padding: 10,
+        fontSize: 18,
+        height: 44,
+      },
+    })
+
+    AppRegistry.registerComponent('AwesomeProject', () => SectionListBasics);
+11.网络
+    使用Fetch
+        React Native提供了和web标准一致的Fetch API，用于满足开发者访问网络的需求。
+        发起网络请求：
+            fetch('https://mywebsite.com/mydata.json')
+            fetch的可选第二个参数：
+            fetch('https://mywebsite.com/endpoint/', {
+              method: 'POST',
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                firstParam: 'yourValue',
+                secondParam: 'yourOtherValue',
+              })
+            })
+            //如果服务器无法识别上面POST的数据格式，可以使用传统的form格式
+            fetch('https://mywebsite.com/endpoint/', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: 'key1=value1&key2=value2'
+            })
+        处理服务器的响应数据：
+            getMoviesFromApiAsync() {
+                return fetch('https://facebook.github.io/react-native/movies.json')
+                  .then((response) => response.json())
+                  .then((responseJson) => {
+                    return responseJson.movies;
+                  })
+                  .catch((error) => {
+                    console.error(error);
+                  });
+              }
+              //使用ES7的语法 async /await
+              async getMoviesFromApi(){
+                try{
+                    let response = await fetch('https://facebook.github.io/react-native/movies.json');
+                    let responseJSON = await response.json();
+
+                    return responseJSON.movies;
+                }catch(error){
+                    console.error(error)
+                }
+              }
+            注意：iOS默认会阻止所有非https得请求。https://segmentfault.com/a/1190000002933776
+    使用其他的网络库
+        React Native已经内置了ajax(XMLHttpRequest)。一些基于ajax封装的第三方库也是可以使用的如：frisbee或axios等。
+        但注意不能不使用jquery，因为jquery中还使用了很多浏览器才有而RN没有的东西。即不是所有web中的
+        ajax库都可以直接使用。
+        var request = new XMLHttpRequest();
+        request.onreadystatechange = (e) => {
+          if (request.readyState !== 4) {
+            return;
+          }
+
+          if (request.status === 200) {
+            console.log('success', request.responseText);
+          } else {
+            console.warn('error');
+          }
+        };
+
+        request.open('GET', 'https://mywebsite.com/endpoint/');
+        request.send();
+        注意：安全机制与网页环境有所不同：在应用中你可以访问任何网站没有跨域的限制。
+    WebSocket支持
+        React Native还支持WebSocket，这种协议可以在单个TCP连接上提供全双工的通信信道。
+        var ws = new WebSocket('ws://host.com/path');
+
+        ws.onopen = () => {
+          // 打开一个连接
+
+          ws.send('something'); // 发送一个消息
+        };
+
+        ws.onmessage = (e) => {
+          // 接收到了一个消息
+          console.log(e.data);
+        };
+
+        ws.onerror = (e) => {
+          // 发生了一个错误
+          console.log(e.message);
+        };
+
+        ws.onclose = (e) => {
+          // 连接被关闭了
+          console.log(e.code, e.reason);
+        };
+12.其他参考资源
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
