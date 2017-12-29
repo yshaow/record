@@ -72,6 +72,7 @@
                         react-native init test
                         react-native run-ios
         Android
+            》JDK 1.8以上
             》AndroidStudio v2.x以上
                 ANDROID_HOME环境变量：
                     vi ~/.bash_profile
@@ -89,6 +90,231 @@
             》测试安装
                 react-native init test
                 react-native run-android
+2.从React到RN
+    》React特点
+        》作为UI
+        》虚拟DOM
+            是React最重要的一个特性，放进内存最小更新视图(差异部分更新 -- diff算法)
+        》数据流 -- 单向数据流
+    》为什么要使用React Native
+        如何在开发成本和用户体验做到更好的平衡？很多时候前端有一种乐观的想法：h5可以替代原生应用(但性能不理想)
+        RN不仅可以使用前段开发的模式来开发应用，还能调用原生应用的UI组件和API。
+3.flexbox布局
+    flexbox是Flexible Box的缩写即弹性盒子布局 -- 主流浏览器都支持。
+
+    flexbox是伸缩容器container和伸缩项目item组成。
+
+    flexbox布局的主体思想是元素可以改变大小以适应可用空间，但可用空间变大Flex元素将伸展大小以填充可用空间，但Flex
+    元素超出可用空间时将自动缩小。总之Flex元素是可以让你的布局根据浏览器的大小变化进行自动伸缩。
+
+    按照伸缩流的方向布局：伸缩容器有主轴和交叉轴(垂直于主轴的次轴)组成，主轴既可以是水平轴也可以是垂直轴。
+
+    flexbox目前还处于草稿状态，所有在使用flexbox布局的时候，需要加上各个浏览器的私有兼容前缀如：-webkit -moz -ms -o等。
+
+    》伸缩容器的属性
+        》display:flex(块级伸缩容器) | inline-flex(行内级伸缩容器)
+        》flex-direction 指定主轴的方向
+            flex-direction：row(默认值 从左到右) | row-reverse(从右到左) | column(从上到下) | column-reverse(从下到上)
+        》flex-wrap 伸缩容器在主轴线方向空间不足的情况下，是否换行以及该如何换行
+            flex-wrap:nowrap(默认值 不换行 flex的项会自动缩小) | wrap(换行 从上到下) | wrap-reverse(换行  从下到上)
+        》flex-flow 是flex-direction和flex-wrap的缩写版本，它同时定义了伸缩容器的主轴和侧轴  其默认值 row nowrap;
+        》justify-content 用来定义伸缩项目 在主轴线的对齐方式
+            justify-content:flex-start(默认值 起始方向) | flex-end(结束位置) | center(中心) | space-between(均匀分布在主轴线上) | space-around(均匀分布在主轴线上，开始位置和结束为止留中间间隙的一半)
+        》align-items 用来定义伸缩项目在交叉轴上的对齐方式
+            align-items:flex-start(默认值 交叉轴起始位置) | flex-end(结束位置) | center(中心) | baseline(基准线) | stretch(沿着交叉轴拉伸铺满)
+
+        》align-content
+            用来调整伸缩项目换行后 在交叉轴上的对齐方式
+            align-content:flex-start(交叉轴的起始位置) | flex-end(结束位置) | center(中心) | space-between(均匀分布在交叉轴上) | space-around(均匀分布在交叉轴上 起始位置和结束位置有间隙) | stretch(默认值)
+
+        伸缩项目的属性
+        》order:整数值
+            定义项目排列顺序，数值越小，排列越靠前，默认值是0
+
+        》flex-grow:整数值
+            定义伸缩项目的放大比例     默认值是0--即表示如果存在剩余空间也不放大
+        》flex-shrink:整数值  当容器大小不足的时候起作用
+            定义伸缩项目的收缩能力，默认值是1
+        》flex-basis:length(如：200px) | auto(默认值)
+            用来设置伸缩项目的基准值，剩余的空间按比率进行伸缩。
+        》flex ：none | flex-grow flex-shrink flex-basis 其中第二个和第三个参数为可选参数 默认值：0 1 auto;
+            是flex-grow flex-shrink flex-basis这三个属性的缩写
+        》align-self : auto | flex-start | flex-end | center | baseline | stretch(伸缩项目在交叉轴方向沾满伸缩容器，
+            如果交叉轴沾满伸缩容器，如果交叉轴为垂直方向的话，只有在不设置高度的情况下才能看到效果。)
+            用来设置单独的伸缩项目在交叉轴上的对齐方式，会覆盖默认的对齐方式
+4.在React Native中使用flexbox
+    RN目前主要支持flexbox的如下6个属性：
+    》alignItems:flex-start(默认值) | flex-end | center| stretch
+        用来定义伸缩项目在交叉轴上的对齐方式
+    》alignSelf:auto | flex-start | flex-end | center | stretch(伸缩项目在交叉轴方向沾满伸缩容器，如果交叉轴为垂直方向的话，只有在不设置高度的情况下才能看到效果)
+        用来设置单独的伸缩项在交叉轴的对齐方式，会覆盖默认的对齐方式。
+    》flex
+        和web端的flex用法一样
+    》flexDirection:row | row-reverse | column(默认值) | column-reverse
+        指定主轴的方向
+    》flexWrap
+        用法和web端一样
+    》justifyContent
+        用法和web端一样
+5.html5与react native的区别
+    》样式
+
+    》元素
+
+    》书写格式
+6.JSX
+    React是由ReactJs与React Native组成，其中ReactJs是Facebook开源的一个前端框架，React Native是ReactJs思想在native上的体现。
+    JSX不是一门新的语言，仅仅是语法糖，允许开发者在js中书写HTML语法，最后每个HTML标签都转化为js代码来运行。
+
+7.ReactJs
+    核心思想：组件化 维护自己的状态和UI，自动重新渲染。多个组件组成了一个ReactJS应用。
+    虚拟DOM：将真实的DOM结构映射成一个JSON的数据结构。
+
+8.调式与打包发布
+    调式：
+        reload js --更新代码之后 reload js会更新app
+        debug js 和chrome结合使用
+        enable live reload --开启自动刷新app 更新代码自动刷新
+        检查元素
+        enable perf monitor -- 查看性能
+        dev settings
+    打包发布：
+        1.生成一个签名密钥
+            keytool -genkey -v -keystore my-release-key.keystore -alias my-key-alias -keyalg RSA -keysize 2048 -validity 10000
+            或
+            keytool -importkeystore -srckeystore my-release-key.keystore -destkeystore my-release-key.keystore -deststoretype pkcs12
+        2.找到路径/android/app/src/main，并在该目录下新建assets文件夹
+        3.在工程目录下将index.android.bundle下载并保存到assets资源文件夹中
+            curl -k 'http://localhost:8081/index.android.bundle' > android/app/src/main/assets/index.android.bundle
+            上面命令是重点，如果assets目录中不存在该文件，则打包的apk在执行时显示空白。
+
+            如果出现：Protocol "'http" not supported or disabled in libcurl错误
+            执行：curl -k "http://localhost:8081/index.android.bundle" > android/app/src/main/assets/index.android.bundle
+
+            使用这个命令：curl -k "http://localhost:8081/index.bundle?platform=android" > android/app/src/main/assets/index.bundle
+
+            如果curl命令不存在，windows安装使用curl命令：http://jingyan.baidu.com/article/a681b0dec4c67a3b1943467c.html
+            将curl.exe放到需要执行curl命令的目录下 也可以设置环境变量
+        4.添加gradle的android keystore配置
+            打包的apk在未签名的情况下，在手机中(非root)是不允许安装的
+
+            在app目录下的build.gradle文件中：
+            //添加签名 -- defaultConfig下面
+            signingConfigs {
+                release {
+                    storeFile file("my-release-key.keystore路径")
+                    storePassword "密码"
+                    keyAlias "keyAlias的名字"
+                    keyPassword "密码"
+
+                    如：
+                    storeFile file("E://projects/record/react-native/myReactNative/my-release-key.keystore")
+                    storePassword "123456"
+                    keyAlias "my-key-alias"
+                    keyPassword "123456"
+                }
+            }
+
+            //在buildTypes中 引用签名配置
+            buildTypes {
+                release {
+                    minifyEnable false
+                    proguardFiles getDefaultProguardFile('......')
+                    //添加下面即可
+                    signingConfig signingConfigs.release
+                }
+            }
+        5.启用Proguard代码混淆来缩小APK文件的大小
+            Proguard是一个Java字节码混淆压缩工具，它可以移除掉React Native Java和它的依赖库中没有被使用到的部分，最终
+            有效的减少APK的大小。
+            重要：启用Proguard之后，你必须再次全面测试你的应用，Proguard有时候需要为你引入的每个原生库做一些额外的配置。
+                  参见app/proguard-rules.pro文件。
+
+            def enableProguardInReleaseBuilds = true //在app/build.gradle
+        6.在**/android/**目录中执行gradle assembleRelease命令，打包后的文件在android/app/build/outputs/apk(debug.apk是开发环境用到的包)目录中，如：app-release.apk。
+          如果打包碰到问题可以先执行 gradle clean清理一下。
+          **unaligned.apk是没有签名的(不使用)**
+
+          安装gradle工具(版本与android/gradle/wrapper/gradle-wrapper.properties下的一致)，并配置环境变量，配置GRADLE_HOME到gradle根目录中，然后把%GRADLE_HOME%/bin(
+          linux或mac是$GRADLE_HOME/bin)加到PATH环境变量中。
+          配置完成之后，运行gradle -v,检测是否安装无误。
+        7.将apk发布到各大应用市场
+9.React Native 组件
+    》View组件
+        它类似于div，支持多层嵌套，支持flexbox布局。
+
+        组件使用步骤：
+            》加载View组件
+                import {View} from 'react-native'
+            》创建组件
+                class ViewTest extends React.Component{
+
+                    render(){
+                        return (
+                            <View style={styles.flex}/>
+                        );
+                    }
+                }
+            》添加样式表
+                import {StyleSheet} from 'react-native'
+                const styles = StyleSheet.create({
+                    flex:{flex:1}
+                });
+
+                外联样式: -- 推荐
+                    <View style={ styles.flex }></View>
+                内联样式：-- 不推荐
+                    <View style={ {flex:1,borderWidth:1} }></View>
+                多个样式:
+                    <View style={ [styles.flex,{flexDirection:'row'}] }></View>
+
+
+                import {PixelRatio} from 'react-native'
+                //PixelRatio.get() -- 获取高清设备的像素比
+                //1/PixelRatio.get() -- 当前设备的最小像素
+                //使用场景：
+                如：borderLeftWidth:1/PixelRatio.get()
+            》注册入口 -- 一个应用，只有一个
+                import { AppRegistry } from 'react-native';
+                import App from './App';
+
+                AppRegistry.registerComponent('myReactNative/*应用名称*/', () => App /*入口组件*/);
+            》外层布局
+
+            》flexbox水平三栏布局
+
+            》上下两栏布局
+
+            》完善效果
+    》Text组件 主要用于显示文本，具有响应性，可以嵌套，可以继承样式
+               内部Text组件可以继承外部Text组件的样式。
+      Text组件的特性：
+        》onPress 点击事件触发
+        》numberOfLines 最多显示多少行，超过用省略号替代
+        》onLayout 获取元素的位置和大小
+    》Navigator组件
+        一个应用往往是由多功能视图组成，多页面的切换：路由或导航。在RN中专门负责视图切换的组件：Navigator(android or iOS)，NavigatorIOS(iOS)。
+
+        导航器对比：
+            Navigator和NavigatorIOS都可以用来管理应用中"场景"的导航。导航器建立了一个路由栈，用来弹出，推入或替换路由状态。他们
+            和HTML5中的history API很类似。主要区别在于NavigatorIOS使用了iOS中的UINavigationController类，而Navigator则完全用js
+            重写了一个类似功能的React组件。因此Navigator可以兼容iOS和android，而NavigatorIOS只能用于iOS。
+
+            NavigatorIOS轻量，受限的API设置，使其相对于Navigator来说不太方便定制。由开源社区主导开发，React Native的官方
+            团队并不在自己的应用中使用它。
+
+            对于大多数正式APP开发，建议使用Navigator -- 使用NavigatorIOS实现复杂的需求容易碰到麻烦。
+
+            导航器通过路由对象来分辨不同的场景。利用renderScene方法，导航栏可以根据指定的路由来渲染场景。
+            可以通过configureScene属性获取指定路由对象的配置信息，从而改变场景的动画或手势。
+            renderScene = {
+                (route,navigator) => {
+                    let Component = route.component;
+                    return <Component {...route.params} navigator={navigator}/>
+                }
+            }
+
+
 
 
 
@@ -370,6 +596,7 @@ http://reactnative.cn/docs/0.49/getting-started.html
             return <Text>Hello world !</Text>
         }
     }
+    注意：React Native内置了对ES2015标准的支持，无需担心兼容问题。
 3.Props属性
     大多数组件在创建时就可以使用各种参数来进行定制。用于定制的这些参数就称为props属性。
     如下面的source以及style：
