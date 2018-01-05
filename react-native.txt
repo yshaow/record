@@ -1270,9 +1270,904 @@ http://reactnative.cn/docs/0.49/getting-started.html
                    android:theme="@style/Theme.AppCompat.Light.NoActionBar">
                  </activity>
 
+                具体查看文档
     》Swift
-
     》Objective-C
+14.使用导航器跳转页面
+    React Native中现有的几个导航组件。如果你刚开始接触那么直接选择React Navigation 。如果你只针对iOS平台开发，并且想和系统原生
+    外观一致，那么可以选择NavigatorIOS。你还可能在很多地方听过Navigator，这个老组件会逐步被React Navigation替代。但是它经历过
+    长期的实践，较为稳定。过去还有一个实验性的导航器组件NavigationExperimental，这个组件已经完全弃用。
+    注意：
+        从.44版本开始，Navigator被从react native的核心组件库中剥离到react-native-deprecated-custom-components的单独模块中。如果
+        你需要使用Navigator则需要先yarn add react-native-deprecated-custom-components安装，然后从这个模块中import，即import {
+        Navigator } from 'react-native-deprecated-custom-components'
+    》React Navigation
+        社区今后主推的方案是一个单独的导航库react-navigation，它的使用十分简单。
+        先安装此库：yarn add react-navigation
+
+        案例：
+        import React,{Component} from 'react'
+        import {View,Text,Button} from 'react-native'
+        import {StackNavigator} from 'react-navigation'
+
+        /**
+         * 其中每个screen组件都可以单独设置导航头选项 如：导航头的标题 还可以使用navigation属性中的方法跳转到别的页面
+         */
+
+        class MainComponent extends React.Component {
+            //设置导航头选项
+            static navigationOptions = {
+                title: '主页',
+            };
+
+            render() {
+                const { navigate } = this.props.navigation;
+                return (
+                    <View>
+                        <Text>主页</Text>
+                        <Button
+                            title="Go to Jane's profile"
+                            //跳转到其他页面
+                            onPress={() => navigate('Profile', { name: 'Jane' }) }
+                        />
+                    </View>
+                );
+            }
+        }
+
+        class ProfileComponent extends React.Component {
+            static navigationOptions = {
+                title: '个人页',
+            };
+            render() {
+                const { navigate } = this.props.navigation;
+                return <Text>profile</Text>
+            }
+        }
+
+
+        const App = StackNavigator({
+            Main:{screen:MainComponent},
+            Profile:{screen:ProfileComponent}
+        });
+
+        class NavigationTest extends Component{
+
+            render(){
+
+                return <App/>
+            }
+        }
+
+        export default NavigationTest
+        //React Navigation的路由写法使其非常容易扩展导航逻辑，或者整合到redux中。由于路由可以嵌套使用，因而开发者可以根据不同页面编写不同
+        //的导航逻辑且彼此互不影响。
+
+        //React Navigation中的视图是原生组件，同时用到了运行在原生线程上的Animated动画库，因此性能表现十分流畅。此外其动画形式和手势都非常便于
+        //定制。
+
+        》其文档 https://reactnavigation.org/docs/intro/
+            》介绍
+                React Navigation源自于React Native社区，基于js的可扩展且易于使用的导航解决方案。
+                React Navigation是来自于Facebook ，Expo和React社区的开发者之间的合作结果：它取代并改进了生态系统中的多个导航库，包括
+                Ex-Navigation,React Native的Navigator和NavigationExperimental组件。
+            》快速入门
+                》安装
+                    npm: npm install --save react-navigation
+                    yarn:yarn add react-navigation
+                》注意
+                    要开始使用React Navigation，必须创建一个导航器。React Navigation带有三个默认的导航器。
+                    StackNavigator -- 为您的应用程序在每个**新屏幕顶部**的屏幕之间的切换
+                    TabNavigator -- 用于设置多个选项卡的屏幕
+                    DrawerNavigator -- 用于设置带抽屉导航的屏幕
+                》创建一个StackNavigator
+                    StackNavigator是最常见的导航形式。
+                    案例：
+                       import React from 'react'
+                       import {View,Text,Button} from 'react-native'
+                       import {StackNavigator} from 'react-navigation'
+
+                       /**
+                        * 创建每屏视图
+                        */
+                       const HomeScreen = ({navigation}) => (
+                           <View style={{flex:1,alignItems:'center',justifyContent:'center'}}>
+                               <Text>Home Screen</Text>
+                               {/*从主屏幕导航到详细信息屏幕*/}
+                               {/*当你使用导航器注册一个组件时，组件会添加一个道具。这个道具驱动我们如何在不同的屏幕之间移动。navigation.navigate*/}
+                               <Button
+                                   onPress={ () => navigation.navigate('Detail')}
+                                   title="Go to detail"
+                               />
+                           </View>
+                       );
+
+                       const DetailScreen = () => (
+                           <View style={{flex:1,alignItems:'center',justifyContent:'center'}}>
+                               <Text>Details Screen</Text>
+                           </View>
+                       );
+
+                       //创建StackNavigator
+                       const RootNavigator = StackNavigator({
+                           //为每屏添加试图组件
+                           Home:{
+                               screen:HomeScreen,
+                               //添加导航标题
+                               navigationOptions:{
+                                   headerTitle:'home'
+                               }
+                           },
+                           Detail:{
+                               screen:DetailScreen,
+                               navigationOptions:{
+                                   headerTitle:'Detail'
+                               }
+                           }
+                       });
+
+                       export default RootNavigator
+                》创建一个TabNavigator
+                    //添加图标 npm install react-native-vector-icons 或yarn add react-native-vector-icons
+                    import React from 'react'
+                    import {View,Text} from 'react-native'
+                    import {TabNavigator} from 'react-navigation'
+                    import Ionicons from 'react-native-vector-icons/Ionicons'
+
+                    const HomeScreen = () => (
+                        <View style={ {flex:1,alignItems:'center',justifyContent:'center'} }>
+                            <Text>Home Screen</Text>
+                        </View>
+                    );
+
+                    const ProfileScreen = () => (
+                        <View style={ {flex:1,alignItems:'center',justifyContent:'center'} }>
+                            <Text>Profile Screen</Text>
+                        </View>
+                    );
+
+                    //创建TabNavigator
+                    const RootTabs = TabNavigator({
+                        Home:{
+                            screen:HomeScreen,
+                            navigationOptions:{
+                                tabBarLabel:'Home',
+                                //添加图标
+                                tabBarIcon: ({tintColor,focused}) => (
+                                    <Ionicons name={ focused ? 'ios-home' : 'ios-home-outline'} size={26} style={{color:tintColor}}/>
+                                )
+                            }
+                        },
+                        Profile:{
+                            screen:ProfileScreen,
+                            navigationOptions:{
+                                tabBarLabel:'Profile',
+                                tabBarIcon:({tintColor,focused}) => (
+                                    <Ionicons
+                                        name={focused ? 'ios-person' : 'ios-person-outline'}
+                                        size={26}
+                                        style={{color:tintColor}}
+                                    />
+                                )
+                            }
+                        }
+                    });
+
+                    export default RootTabs
+                》DrawerNavigator
+                    import React from 'react'
+                    import {DrawerNavigator} from 'react-navigation'
+                    import {View,Text,Button} from 'react-native'
+                    import Ionicons from 'react-native-vector-icons/Ionicons'
+
+                    const HomeScreen = ({navigation}) => (
+                        <View style={{flex:1,alignItems:'center',justifyContent:'center'}}>
+                            <Text>Home Screen</Text>
+                            {/*要打开抽屉，可以从屏幕左边缘向右滑动，也可以用代码实现*/}
+                            <Button title="Open Drawer" onPress={() => navigation.navigate('DrawerToggle')}/>
+                        </View>
+                    );
+
+                    const ProfileScreen = () => (
+                        <View style={{flex:1,alignItems:'center',justifyContent:'center'}}>
+                            <Text>Profile Screen</Text>
+                        </View>
+                    );
+
+
+                    //创建
+                    const RootDrawer = DrawerNavigator({
+                        Home:{
+                            screen:HomeScreen,
+                            navigationOptions:{
+                                drawerLabel:'主页',
+                                drawerIcon: ({tintColor,focused}) => (<Ionicons name={focused ? 'ios-home' : 'ios-home-outline'} size={20} style={{color:tintColor}}/>)
+                            }
+                        },
+                        Profile:{
+                            screen:ProfileScreen,
+                            navigationOptions:{
+                                drawerLabel:'个人',
+                                drawerIcon: ({tintColor,focused}) => (<Ionicons name={focused ? 'ios-person' : 'ios-person-outline'} size={20} style={{color:tintColor}}/>)
+                            }
+                        }
+                    });
+
+                    export default RootDrawer
+            》Hello Mobile导航
+                》设置和安装
+                    react-native init SimpleApp
+                    cd SimpleApp
+                    npm install --save react-navigation
+                    react-native run-android || react-native run-ios
+
+                    或
+                    create-react-native-app SimpleApp
+                    cd SimpleApp
+                    npm install --save react-navigation
+                    npm start
+                》StackNavigation
+
+                》传递参数
+                    navigate除了导航功能指定目标外，我们还可以将传递的参数放入其中。
+                    onPress={() => navigate('Chat', { user: 'Lucy' })}
+
+                》案例
+                    import React from 'react'
+                    import {Text,View,Button} from 'react-native'
+                    import {StackNavigator} from 'react-navigation'
+
+                    class HomeScreen extends React.Component{
+                        static navigationOptions = {
+                            title:'Welcome'
+                        }
+
+                        render(){
+                            const {navigate} = this.props.navigation;
+
+                            return (
+
+                                <View>
+                                    <Text>Hello,Navigation!</Text>
+                                    {/*传递参数*/}
+                                    <Button title="Chat with Lucy" onPress={ () => navigate('Chat',{user:'Lucy'})}/>
+                                </View>
+                            )
+                        }
+                    }
+
+                    class ChatScreen extends React.Component{
+                        static navigationOptions = {
+                            title:'Chat with Lucy'
+                        }
+
+                        render(){
+                            //获取参数
+                            const {params} = this.props.navigation.state;
+
+                            return <View>
+                                <Text>Chat with {params.user}</Text>
+                            </View>
+                        }
+                    }
+
+                    export default SimpleApp = StackNavigator({
+                        Home:{
+                            screen:HomeScreen
+                        },
+                        Chat:{
+                            screen:ChatScreen
+                        }
+                    });
+            》嵌套导航
+                在移动应用中常见的是组合各种各样的导航。React Navigation中的路由和导航器是可组合的。这使得可以为应用定义复杂的导航结构。
+                //NestNavigationTest -- children component
+                import React ,{Component} from 'react'
+                import {TabNavigator} from 'react-navigation'
+                import {Text,View,Button} from 'react-native'
+
+                class RecentChatsScreen extends Component{
+
+                    render(){
+                        const {params} = this.props.navigation.state;
+
+                        return (
+                            <View>
+                                <Text>List of recent chats,from {params ? params.user : 'default'}</Text>
+                                <Button title="Chat with Lucy" onPress={ () => this.props.navigation.navigate('Chat',{user:'Lucy'})}/>
+                            </View>
+                        );
+                    }
+                }
+
+                class AllContactsScreen extends Component{
+
+                    render(){
+                        return (
+                            <View>
+                                <Text>List of all contacts</Text>
+                                <Button title="to Recent" onPress={ () => this.props.navigation.navigate('Recent',{user:'all'})}/>
+                            </View>
+                        )
+                    }
+                }
+
+                const MainScreenNavigator = TabNavigator({
+                    Recent:{screen:RecentChatsScreen},
+                    All:{screen:AllContactsScreen}
+                });
+
+                export default MainScreenNavigator
+
+                //HelloNavigation -- parent component
+                import React from 'react'
+                import {Text,View,Button} from 'react-native'
+                import {StackNavigator} from 'react-navigation'
+                import NestNavigationTest from '../NestNavigationTest'
+
+                class HomeScreen extends React.Component{
+                    static navigationOptions = {
+                        title:'Welcome'
+                    }
+
+                    render(){
+                        const {navigate} = this.props.navigation;
+
+                        return (
+
+                            //避免导航器无法显示  给容器使用flex:1
+                            <View style={{flex:1}}>
+                                <Text>Hello,Navigation!</Text>
+                                {/*传递参数*/}
+                                <Button title="Chat with Lucy" onPress={ () => navigate('Chat',{user:'Lucy'})}/>
+
+                                {/*在组件中嵌套导航器*/}
+                                <NestNavigationTest navigation={this.props.navigation}/>
+                            </View>
+                        )
+                    }
+                }
+
+                /**
+                 * 在组件中嵌套导航器
+                 *
+                 * 为了把NestNavigationTest的导航链接到导航树上，我们需要把NestNavigationTest的router给HomeScreen的router。
+                 * 这使得HomeScreen“导航感知”，即告诉父导航器将导航对象传递下去。由于HomeScreen的router被子组件NestNavigationTest的
+                 * router覆盖，这个子组件将接受navigation props。
+                 */
+                HomeScreen.router = NestNavigationTest.router;
+
+                class ChatScreen extends React.Component{
+                    static navigationOptions = {
+                        title:'Chat with Lucy'
+                    }
+
+                    render(){
+                        //获取参数
+                        const {params} = this.props.navigation.state;
+
+                        return (
+                            <View>
+                                <Text>Chat with {params.user}</Text>
+                            </View>
+                        );
+                    }
+                }
+
+                const SimpleApp = StackNavigator({
+                    Home:{
+                        screen:HomeScreen
+                    },
+                    Chat:{
+                        screen:ChatScreen
+                    }
+                });
+
+                //嵌套导航 -- 将导航器嵌套在屏幕中 该导航器内容将沾满整个屏幕 使用navigate切换视图
+                const NestNavigation = StackNavigator({
+                    Home:{
+                        screen:NestNavigationTest,
+                        navigationOptions:{
+                            title:'My Chats'
+                        }
+                    },
+                    Chat:{screen:ChatScreen}
+                });
+
+                /**
+                 * 嵌套导航器 -- 在组件中嵌套导航器
+                 *
+                 * 有时候需要嵌套包装在组件中的导航器。该导航器只占有屏幕的一部分的情况下非常有用
+                 *
+                 * 为了将子导航器链接到导航树中，需要父导航器的属性navigation
+                 */
+                const NestNavigationComponent = StackNavigator({
+                    Home:{
+                        screen:HomeScreen
+                    },
+                    Chat:{screen:ChatScreen}
+                });
+                export default NestNavigationComponent
+            》配置 Headers
+                配置header仅适用于StackNavigator。
+
+                》设置header title
+                    class ChatScreen extends React.Component{
+                        static navigationOptions = ({navigation}) => ({
+                            title:'Chat with ${navigation.state.params.user}'
+                        })
+                    }
+                》添加一个右边按钮
+                    header的导航选项是允许我们添加一个自定义的右按钮的
+                    static navigationOptions = {
+                        headerRight:<Button title='Info'/>
+                    }
+                    //导航选项能够被navigation prop定义。
+                    //根据route的params的不同来渲染不同的button，并且当button 被点击时执行navigation.setParams。
+                    state navigationOptions = ({navigation}) => {
+                        const {state,setParams} = navigation;
+                        const isInfo = state.params.mode === 'info';
+                        const {user} = state.params;
+
+                        return {
+                            title: isInfo ? `${user}'s Contact Info'` : `Chat with ${user}`,
+                            headerRight:(
+                                <Button title={isInfo ? 'Done' : `${user}'s info'`}
+                                    onPress = { () => setParams({mode:isInfo ? 'none' : 'info'})}
+                                />
+                            )
+                        }
+                    }
+                    //现在header就可以和路由state交互了
+                》header和屏幕组件的交互
+                    有时候，header需要访问屏幕组件的函数或state属性。
+                    class EditInfoScreen extends React.Component{
+                        static navigationOptions = ({navigation}) => {
+                            const {params = {}} = navigation.state;
+                            let headerRight = (
+                                <Button
+                                    title = 'Save'
+                                    onPress = {params.handleSave ? params.handleSave : () => null}
+                                />
+                            );
+
+                            if(params.isSaving) headerRight = <ActivityIndicator/>;
+
+                            return {headerRight}
+                        }
+
+                        state={
+                            nickname:'Lucy jacuzzi'
+                        }
+
+                        _handleSave = () => {
+                            this.props.navigation.setParams({isSaving:true});
+
+                            saveInfo().then( () => {
+                                this.props.navigation.setParams(isSaving:false);
+                            });
+                        }
+
+                        componentDidMount(){
+                            this.props.navigation.setParams({handleSave:this._handleSave});
+                        }
+
+                        render(){
+                            return <TextInput
+                                onChangeText = {(nickname) => this.setState({nickname})}
+                                placeholder={'Nickname'}
+                                value={this.state.nickname}
+                            />
+                        }
+                    }
+                    //注意，由于param handleSave仅仅在组件挂载时设置，它不是立即可用的。因此handleSave被默认为空的函数从而避免组件
+                    //渲染的闪烁。
+
+                    作为一个可替代setParams的方案。你可以考虑使用state状态管理库如：Mobx或Redux。当导航到一个屏幕时，传递一个对象，
+                    该对象包含要呈现的屏幕所需的数据，以及您可能想要调用的函数修改数据、发出网络请求等等。这样，您的屏幕组件和静态
+                    的navbarOptions块都可以访问该对象。当遵循此方法时，请确保考虑深层链接，在只将javascript原语作为导航道具传递到屏
+                    幕的情况下，这是最有效的。如果需要进行深度链接，您可以使用更高阶组件(HOC)将原语转换为屏幕组件所期望的对象。
+            》Navigators
+                Navigators允许你定义应用的导航结构，并且它还允许渲染可配置的相同元素，如：headers以及tab bars。
+                其实，navigators只是普通的React 组件。
+                》内置的Navigators
+                    react-navigation包含了以下函数从而来帮你创建navigators：
+                    》StackNavigator
+                        一次渲染一个屏并提供屏幕切换之间的过渡。当一个新屏幕被打开时，它被放置在栈顶。
+                    》TabNavigator
+                        渲染一个标签栏，让用户在多个屏幕之间切换
+                    》DrawerNavigator
+                        提供一个从屏幕左侧滑动的抽屉。
+                》用Navigators渲染屏幕
+                    这个navigators渲染应用的屏幕仅仅是React组件。
+                    要了解怎样创建屏幕需要学习：
+                    》屏幕的navigation prop -- 允许屏幕分发导航操作 如：打开应用的其他屏
+                    》屏幕的navigationOptions -- 自定义navigator的呈现 如：header的title tab的label。
+                》在顶层组件调用 Navigate
+                    如果你想使用同一级别的navigator，你可以使用ref属性声明。
+                    import {NavigationActions} from 'react-navigation'
+                    const AppNavigator = StackNavigator(SomeAppRouteConfigs);
+                    class App extends React.Component{
+                        someEvent(){
+                            this.navigator && this.navigator.dispatch(
+                                NavigationActions.navigate({routeName:someRouteName});
+                            );
+                        }
+
+                        render(){
+                            <AppNavigator ref={ nav => {this.navigator = nav}}/>
+                        }
+                    }
+                    //注意：这个解决方案只能用在顶级导航器上。
+                》navigation 容器
+                    当navigation prop缺失时，内置的navigators能够自动的成为顶级navigators。这个功能提供了一个透明的navigation 容器，这就是
+                    顶级navigation prop的来源。
+
+                    当渲染一个包含navigators的组件时，navigation prop时可选的。当它缺失时，这个容器自动管理自己的navigation state，处理url、
+                    外部链接和android 返回键等。
+
+                    为了达到上面效果，这个内置navigators有上面功能。因为它们使用了createNavigationContainer。通常navigators需要一个navigation
+                    prop才能运行。
+
+                    顶级navigators接受下列属性：
+                    onNavigationStateChange(prevState, newState, action);
+                    这个函数在navigator state 改变时被调用。默认情况下会在控制台打印state的改变。
+                    uriPrefix -- 应用的url前缀可能会被处理，这将在深层次的链接中用来提取router。
+            》StackNavigator
+                提供了一个方式使得应用从一个屏到新屏的过渡，新屏将被放置在栈顶。
+                默认情况下StackNavigator被配置为iOS和android是相似的。在iOS中新屏从屏幕右侧滑入，android从底部进入屏幕。
+                在iOS中StackNavigator也可以配置成新屏从底部滑入。
+
+                案例：
+                class MyHomeScreen extends React.Component{
+                    static navigationOptions = {
+                        title:'Home'
+                    }
+
+                    render(){
+                        return (
+                            <Button
+                                onPress={ ()=> this.props.navigation.navigate('Profile',{name:'Lucy'})}
+                                title="Go to Lucy's profile"
+                            />
+                        );
+                    }
+                }
+
+                const ModalStack = StackNavigator({
+                    Home:{
+                        screen:MyHomeScreen
+                    },
+                    Profile:{
+                        path:'people/:name',
+                        screen:MyProfileScreen
+                    }
+                });
+
+
+                》API解析
+                    StackNavigator(RouteConfigs,StackNavigatorConfig);
+                    》RouteConfigs
+                        这个路由配置对象是从route的name 到 route的配置的一个映射，这将告诉navigator怎样呈现这个route。
+                        {
+                            //为每个可以导航到的screen，创建如下一样的入口。
+                            Profile:{
+                                screen:ProfileScreen,//ProfileScreen是React组件，这将是该屏的主要内容，当该组件被StackNavigator加载后，它将得到navigation prop。
+                                path:'people/:name',//可选的 当深度链接或利用react-navigation在web应用中时，该属性被使用 。 可以提取route的action以及params。
+                                navigationOptions:({navigation}) => ({//可选的 会覆盖屏幕本身的 navigationOptions
+                                  title:`${navigation.state.params.name}'s Profile'`,
+                                })
+                            }
+                        }
+                    》StackNavigatorConfig
+                        {
+                            //router 选项
+                            initialRouteName,//设置stack中的默认screen，必须是RouteConfigs的一个key
+                            initialRouteParams,//初始化route的参数
+                            navigationOptions,//所有屏幕的默认navigation options
+                            paths,//覆盖RouteConfigs中设置的path的映射
+
+                            //视觉 选项
+                            mode,//定义渲染和过渡的样式 card(利用标准的iOS和android的屏幕过渡 默认值) modal(让屏幕从底部滑动，这是一个常见的iOS模式。只在iOS上运行，对Android无效。)
+                            headerMode,//指定怎样渲染header ，其值如下：
+                                》float 在屏幕更改时渲染保留在顶部的单个header和动画。这是iOS上的常见模式
+                                》screen 每个屏幕都有一个header，header与屏幕一起淡入淡出。这是Android上的常见模式
+                                》none 没有header将被渲染
+                            cardStyle,//使用这个属性来覆盖或扩展stack中单个卡片的默认样式
+                            transitionConfig:function(transitionProps,prevTransitionProps,isModal){//值为一个函数，并返回一个合并了默认屏过渡类型的对象
+                                //transitionProps -- 新屏的过渡props
+                                //prevTransitionProps -- 旧屏的过渡prop
+                                //isModal -- Boolean  指定屏幕是否为modal
+                            },
+                            onTransitionStart，//当卡片过渡动画开始时调用的函数
+                            onTransitionEnd//当卡片过渡动画结束时调用的函数
+                        }
+                    》navigationOptions属性
+                        {
+                            title,//String (StackNavigator中的headerTitle,TabNavigator中的tabBarLabel，DrawerNavigator中的drawerLabel中的备用)
+                            header,//React Element 或 接受HeaderProps参数的函数，该函数返回React Element，用于显示header，如果需要隐藏header则设置为null
+                            headerTitle,//String,React Element或React组件使用这个header，其默认值为title值。当一个组件被使用，它将接受allowFontScaling、style、children props，这个title字符串通过children传递
+                            headerTitleAllowFontScaling,//headerTitle是否被缩放 默认true
+                            headerBackTitle,//iOS上后退按钮的title字符串，如果为null表示不可用。默认为上一个屏幕的headerTitle
+                            headerTruncatedBackTitle,//当headerBackTitle不适合于当前屏幕时的返回按钮的title字符串。默认'Back'
+                            headerRight,//显示在header右边的React Element
+                            headerLeft,//显示在header左边的React Element或组件 当一个组件被使用时，它将接收一些props 如：onPress title titleStyle等
+                            headerStyle,//header的样式对象
+                            headerTitleStyle,//title组件的样式对象
+                            headerBackTitleStyle，//返回title的样式对象
+                            headerTintColor,//header的颜色
+                            headerPressColorAndroid,//点击header的颜色 仅仅android>=5.0支持
+                            gesturesEnabled，//是否可以使用手势来消除此屏幕。在iOS上默认为true，在Android上为false。
+                            gestureResponseDistance：{//手势识别的距离
+                                horizontal： number - 水平方向的距离。默认为25。
+                                vertical：number - 垂直方向的距离。默认为135
+                            }，
+                            gestureDirection ，//String 重置关闭手势的方向 default -- 正常的行为 inverted-- 从右到左滑动
+                        }
+                    》Navigator Props
+                        通过StackNavigator(...)的方式创建的navigator组件有如下属性：
+                        》screenProps -- 将额外的参数传递给子屏幕 如：
+                            const SomeStack = StackNavigator({...});
+
+                            <SomeStack screenProps={
+                                //这个属性将被传递到screen组件中
+                            }/>
+            》TabNavigator
+                利用TabRouter可以更容易的设置有多个选项卡的屏。
+
+                class MyHomeScreen extends React.Component{
+                    static navigationOptions = {
+                        tabBarLabel:'Home',
+                        tabBarIcon:({tintColor}) => (
+                            <Image
+                                source={ require('./chats-icon.png')}
+                                style={[styles.icon,{tintColor:tintColor}]}
+                            />
+                        )
+                    }
+
+                    render(){
+
+                        return (
+                            <Button
+                                onPress = { () => this.props.navigation.navigate('Notifications') }
+                                title='Go to notifications'
+                            />
+                        );
+                    }
+                }
+
+                class MyNotificationsScreen extends React.Component{
+                    static navigationOptions = {
+                        tabBarLabel:'Notifications',
+                        tabBarIcon:({tintColor}) => (
+                            <Image
+                                source={require('./notif-icon.png')}
+                                style={[styles.icon,{tintColor:tintColor}]}
+                            />
+                        )
+                    }
+
+                    render(){
+                        return (
+                            <Button
+                                onPress = { ()=> this.props.navigation.goBack()}
+                                title='Go back home'
+                            />
+                        );
+                    }
+                }
+
+                const styles = StyleSheet.create({
+                    icon:{
+                        width:26,
+                        height:26,
+                    }
+                });
+
+                const MyApp = TabNavigator({
+                    Home:{
+                        screen:MyHomeScreen
+                    },
+                    Notifications:{
+                        screen:MyNotificationsScreen
+                    }
+                },{
+                    tabBarPosition:'top',
+                    animationEnabled:true,
+                    tabBarOptions:{
+                        activeTintColor:'#e91e63'
+                    }
+                });
+
+                》API 解析
+                    TabNavigator(RouteConfigs,TabNavigatorConfig);
+                    》RouteConfigs
+                        其配置和StackNavigator Route configs 一样
+
+                        》navigationOptions 配置属性：
+                            {
+                                title//headerTitle 与tabBarLabel的备用字段
+                                tabBarVisible//是否显示tab bar  默认为true
+                                swipeEnabled//是否启用tabs之间的滑动，不设置则使用TabNavigatorConfig的选项值
+                                tabBarIcon //添加图标 React Element 或接受focused(boolean) tintColor(string)参数的函数 返回一个React Node
+                                tabBarLabel //String || React Element || ({focused:boolean,tintColor:string}) => { return React.Node } 如不设置即undefined 则使用title的值
+                                tabBarOnPress:function({previousScene,scene,jumpToIndex }){// onPress事件回调函数
+                                    //previousScene:{route, index} 离开的屏
+                                    //scene: { route, index }
+                                    //jumpToIndex -- 函数 执行导航的函数
+                                }
+                            }
+                    》TabNavigatorConfig
+                        {
+                            tabBarComponent，//tabBar使用的组件 iOS默认 TabBarBottom ，android默认 TabBarTop
+                            tabBarPosition,//tabBar的位置 其值'top' ,'bottom'
+                            swipeEnabled，//是否允许tabs 屏幕之间的滑动
+                            animationEnabled，//是否启用动画 在tabs切换时
+                            configureTransition，//其值是一个函数 接收currentTransitionProps  和 nextTransitionProps参数，返回一个配置对象用于描述tabs之间的动画
+                            initialLayout:{//避免延时帧
+                                    width,
+                                    height
+                            },
+                            tabBarOptions:{//配置tab bar
+                                //为TabBarBottom组件(默认是iOS上的tab bar)的配置如下
+                                activeTintColor,//激活tab是 Label和icon的颜色
+                                activeBackgroundColor，//激活tab的背景颜色
+                                inactiveTintColor，//未激活的tab的 Label和icon的颜色
+                                inactiveBackgroundColor，//未激活tab的背景颜色
+                                showLabel，//是否显示label  默认true
+                                style，//tab bar的样式对象
+                                labelStyle，//tab label的样式对象
+                                tabStyle,//tab的样式对象
+                                allowFontScaling，//label 字体是否能够缩放  默认true
+
+                                //为TabBarTop(android上的tab bar)组件的配置
+                                activeTintColor//tab激活的label和icon颜色
+                                inactiveTintColor//tab未激活的label icon颜色
+                                showIcon//是否显示icon 默认false
+                                showLabel //是否显示label 默认true
+                                upperCaseLabel//是否让label转成大写  默认true
+                                pressColor //按下时的波纹颜色 Android >= 5.0 only
+                                pressOpacity //按下时波纹透明度 iOS and Android < 5.0 only
+                                scrollEnabled //是否可以滚动tab
+                                tabStyle //tab的样式对象
+                                indicatorStyle //tab 下面line的样式对象
+                                labelStyle //label样式对象
+                                iconStyle //tab icon的样式对象
+                                style //tab bar样式对象
+                                allowFontScaling //是否允许label 字体缩放
+                            },
+                            initialRouteName，//需要首次加载的tab  其值routeName
+                            order，//tabs的顺序， 其值是routeName的数组
+                            paths，//为路径配置提供一个routeName映射，它覆盖了在routeConfigs中设置的路径
+                            backBehavior，//后退按钮是否会导致标签切换到初始tab，如果是设置为initialRoute(默认值)，否则设置为'none'
+                        }
+                    》navigator props
+                        被TabNavigator创建的navigator组件有如下属性：
+                        screenProps -- 传递给子屏幕的额外属性和navigation 选项
+
+                        const TabNav = TabNavigator({});
+                        <TabNav screenProps={}/>
+            》DrawerNavigator
+                使用DrawerNavigator可以更容易创建抽屉导航。
+
+                class MyHomeScreen extends React.Component{
+                    static navigationOptions = {
+                        drawerLabel:'Home',
+                        drawerIcon:({tintColor}) => (
+                            <Image source={require('./chats-icon.png')} style={[styles.icon,{tintColor}]}/>
+                        )
+                    }
+
+                    render(){
+                        return (
+                            <Button
+                                onPress={ () => this.props.navigation.navigate('Notifications')}
+                                title='Go to notifications'
+                            />
+                        );
+                    }
+                }
+
+                class MyNotificationsScreen extends React.Component{
+                    static navigationOptions = {
+                        drawerLabel:'Notifications',
+                        drawerIcon:({tintColor}) => (
+                            <Image source={require('./notif-icon.png')} style={[styles.icon,{tintColor}]}/>
+                        )
+                    }
+
+                    render(){
+                        return (
+                            <Button onPress={() => this.props.navigation.goBack()} title='Go back home'/>
+                        );
+                    }
+                }
+
+                const styles = StyleSheet.create({
+                    icon:{
+                        width:24,
+                        height:24
+                    }
+                });
+
+                const MyApp = DrawerNavigator({
+                    Home:{
+                        screen:MyHomeScreen
+                    },
+                    Notifications:{
+                        screen:MyNotificationsScreen
+                    }
+                });
+
+                //打开抽屉卡片
+                this.props.navigation.navigate('DrawerOpen');
+                //关闭抽屉卡片
+                this.props.navigation.navigate('DrawerClose');
+                //切换抽屉卡片
+                this.props.navigation.navigate('DrawerToggle');
+
+                》API
+                    DrawerNavigator(RouteConfig,DrawerNavigatorConfig);
+
+                    》RouteConfigs
+                        和StackNavigator一样的
+                    》DrawerNavigatorConfig
+                        {
+                            drawerWidth //抽屉的宽度 数值或返回数值的函数
+                            drawerPosition//抽屉的位置 默认left 其值left right
+                            contentComponent //抽屉的渲染内容组件。如 导航items。该组件接收navigation prop 默认是DrawerItems组件
+                            contentOptions:{//配置抽屉内容
+                                //针对DrawerItems 的抽屉条目的配置
+                                items //routes数组
+                                activeItemKey //激活route的key
+                                activeTintColor //激活label 和 icon的颜色
+                                activeBackgroundColor //激活label的背景颜色
+                                inactiveTintColor //未激活项 label icon的颜色
+                                inactiveBackgroundColor //未激活项 的背景颜色
+                                onItemPress(route)//点击item的执行函数
+                                itemsContainerStyle //内容容器的样式对象
+                                itemStyle //条目的样式对象
+                                labelStyle //label的样式对象
+                                iconContainerStyle //图标容器View的样式对象
+                            }
+                            useNativeAnimations //是否启用原生动画 默认true
+                            drawerBackgroundColor //抽屉的背景颜色  默认是white
+                            initialRouteName //初始化routeName
+                            order //导航条目的顺序  routeNames组成的数组
+                            paths //它将覆盖routeConfigs中设置的path
+                            backBehavior //返回按钮的行为 initialRoute(默认值) -- 回到初始页面 none -- 退出应用程序
+                        }
+                    》contentComponent -- 自定义抽屉内容的属性
+                        这个抽屉的默认组件(DrawerItems)是可滚动的，并且只包含了RouteConfigs中路由的链接。您可以轻松地覆盖默认组件，
+                        在抽屉中添加页眉、页脚或其他内容。默认情况下，抽屉是可滚动的，支持iPhone X安全区。如果您自定义内容，
+                        请确保将内容包装在一个SafeAreaView中:
+
+                        import {DrawerItems,SafeAreaView} from 'react-navigation'
+                        const CustomDrawerContentComponent = (props) => (
+                          <ScrollView>
+                            <SafeAreaView style={styles.container} forceInset={{ top: 'always', horizontal: 'never' }}>
+                              <DrawerItems {...props} />
+                            </SafeAreaView>
+                          </ScrollView>
+                        );
+
+                        const styles = StyleSheet.create({
+                          container: {
+                            flex: 1,
+                          },
+                        });
+
+
+
+
+
+
+
+
+
+
+
 
 
 
