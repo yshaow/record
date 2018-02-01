@@ -12,8 +12,16 @@ import React from 'react'
  //import AndroidComponent from './components/NavigationTest'
  //import AndroidComponent from './components/StackNavigatorTest'
    //import AndroidComponent from './components/TabNavigatorTest'
-import AndroidComponent from './components/DrawerNavigatorTest'
+//import AndroidComponent from './components/DrawerNavigatorTest'
 //import AndroidComponent from './components/HelloNavigation'
+// import AndroidComponent from './components/NavigationActionsTest'
+// import AndroidComponent from './components/DeepLinkTest'
+// import AndroidComponent from './components/ScreenTrackTest'
+// import AndroidComponent from './components/TabRouterTest'
+// import AndroidComponent from './components/AnimatedTest'
+ //import AndroidComponent from './components/LayoutAnimateTest'
+import AndroidComponent from './components/AccessibleTest'
+
 class Android extends React.Component{
 
     render(){

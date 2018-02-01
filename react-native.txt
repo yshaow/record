@@ -2112,6 +2112,15 @@ http://reactnative.cn/docs/0.49/getting-started.html
 
                     》RouteConfigs
                         和StackNavigator一样的
+
+                        》navigationOptions属性
+                            title -- headerTitle 和 drawerLabel的备用属性
+                            drawerLabel -- String 、 React Element 或 一个接收({focused:boolean,tintColor:string})参数的函数，该函数返回React.Node。当是undefined时，使用title字段。
+                            drawerIcon -- React Element 或 一个接收({focused:boolean,tintColor:string})参数的函数，该函数返回React.Node。
+                            drawerLockMode -- 指定抽屉的锁定模式。这也可以通过在顶级路由器上使用screenProps.drawerLockMode动态更新。
+                                        》unlocked (默认值) 抽屉会响应（打开/关闭）触摸手势。
+                                        》locked-closed 抽屉会保持关闭，不会对手势做出反应。
+                                        》locked-open 抽屉会保持打开状态，不会对手势做出反应。抽屉可能仍然以编程方式打开和关闭（openDrawer/ closeDrawer）。
                     》DrawerNavigatorConfig
                         {
                             drawerWidth //抽屉的宽度 数值或返回数值的函数
@@ -2157,6 +2166,2607 @@ http://reactnative.cn/docs/0.49/getting-started.html
                             flex: 1,
                           },
                         });
+                    》Navigator Props
+                        通过DrawerNavigator创建的navigator 组件有下面属性：
+                        screenProps -- 将额外的选项传递给子屏
+
+                        const DrawerNav = DrawerNavigator({
+                            //config
+                        });
+
+                        <DrawerNav screenProps={}/>
+
+                    》嵌套的DrawerNavigation
+                        请注意，如果您嵌套DrawerNavigation，则抽屉会显示在父导航的下方。
+            》navigation prop
+                》应用的每一个屏都将接收一个navigation的属性，它包含下面属性：
+                    》navigate(routeName,params,action) 链接到其他屏
+                        》routeName --已经注册过的router 名称 String
+                        》params -- 传递到目标屏的参数    Object
+                        》action -- 需要在child 屏幕中运行的action
+
+                        class HomeScreen extends React.Component{
+                            render(){
+                                const {navigate} = this.props.navigation;
+
+                                return (
+                                    <View>
+                                        <Button onPress={ () => navigate('Profile',{name:'Brent'})} title='跳转'/>
+                                    </View>
+                                )
+                            }
+                        }
+
+                    》state  当前屏的routes
+                        通过this.props.navigation.state可以访问屏幕的路线。它包含下列属性：
+                        {
+                            routeName:'profile',//router 名称
+                            key:'main0',//用于排序路由得唯一标识
+                            params:{hello:'world'}//当前屏幕的参数对象
+                        }
+
+                        class ProfileScreen extends React.Component{
+                            render(){
+                                const {state} = this.props.navigation;
+                                return (
+                                    <Text>Name:{state.params.name}</Text>
+                                );
+                            }
+                        }
+                    》setParams  改变route的params
+                        setParams允许改变route的params。
+
+                        class ProfileScreen extends React.Component{
+                            render(){
+                                const {setParams} = this.props.navigation;
+
+                                return (
+                                    <Button onPress={()=> setParams({name:'Lucy'})} title="Set title name to 'Lucy'"/>
+                                );
+                            }
+                        }
+
+                    》goBack 返回到上一个屏
+                        可选参数：提供一个key，指定要返回的route的起始屏幕。默认返回上一次的屏(不填key 即起始屏幕是当前屏幕 返回当前屏幕的上一个屏幕)。
+                        如：navigation.goBack(SCREEN_KEY_B) // will go to screen A FROM screen B
+
+                        class HomeScreen extends React.Component{
+                            render(){
+                                const {goBack} = this.props.navigation;
+
+                                return (
+                                      <View>
+                                        <Button
+                                          onPress={() => goBack()}
+                                          title="Go back from this HomeScreen"
+                                        />
+                                        <Button
+                                          onPress={() => goBack(null)}
+                                          title="Go back anywhere"
+                                        />
+                                        <Button
+                                          onPress={() => goBack('screen-123')}
+                                          title="Go back from screen-123"
+                                        />
+                                      </View>
+                                     )
+                            }
+                        }
+
+                    》dispatch   向router发送一个action
+
+                        利用dispatch 发送任何navigation action给router。其他屏幕能够调用action。
+                        注意：如果你想dispatch react-navigation actions,你需要使用该库自己提供的action creators。
+
+                        import {NavigationActions} from 'react-navigation'
+                        const navigateAction = NavigationActions.navigate({
+                            routerName:'Profile',
+                            params:{},
+
+                            //navigate能够嵌套navigate action ，它将在子router中运行
+                            action:NavigationActions.navigate({routeName:'SubProfileRoute'});
+                        });
+                        this.props.navigation.dispatch(navigateAction);
+
+
+                    注意：navigation属性被分发到每一个导航组件，包括navigator本身。navigation可能没有navigate goBack等帮助函数，仅仅只有state
+                    和dispatch。为了navigation可以使用navigate，你需要使用dispatch一个action creator。
+            》Navigation Actions
+                所有的navigation actions返回一个对象，它能够通过navigation.dispatch()分发给router。
+                注意：如果你想dispatch react-navigation actions，你应该使用本库的 action creator 。
+
+                这些actions支持下面属性：
+                    Navigate -- 导航到其他的route
+                        这个navigate将以navigate操作的结果更新当前state。
+
+                        import {NavigationActions} from 'react-navigation'
+                        const navigateAction = NavigationActions.navigate({
+                            routeName:'Profile',//String 必须的 在应用程序的路由器中某处注册的目的地routeName
+                            params:{},//Object 可选的 route参数
+                            //Object 可选的 (高级)子操作在子路由器中运行，如果屏幕是导航器。该文档中描述的任何一个操作都可以设置为子操作
+                            action:NavigationActions.navigate({routeName:'SubProfileRoute'})
+                        });
+                        this.props.navigation.dispatch(navigateAction);
+
+                    Reset -- 用一个新的state替换当前state
+                        reset action 将用多个actions的执行结果，替换整个navigation state。
+                        支持如下属性:
+                        》index Number 必须的  navigation state中routes 中激活路由的索引
+                        》actions Array 必须的 navigation Actions的数组
+                        》key String or null 可选的 如果设置 被给的key的navigator将被重置，如果设置null root navigator将被重置。
+
+                        import {NavigationActions} from 'react-navigation'
+                        const resetAction = NavigationActions.reset({
+                            index:0,
+                            actions:[NavigationActions.navigate({ routeName: 'Profile'})]
+                        });
+                        this.props.navigation.dispatch(resetAction);
+
+                        //使用index参数
+                        这个index参数，用于指定当前激活的route。
+                        如：有一个基础导航栈(Profile和Settings)。为了重置state到激活屏幕Settings，但是栈定时Profile，即index为1。
+                        import { NavigationActions } from 'react-navigation'
+
+                        const resetAction = NavigationActions.reset({
+                          index: 1,
+                          actions: [
+                            NavigationActions.navigate({ routeName: 'Profile'}),
+                            NavigationActions.navigate({ routeName: 'Settings'})
+                          ]
+                        })
+                        this.props.navigation.dispatch(resetAction)
+
+                    Back -- 返回前一个state
+                        返回上一个屏幕并关闭当前屏幕。back action有一个可选参数。
+                        》key String or null 可选 如果设置，将从当前key位置返回上一个屏幕。如果null，将返回到任何位置。
+
+                            import {NavigationActions} from 'react-navigation'
+                            const backAction= NavigationAction.back({
+                                key:'Profile'
+                            });
+                            this.props.navigation.dispatch(backAction);
+
+                    Set Params -- 为route设置参数
+                        当dispatch setParams action时，这个router将产生一个新的state，去改变key指定的route的params。
+                        》params Object 必须的，新的params被合并到现有的路由params中
+                        》key String 必须的 需要设置新params的route key。
+                        import { NavigationActions } from 'react-navigation'
+
+                        const setParamsAction = NavigationActions.setParams({
+                          params: { title: 'Hello' },
+                          key: 'screen-123',
+                        })
+                        this.props.navigation.dispatch(setParamsAction)
+
+                    Init -- 如果state是undefined 它将初始化state。
+                    这个action creator定义了toString()来返回action type。这将是很有用的对于redux库。
+            》navigation options
+                每个屏幕可以配置几个方面，说明它如何在父导航器中呈现。
+
+                两种方式指定每一个option：
+                》静态配置 -- 每个导航选项都可以直接分配
+                    class MyScreen extends React.Component{
+                        static navigationOptions = {
+                            title:'Great'
+                        }
+                    }
+                》动态配置
+                    这个options可以是接收props参数的函数，该函数返回一个navigation options对象。它将覆盖route-defined和navigator-defined的
+                    navigationOptions。
+                        》navigation 对象
+                        》screenProps 从navigator组件传递的prop
+                        》navigationOptions 默认和以前的options
+
+                        class Profile extends React.Component{
+                            static navigationOptions = ({navigation,screenProps,navigationOptions}) =>({
+                                title: navigation.state.params.name + "'s Profile!",
+                                headerRight: <Button color={screenProps.tintColor} {...} />,
+                            })
+                        }
+                        //screenProps在渲染时被传入，如果上面组件在SimpleApp navigator 下，那么screenProps.tintColor将取到值
+                        <SimpleApp
+                          screenProps={{tintColor: 'blue'}}/>
+
+
+                》通用的navigation options
+                    title属性在每个navigator之间都是通用的。它用来设置屏幕的title string。
+                    class MyScreen extends React.Component{
+                        static navigationOptions = {
+                            title:'Great'
+                        }
+                    }
+                    title属性和其他仅仅用于navigator view的属性是不同的，它可以用作浏览器和APP的title。
+
+                》默认 navigation options
+                    定义navigationOptions 在screen上是非常常见的。但是有时候也定义navigationOptions 在navigator。
+                    TabNavigator({},{
+                        navigationOptions: {
+                            headerTintColor: 'blue',
+                        }
+                    });
+                》navigation options选项
+                    参考：
+                        drawer navigator
+                        stack navigator
+                        tab navigator
+            》自定义Navigators
+                navigator是具有路由功能的 任何React组件。
+                //下面是一个基本案例，他使用router API使得激活组件渲染。
+                class MyNavigator extends React.Component{
+                    static router = MyRouter;
+                    render(){
+
+                        const {state,dispatch} = this.props.navigation;
+                        const {routes,index} = state;
+                        //根据state获取组件
+                        const Component = MyRouter.getComponentForState(state);
+                        //获取激活子路由的状态
+                        let childNavigation = {dispatch,state:routes[index]};
+                        childNavigation = addNavigationHelpers(childNavigation);
+
+                        //返回组件
+                        return <Component navigation={childNavigation}/>
+                    }
+
+                }
+
+                》Navigation prop
+                    navigator传递的 navigation prop仅仅包括 state 和 dispatch。这是navigator的当前state和发送action 请求的事件通道。
+
+                    所有的navigators都是受控制的组件：他们总是显示props.navigation.state对应的组件，并且通过props.navigation.dispatch
+                    发送action来改变state。
+
+                    navigators可以通过自定义路由来为父navigators定义行为。如：一个navigator是可以通过router.getStateForAction返回null
+                    来阻止导航的激活，或者navigator能够自定义URL来覆盖router.getActionForPathAndParams 和 router.getStateForAction生成
+                    的相关路由信息。
+
+                》navigation state
+                    这个navigation state被传入navigator's prop.navigation.state。
+                    //state结构如下
+                    {
+                        index:1,//标识路由数组中激活的route
+                        routes:[
+                            {
+                                routeName:'MyRouteName',//路由名称  用于关联组件
+                                key:'myroute-123',//该route的唯一标识，用于routes数组中的排序
+                                ...customRouteData,//routes的数据 包括params
+                            },
+                            ...moreRoutes
+                        ]
+                    }
+                》navigation dispatchers
+                    一个navigator能够dispatch actions，如：'Go back'；
+                    如果dispatcher的返回值： 成功 -- 返回true 失败 -- 返回false
+                》建立自定义导航的API
+                    为了帮助开发者实现自定义navigators，React Navigation提供了下面工具：
+                    》createNavigator
+                        该方法将router和navigation view以标准的方式组合在一起。
+                        const MyApp = createNavigator(MyRouter)(MyView);
+                        等同于
+                        const MyApp = ({navigation}) => (
+                             <MyView router={MyRouter} navigation={navigation} />
+                        );
+                        MyApp.router = MyRouter;
+                    》addNavigationHelpers
+                        添加navigation的所有功能属性。
+                    》createNavigationContainer
+                        如果你想让你的导航器作为顶级组件可用,(没有导航 prop支持传递),
+                        您可以使用createNavigationContainer。当导航prop丢失时，这个实用程序
+                        将使您的导航器充当顶级导航器。它将管理应用程序状态，并与应用程序级的导航功能集成，
+                        比如处理传入和传出链接，以及Android back按钮行为。
+                》Redux集成
+                    》redux 集成概述
+                        》为了使用redux管理你的导航state，你可以传递navigation prop到navigator。
+                        》一旦传递了自己的navigation prop，默认的navigation prop将被销毁。所以navigation默认所带有的属性也需要手动传入。
+                        》这个state将由reducer分配，并且dispatch将使用redux默认的dispatch。因此你能够通过this.props.navigation.dispatch(action)
+                        dispatch正常的redux action。reducer将更新navigation state当dispatch action时。这个新的navigation state将被分发给navigator.
+                    》redux 集成详情
+                        使用redux，应用state被reducer定义。没有navigation router都有一个reducer，调用getStateForAction。
+
+                        import {addNavigationHelpers } from 'react-navigation'
+                        const AppNavigator = StackNavigator(AppRouteConfigs);
+                        const initialState = AppNavigator.router.getStateForAction(AppNavigator.router.getActionForPathAndParams('Login'));
+
+                        const navReducer = (state = initialState,action) =>{
+                            const nextState = AppNavigator.router.getStateForAction(action,state);
+
+                            return nextState || state;
+                        }
+
+                        const appReducer = combineReducers({
+                            nav:navReducer
+                        });
+
+                        class App extends React.Component{
+                            render(){
+                                return (
+                                    <AppNavigator
+                                        navigation={addNavigationHelpers({
+                                            dispatch:this.props.dispatch,
+                                            state:this.props.nav
+                                        })}
+                                    />
+                                );
+                            }
+                        }
+
+                        const mapStateToProps = state => ({nav:state.nav});
+
+                        const AppWithNavigationState = connect(mapStateToProps)(App);
+
+                        const store = createStore(appReducer);
+
+                        class Root extends React.Component{
+                            render(){
+                                return (
+                                      <Provider store={store}>
+                                        <AppWithNavigationState />
+                                      </Provider>
+                                );
+                            }
+                        }
+                        //上面操作之后，navigation state将被存储在redux store中，可以使用redux dispatch来操作
+                        //navigation actions。
+
+                        注意：当navigator被赋予navigation prop，它将放弃其内部state的维护，这意味着你需要持久的维护state来处理深层次的链接。
+                        如：android的back botton。
+
+                        当导航器嵌套时，navigation state将自动从一个navigator 传递到另外一个navigator。为了child navigator能够接受到父navigator
+                        state，它应该被定义为一个screen。
+                        如：
+                        const AppNavigator = StackNavigator({
+                            Home:{screen:MyTabNavigator }
+                        });
+                        //一旦使用connect 处理AppNavigator之后，MyTabNavigator将自动接收navigation state作为navigation prop。
+                    》案例 https://github.com/react-navigation/react-navigation/tree/master/examples/ReduxExample
+
+                    》处理android 上的回退按钮
+                        通过使用下面的代码片段，您的导航组件将会注意到后退按钮的操作，并将正确地与您的堆栈交互。这在Android上非常有用。
+                        import React from 'react';
+                        import {BackHandler} from 'react-native'
+                        import {addNavigationHelper,NavigationActions} from 'react-navigation'
+
+                        class AppNavigation = TabNavigator({
+                            Home:{screen:HomeScreen},
+                            Settings:{screen:SettingScreen}
+                        });
+
+                        class ReduxNavigation extends React.Component{
+                            componentDidMount(){
+                                BackHandler.addEventListener("hardwareBackPress", this.onBackPress);
+                            }
+
+                            componentWillUnmount() {
+                                BackHandler.removeEventListener("hardwareBackPress", this.onBackPress);
+                            }
+
+                            onBackPress = () => {
+                                const {dispatch,nav} = this.props;
+
+                                if(nav.index === 0){
+                                    return false;
+                                }
+
+                                dispatch(NavigationActions.back());
+                                return true;
+                            }
+
+                            render() {
+                                const { dispatch, nav } = this.props;
+                                const navigation = addNavigationHelpers({
+                                  dispatch,
+                                  state: nav
+                                });
+
+                                return <AppNavigation navigation={navigation} />;
+                              }
+                        }
+                》Web集成
+                    react navigation routers工作在web上，允许使用native app共享navigation逻辑。当前绑定在react-navigation上的视图
+                    只工作在react native,但是在未来可能改变，如：https://github.com/lelandrichardson/react-primitives
+                》深度链接
+                    在应用中处理外部的URL。
+
+                    》参数
+                        //以前版本
+                        const SimpleApp = StackNavigator({
+                          Home: { screen: HomeScreen },
+                          Chat: { screen: ChatScreen },
+                        });
+                        //希望chat/Taylor链接到Chat屏幕，Taylor是一个user参数，配置如下：
+                        const SimpleApp = StackNavigator({
+                            Home:{screen:HomeScreen},
+                            Chat:{
+                                screen:ChatScreen,
+                                path:'chat/:user'
+                            }
+                        });
+                    》URL 前缀
+                        //通过提取app传入URL来配置navigation container。
+
+                         const SimpleApp = StackNavigator({...});
+                         //在Android上，URI前缀通常除了scheme之外还包含一个主机名。
+                         const prefix = Platform.OS === 'android' ? 'mychat://mychat/' : 'mychat://'
+                         const MainApp = () => <SimpleApp uriPrefix={prefix}/>
+                    》android
+                        为了配置android的外部链接，你可以在manifest中配置一个新的intent。
+                        即在android/app/src/main/AndroidManifest.xml 的mainActivity entry中添加新的intent-filter类型的View
+                        <intent-filter>
+                            <action android:name="android.intent.action.VIEW" />
+                            <category android:name="android.intent.category.DEFAULT" />
+                            <category android:name="android.intent.category.BROWSABLE" />
+                            <data android:scheme="mychat"
+                                  android:host="mychat" />
+                        </intent-filter>
+
+                        //重启应用
+                        react-native run-android
+                        //需要测试android中的intent 处理，需要运行下面命令
+                        adb shell am start -W -a android.intent.action.VIEW -d "mychat://mychat/chat/Taylor" com.simpleapp(包名 -- com.simpleapp)
+
+                        这样就可以通过浏览器来打开应用了。
+                    》iOS
+                        配置基于mychat:// url scheme 打开iOS App。
+                        在ios/myReactNative/AppDelegate.m中
+                            //头部添加这个
+                            #import <React/RCTLinkingManager.h>
+
+                            //在 `@end`前面添加这个:
+                            - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url
+                              sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+                            {
+                              return [RCTLinkingManager application:application openURL:url
+                                                  sourceApplication:sourceApplication annotation:annotation];
+                            }
+                        //在xcode中打开项目SimpleApp/ios/SimpleApp.xcodeproj，选择Info按钮，设置Url types ，并添加identifier 和scheme 为mychat。
+
+                        //重启服务
+                        react-native run-ios
+                        //测试url在模拟器上使用下面命令
+                        xcrun simctl openurl booted mychat://chat/Taylor
+                        //测试url在真实设备，打开浏览器 测试mychat://chat/Taylor链接即可
+                》屏幕跟踪与分析
+                    //下面展示screen 追踪并发送到google analytics，这种方式适用于任何移动端 分析SDK。
+
+                    》screen 追踪
+                        当使用内置的navigation container时，我们可以使用onNavigationStateChange 追踪屏幕。
+
+                        import { GoogleAnalyticsTracker } from 'react-native-google-analytics-bridge'
+                        const tracker = new GoogleAnalyticsTracker(GA_TRACKING_ID);
+
+                        //获取当前screen 从navigation state
+                        function getCurrentRouteName(navigationState){
+                            if(!navigationState) return null;
+
+                            const route = navigationState.routes[navigationState.index];
+                            if(route.routes) return getCurrentRouteName(route);
+                            else return route.routeName;
+                        }
+
+                        const AppNavigator = StackNavigator(AppRouteConfigs);
+                        export default () => (
+                            <AppNavigator
+                                onNavigationStateChange = ({prevState,currentState}) => {
+                                    const currentScreen = getCurrentRouteName(currentState);
+                                    const prevScreen = getCurrentRouteName(prevState);
+
+                                    if(prevScreen !== currentScreen){
+                                        tracker.trackScreenView(currentScreen);
+                                    }
+                                }
+                            />
+                        );
+                    》redux中的screen 追踪
+                        当使用Redux时，我们可以编写一个Redux中间件来跟踪屏幕。为此，我们将使用上面的getCurrentRouteName。
+                        import {NavigationActions} from 'react-navigation'
+                        import {GoogleAnalyticsTracker } from 'react-native-google-analytics-bridge'
+                        const tracker = new GoogleAnalyticsTracker(GA_TRACKING_ID);
+
+                        const screenTracking = ({getState}) => next => action => {
+                            if(action.type !== NavigationActions.NAVIGATE && action.type !== NavigationActions.BACK){
+                                return next(action);
+                            }
+
+                            const currentScreen = getCurrentRouteName(getState().navigation);
+                            const result = next(action);
+                            const nextScreen = getCurrentRouteName(getState().navigation);
+
+                            if(nextScreen !== currentScreen) tracker.trackScreenView(nextScreen);
+
+                            return result;
+                        };
+                        export default screenTracking;
+
+                        //在redux store创建时使用上面中间件
+                        const store = createStore(
+                          combineReducers({
+                            navigation: navigationReducer,
+                            ...
+                          }),
+                          applyMiddleware(
+                            screenTracking,
+                            ...
+                            ),
+                        );
+                》Routers
+                    routers 定义组件的 navigation state，它们允许开发者定义path并处理actions。
+
+                    》内置routers
+                        》StackRouter
+                        》TabRouter
+                    》使用Routers
+                        要手动设置navigator，需要放置一个静态的router在组件上。
+                        class MyNavigator extends React.Component{
+                            static router = StackRouter(routes,config);
+                        }
+                        //现在您可以将该组件用作另一个导航器中的屏幕，而MyNavigator的导航逻辑将由这个StackRouter定义。
+                    》自定义navigation actions
+                        要覆盖navigation行为，您可以覆盖getStateForAction中的navigation state逻辑，并手动操作routes和index。
+                        const MyApp = StackNavigator({
+                            Home:{screen:Home},
+                            Profile:{screen:Profile}
+                        },{
+                          initialRouteName:'Home'
+                        });
+
+                        const defaultGetStateForAction = MyApp.router.getStateForAction;
+                        MyApp.router.getStateForAction = (action,state) => {
+                            if(state && action.type === 'PushTwoProfiles'){
+                                const routes = [
+                                    ...state.routes,
+                                    {key: 'A', routeName: 'Profile', params: { name: action.name1 }},
+                                    {key: 'B', routeName: 'Profile', params: { name: action.name2 }},
+                                ]
+
+                                return {
+                                    ...state,
+                                    routes,
+                                    index:routes.length -1
+                                }
+                            }
+                            return defaultGetStateForAction(action,state);
+                        }
+                    》阻止导航actions
+                        有时候你可能想阻止一些导航操作，这取决于你的route。
+                        import {NavigationActions} from 'react-navigation'
+
+                        const MyStackRouter = StackRouter({
+                            Home:{screen:Home},
+                            Profile:{screen:Profile}
+                        },{
+                            initialRouteName:'Home'
+                        });
+
+                        const defaultGetStateForAction = MyStackRouter.router.getStateForAction;
+                        MyStackRouter.router.getStateForAction = (action,state) => {
+                            if(state && action.type === NavigationActions.BACK && state.routes[state.index].params.isEditing){
+                                //返回null actions将被阻止
+                                return null;
+                            }
+
+                            return defaultGetStateForAction(action,state);
+                        }
+                    》处理自定义URL
+                        也许你的app有一个独特的URL，内置的routers不能够处理它，你能够扩展这个router getActionForPathAndParams。
+
+                        import {NavigationActions} from 'react-navigation'
+                        const MyApp = StackNavigator({
+                            Home:{screen:Home},
+                            Profile:{screen:Profile}
+                        },{
+                            initialRouteName:"Home"
+                        });
+                        const previousGetActionForPathAndParams = MyApp.router.getActionForPathAndParams;
+                        Object.assign(MyApp.router,{
+                            getActionForPathAndParams(patch,params){
+                                if (
+                                      path === 'my/custom/path' &&
+                                      params.magic === 'yes'
+                                    ) {
+                                      // returns a profile navigate action for /my/custom/path?magic=yes
+                                      return NavigationActions.navigate({
+                                        routeName: 'Profile',
+                                        action: NavigationActions.navigate({
+                                          // This child action will get passed to the child router
+                                          // ProfileScreen.router.getStateForAction to get the child
+                                          // navigation state.
+                                          routeName: 'Friends',
+                                        }),
+                                      });
+                                    }
+                                    return previousGetActionForPathAndParams(path, params);
+                            }
+                        });
+                》自定义Router API
+                    你可以创建自己的router，它包含下面函数：
+                    const MyRouter = {
+                          getStateForAction: (action, state) => ({}),
+                          getActionForPathAndParams: (path, params) => null,
+                          getPathAndParamsForState: (state) => null,
+                          getComponentForState: (state) => MyScreen,
+                          getComponentForRouteName: (routeName) => MyScreen,
+                    }
+                    //现在 你能够创建一个navigator 通过上面router
+                    class MyNavigator extends React.Component{
+                        static router = MyRouter;
+
+                        render(){
+                            ...
+                        }
+                    }
+
+                    》getStateForAction(action,state)
+                        根据给定的action，定义navigation state。当action被给props.navigation.dispatch或react-navigation的辅助函数被调用如
+                        navigation.navigate时，这个getStateForAction将被调用。
+
+                        //通常，这应该返回一个导航状态，具有以下表单。
+                        {
+                            index:1,//当前激活路由得索引
+                            routes:[
+                                {
+                                    routeName:'MyRouteName',
+                                    key:'myroute-123'//routes数组中的唯一标识
+                                    ...randomRouteData
+                                },
+                                ...moreRoutes
+                            ]
+                        }
+                        //如果这个router action在外部处理，或者是想在不改变navigation state的情况下，return null即可
+                    》getComponentForRouteName(routeName)
+                        根据给定的route name 返回 child component 或 navigator。
+                    》getComponentForState(state)
+                        根据深层的navigation state返回一个激活的component。
+                    》getActionForPathAndParams(path,params)
+                        返回一个可选的navigation action，该action在用户导航到这个path和提供可选的params时使用。
+                    》getPathAndParamsForState(state)
+                        返回可以放入URL的路径和params，以将用户链接回应用程序中的相同位置.
+                    》getScreenOptions(navigation,screenProps)
+                        用于检索当前navigation options，必须提供当前的navigation prop 和其他可选的props。
+                        》navigation
+                            这是屏幕将使用的navigation prop，其中状态表示屏幕的路由/状态。Dispatch将在该屏幕的上下文中触发操作。
+                        》screenProps
+                            navigation options可能需要使用的其他props
+                        》navigationOptions
+                            上一个设置的options(默认的或上一个配置的)
+
+                        //获取配置的标题
+                        // First, prepare a navigation prop for your child, or re-use one if already available.
+                        const screenNavigation = addNavigationHelpers({
+                          // In this case we use navigation.state.index because we want the title for the active route.
+                          state: navigation.state.routes[navigation.state.index],
+                          dispatch: navigation.dispatch,
+                        });
+                        const options = this.props.router.getScreenOptions(screenNavigation, {});
+                        const title = options.title;
+                》StackRouter
+                    管理逻辑navigation stack，包括 push、pop、handle path来创建一个深度的stack。
+
+                     const MyApp = StackRouter({
+                        Home:{screen:Home},
+                        Profile:{screen:Profile}
+                     },{
+                        initialRouteName:'Home'
+                     });
+
+                    》RouteConfig
+                        const MyApp = StackRouter({
+                            //RouteConfig
+                            Home:{
+                                screen:Home,
+                                path:''
+                            },
+                            Profile:{
+                                screen:Profile,
+                                path:'profile/:name'
+                            },
+                            Settings:{
+                                //这可以方便地延迟需要屏幕。注意：不能配置child navigator 利用getScreen,因为router不可用
+                                //Navigators必须使用 'screen : MyNavigator'形式配置
+                                getScreen:() => require('Setting').default,
+                                path:'settings'
+                            }
+                        });
+                        //配置中的每一项都可能有以下内容:
+                        》path 指定在stack中的path和params
+                        》screen 指定屏幕组件或child navigator
+                        》getScreen 为屏幕组件设置一个延迟的getter  不适用于navigators
+                    》StackConfig
+                        需要传递到stack router的配置选项：
+                        initialRouteName--初始化route name
+                        initialRouteParams -- 初始化route的默认参数
+                        paths -- 提供routeName到path配置的映射，该映射覆盖了routeConfigs中设置的路径。
+                    》支持的Actions
+                        这个stack router可能响应下面navigation actions。如果可能，这个路由器通常会将操作处理委托给子路由器。
+                        Navigate -- 导航到一个新屏幕
+                        Back  --  返回
+                        Reset  -- 重置navigation state
+                        SetParams -- 设置params。
+                》TabRouter
+                        管理应用中的一组tabs，处理tabs的跳转，以及返回按钮的处理。
+                        const MyApp = TabRouter({
+                            Home:{screen:HomeScreen},
+                            Settings:{screen:SettingsSreen}
+                        },{
+                            initialRouteName:'Home'
+                        });
+
+                        》RouteConfig
+                            const MyApp = TabRouter({//routeConfig
+                                Home:{
+                                    screen:HomeScreen,
+                                    path:'main'
+                                },
+                                Settings:{
+                                    //延时处理tab require
+                                    getScreen: () => require('./SettingsScreen').default,
+                                    path:'settings'
+                                }
+                            });
+                            //每个项有如下配置：
+                            path:指定每个tab的path
+                            screen:指定屏幕组件或child navigator
+                            getScreen:设置延时获取屏幕组件  不适用于child navigators
+
+                        》tab router config
+                            initialRouteName // 初始化的route name
+                            order //routeNames 的Array 定义tabs顺序
+                            paths //提供一个routeName 的path 映射，将覆盖routeConfigs中的paths
+                            backBehavior//点击返回按钮的行为 'initialRoute'(默认值)  'none'
+                        》支持actions
+                            Navigate -- 跳转链接的action
+                            Back  -- 返回action
+                            SetParams  -- 改变当前route的params
+                》Views
+                    navigation view是带有router和navigation prop的展示组件，能够显示多个屏幕，如：被navigation.state指定的。
+
+                    navigation views是被控制的React component，它可以显示当前的navigation state。他们管理屏幕、动画和手势的切换。它们还提供了持久的导航视图，如标签栏和标题
+
+                    》内置的Views
+                        》CardStack -- 提供适合于任何平台的堆栈
+                            Card -- 从卡片堆中拿出一张卡片，用手势表示。
+                            Header -- 卡片堆栈的头部视图。
+                        》Tabs -- 一个可配置的tab switcher/pager。
+                        》Drawer -- 一个从左边滑出的抽屉的视图。
+                    》Transitioner
+                        Transitioner在转换过程中管理动画，并可用于构建完全自定义的导航视图。它在CardStack视图中使用。
+                》Transitioner
+                    transitioner是一个react组件，它帮助管理复杂动画的过渡。它管理动画的时间，并在输入和离开时跟踪各种屏幕，
+                    但它不知道任何东西看起来是什么样子，因为渲染完全是由开发人员决定的。在覆盖层下，过渡器被用来实现CardStack，
+                    因此是StackNavigator。
+
+                    tansitioner最实用的是把它当作当前current navigation state中的props，当routes 时从navigation state离开时，
+                    transitioner将给这些routes赋予过渡，即使他们已经离开了导航状态，也要把它们留在屏幕上。
+
+                    》案例
+                        class MyNavView extends Component{
+
+                            render(){
+                                return  (
+                                    <Transitioner
+                                        configureTransition={this._configureTransition}
+                                        navigation={this.props.navigation}
+                                        render={this._render}
+                                        onTransitionStart={this.onTransitionStart}
+                                        onTransitionEnd={this.onTransitionEnd}
+                                    />
+                                );
+                            }
+                        }
+                    》属性详解
+                        》configureTransition  -- Function
+                            这个函数在Transitioner.componentWillReceiveProps调用。
+                            这个函数允许自定义动画参数如：duration，这个函数的返回值将被传入一个定时函数，默认作为Animated.timing()的配置。
+
+                            _configureTransition(transitionProps, prevTransitionProps) {
+                              return {
+                                // 持续时间 default: 250
+                                duration: 500,
+                                //  default: Easing.inOut(Easing.ease)
+                                easing: Easing.bounce,
+                              }
+                            }
+                            //注意：duration和easing只有当定时函数是Animated.timing时才适用，我们还可以使用不同的定时函数及其相应的配置
+                            如:
+                            _configureTransition(transitionProps, prevTransitionProps) {
+                              return {
+                                // A timing function, default: Animated.timing.
+                                timing: Animated.spring,
+                                // Some parameters relevant to Animated.spring
+                                friction: 1,
+                                tension: 0.5,
+                              }
+                            }
+
+                            //流程定义
+                            configureTransition:(
+                                //当前NavigationTransitionProps被创建从当前导航state和props https://github.com/react-navigation/react-navigation/blob/master/src/TypeDefinition.js#L273
+                                transitionProps: NavigationTransitionProps,
+                                //上一个NavigationTransitionProps被创建 从上一个的state和props https://github.com/react-navigation/react-navigation/blob/master/src/TypeDefinition.js#L273
+                                prevTransitionProps: ?NavigationTransitionProps,
+                            ) => NavigationTransitionSpec ;//返回一个类型NavigationTransitionSpec的对象，它将被输入一个动画的定时功能作为它的配置 https://github.com/react-navigation/react-navigation/blob/master/src/TypeDefinition.js#L316
+                        》navigation
+                            一个对象，包含navigation state和routes以及激活route的index，同时还有dispatch和其他处理action的函数。
+                            如：{
+                                 // Index refers to the active child route in the routes array.
+                                index: 1,
+                                routes: [
+                                  { key: 'DF2FGWGAS-12', routeName: 'ContactHome' },
+                                  { key: 'DF2FGWGAS-13', routeName: 'ContactDetail', params: { personId: 123 } }
+                                ]
+                              }
+
+                            //定义 https://github.com/react-navigation/react-navigation/blob/master/src/TypeDefinition.js#L32
+                            export type NavigationState = {
+                                index:number,
+                                routes:Array<NavigationRoute>
+                            }
+                        》render Function
+                            从Transitioner.render()调用，这个函数的执行实际是从Transitioner委托的，在这个函数中，我们能够接受到
+                            transitionProps 和prevTransitionProps 参数来渲染屏幕，创建动画，处理手势。
+
+                            transitionProps和prevTransitionProps有几个重要的属性： https://github.com/react-navigation/react-navigation/blob/master/src/TypeDefinition.js#L273
+                            》scenes: Array<NavigationScene> -- 所有可用的屏幕
+                            》position: NavigationAnimatedValue -- 导航状态的累进索引
+                            》progress: NavigationAnimatedValue -- 当导航状态从一个转换到另一个时，代表转换进程的值。它的数值范围从0到1
+
+                            》案例
+                                transitionProps.scenes是一系列可用的scenes，它取决于实现者，或者决定如何在屏幕上显示它们。例如，我们可以将场景渲染成一堆卡片，例如：
+                                    _render(transitionProps, prevTransitionProps) {
+                                      const scenes = transitionProps.scenes.map(scene => this._renderScene(transitionProps, scene));
+                                      return (
+                                        <View style={styles.stack}>
+                                          {scenes}
+                                        </View>
+                                      );
+                                    }
+                                然后我们可以使用动画。以动画过渡。为了创建必要的动画样式属性，例如不透明度，我们可以插入与过渡道具一起的位置和进度值:
+                                    _renderScene(transitionProps, scene) {//http://www.reactnativediary.com/2016/12/20/navigation-experimental-custom-transition-1.html
+                                      const { position } = transitionProps;
+                                      const { index } = scene;
+                                      const opacity = position.interpolate({
+                                        inputRange: [index-1, index, index+1],
+                                        outputRange: [0, 1, 0],
+                                      });
+                                      // The prop `router` is populated when we call `createNavigator`.
+                                      const Scene = this.props.router.getComponent(scene.route.routeName);
+                                      return (
+                                        <Animated.View style={{ opacity }}>
+                                          { Scene }
+                                        </Animated.View>
+                                      )
+                                    }
+                            》定义
+                                render: (transitionProps: NavigationTransitionProps, prevTransitionProps: ?NavigationTransitionProps) => React.Node
+                            》参数
+                                transitionProps -- 当前NavigationTransitionProps从当前state创建和props https://github.com/react-navigation/react-navigation/blob/master/src/TypeDefinition.js#L273
+                                prevTransitionProps -- 前面NavigationTransitionProps以前创建的state和props https://github.com/react-navigation/react-navigation/blob/master/src/TypeDefinition.js#L273
+                            》返回值
+                                一个ReactElement 它将被用来渲染的过渡组件
+                        》onTransitionStart  Function
+                            当动画开始时执行的函数
+                            》定义
+                                onTransitionStart: (transitionProps: NavigationTransitionProps, prevTransitionProps: ?NavigationTransitionProps) => (Promise | void),
+                            》参数
+                                transitionProps
+                                prevTransitionProps
+                            》返回值
+                                Promise可以延时过渡动画的开始，或者不会立即开始动画
+                        》onTransitionEnd Function
+                            动画完成时调用
+                            》定义
+                                onTransitionEnd: () => void
+                                //无参数，无返回值
+                》withNavigation
+                    withNavigation时一个高阶组件，它将navigation props传递给被包裹的组件。它是很有用的当你不能传递navigation给组件时，
+                    或者你不想传递比较深的子组件时。
+
+                    import { Button } 'react-native';
+                    import { withNavigation } from 'react-navigation';
+
+                    const MyComponent = ({ to, navigation }) => (
+                        <Button title={`navigate to ${to}`} onPress={() => navigation.navigate(to)} />
+                    );
+
+                    const MyComponentWithNavigation = withNavigation(MyComponent);
+
+
+                    // or use decorators:
+
+                    @withNavigation
+                    export default class MainScreen extends Component {
+                      ...
+                    }
+    》如果你只针对iOS平台开发，那么可以考虑适应NavigatorIOS。它是基于 UINavigationController封装的。
+        <NavigatorIOS
+            initialRoute={
+                {
+                    component:MyScene,
+                    title:'My Initial Scene',
+                    passProps:{myProp:'foo'}
+                }
+            }
+        />
+        用法类似Navigator，NavigatorIOS也使用路由对象来描述场景，但有些重要的区别。其中要渲染的组件在路由对象的component字段中指定，
+        要给目标组件传递的参数则写在passProps中。被渲染的component都会自动接受一个名为navigator的属性，你可以直接调用this.props.navigator的push和pop方法。
+
+        由于NavigatorIOS使用的是原生的UIKit导航，所以它会自动渲染一个带有返回按钮和标题的导航栏。
+
+        import React, { Component, PropTypes } from 'react';
+        import { NavigatorIOS, Text, TouchableHighlight, View } from 'react-native';
+
+        export default class NavigatorIOSApp extends Component {
+          render() {
+            return (
+              <NavigatorIOS
+                initialRoute={{
+                  component: MyScene,
+                  title: 'My Initial Scene',
+                }}
+                style={{flex: 1}}
+              />
+            )
+          }
+        }
+
+        class MyScene extends Component {
+          static propTypes = {
+            title: PropTypes.string.isRequired,
+            navigator: PropTypes.object.isRequired,
+          }
+
+          constructor(props, context) {
+            super(props, context);
+            this._onForward = this._onForward.bind(this);
+          }
+
+          _onForward() {
+            this.props.navigator.push({
+              title: 'Scene ' + nextIndex,
+            });
+          }
+
+          render() {
+            return (
+              <View>
+                <Text>Current Scene: { this.props.title }</Text>
+                <TouchableHighlight onPress={this._onForward}>
+                  <Text>Tap me to load the next scene</Text>
+                </TouchableHighlight>
+              </View>
+            )
+          }
+        }
+15.颜色
+    支持的颜色格式：
+        '#f0f' -- #rgb
+        '#f0fc' -- #rgba
+        '#ff00ff' -- #rrggbb
+        '#ff00ff00' -- #rrggbbaa
+        'rgb(255,255,255)'
+        'rgba(255,255,255,1)'
+        'hsl(360,100%,100%)'
+        'hsla(360,100%,100%,1)'
+        'transparent'
+        'red'
+        0xff00ff00 -- 0xrrggbbaa
+16.图片
+    》静态图片资源
+        从.14版本开始，React native 提供了一个统一的方式来管理iOS和Android应用中的图片。要往app中添加一个静态资源，只需把图片文件放在代码文件
+        夹中，然后像下面这样去引用它。
+            <Image source={require('./my-icon.png')}/>
+        图片文件的查找会和js模块的查找方式一样。在上面的这个例子中，是那个组件引用来这个图片，Packager就会去这个组件所在的文件夹下查找
+        my-icon.png。并且如果你my-icon.ios.png和my-icon.android.png，Packager就会根据平台而选择不同的文件。
+
+        你还可以使用@2x,@3x这样的文件名后缀，来为不同的屏幕精度提供图片，如下面这样的代码结构：
+            img
+                check@2x.png check@3x.png
+            button.js
+        并且在button.js中有这样的代码：<Image source={require('./img/check.png')} />
+        Packager会打包所有的图片，并且依据屏幕精度提供对应的资源，譬如说，iPhone 5s会使用check@2x.png,而Nexus 5会使用check@3x.png。如果没有图片
+        恰好满足屏幕分辨率，则会自动选中最接近的一个图片。
+
+        注意：如果你添加图片的时候packager正则运行，可能需要重启packager以便能正确引入新添加的图片。
+
+        这样会带来很多好处：
+            》iOS和Android一致的文件系统
+            》图片和js代码处在相同的文件夹，这样组件就可以包含自己所用的图片而不用单独去设置
+            》不需要全局命名，不用担心图片名字的冲突问题了
+            》只有实际被用到(即被require)的图片才会被打包到你的app。
+            》现在在开发期间，增加和修改图片不需要重新编译了，只要和修改js代码一样刷新你的模拟器就可以了。
+            》与访问网络图片相比，Packager可以得知图片大小了，不需要再代码里面在声明一遍尺寸。
+            》现在通过npm来分发组件或库可以包含图片了
+
+        注意：为了使新的图片资源机制正常工作，require中的图片名字必须是一个静态字符串(不能使用变量 因为require是在编译时期执行，而非运行时期执行！)
+            <Image source={require('./my-icon.png')}/>//正确
+
+            //错误
+            var icon = this.props.active ? 'my-icon-active' : 'my-icon-inactive';
+            <Image source={require('./' + icon + '.png')} />
+
+            //正确
+            var icon = this.props.active ? require('./my-icon-active.png') : require('./my-icon-inactive.png');
+            <Image source={icon} />
+            //注意：通过这种方式引用的图片资源包含图片的尺寸信息，如果你需要动态缩放图片(如：通过flex)，你可能必须
+            //手动在style属性设置{width:undefined,height:undefined}
+    》静态非图片资源
+        上面描述的require语法也可以用来静态地加载你项目中的声音、视频或文档文件。大多数常见的文件类型都支持，包括
+        .mp3, .wav, .mp4, .mov, .htm 和 .pdf等。
+
+        注意：视频必须指定尺寸而不能使用flex样式，因为我们目前还不能从非图片资源中获取到尺寸信息，对于直接链接到Xcode
+        或android资源文件夹的视频，则不会有这个限制。
+    》使用混合App的图片资源
+        如果你在编写一个混合App(一部分UI使用React Native,而另一部分使用平台原生代码)，也可以使用已经打包到App中的图片资源
+        (以拖拽的方式放置在Xcode的asset类目录中，或者放置在Android的drawable目录里)，注意此时只使用文件名，不带路径也不带后缀。
+        <Image source={{uri: 'app_icon'}} style={{width: 40, height: 40}} />
+
+        对于放置在Android的assets目录中的图片，还可以使用asset:/前缀来引用：
+         <Image source={{uri: 'asset:/app_icon.png'}} style={{width: 40, height: 40}} />
+
+         注意：这一做法并没有任何安全检查，你需要自己确保图片在应用中确实存在，而且还需要指定尺寸。
+    》网络图片
+        很多要在App中显示的图片并不能再编译的时候获得，又或者有时候需要动态载入来减少打包后的二进制文件的大小。
+        这些时候，与静态资源不同的是，**你需要手动指定图片的尺寸**，同时建议使用https以满足iOS App transport security(https://segmentfault.com/a/1190000002933776)的要求。
+
+        //正确
+        <Image source={ {uri:'https://facebook.github.io/react/img/logo_og.png'} } style={{width:400,height:400}}/>
+        //错误
+        <Image source={{uri:'https://facebook.github.io/react/img/logo_og.png'}}/>
+
+        》网络图片的请求参数
+            可以在Image组件的source属性中指定一些请求参数
+            <Image
+                source={
+                    {
+                        uri:'https://facebook.github.io/react/img/logo_og.png'
+                        method: 'POST',
+                        headers: {
+                          Pragma: 'no-cache'
+                        },
+                        body: 'Your Body goes here'
+                    }
+                }
+                style={{width:400,height:400}}
+            />
+    》缓存控制 仅iOS
+        在某些情况下，你可能仅仅想展示一张已经在本地缓存的图片，如：一个低分辨率的占位符，直到高分辨率的图片可用。在其他情况下你不关心图片
+        是否是过时，并愿意显示过时的图片，以节省带宽，缓存资源属性给你控制网络层和缓存交互的方式。
+        default：使用原生平台默认策略。
+        reload：URL的数据将从原始地址加载。不使用现有的缓存数据。
+        force-cache：现有的缓存数据将用于满足请求，忽略其期限或到期日。如果缓存中没有对应请求的数据，则从原始地址加载。
+        only-if-cached：现有的缓存数据将用于满足请求，忽略其期限或到期日。如果缓存中没有对应请求的数据，则不尝试从原始地址加载，并且认为请求是失败的。
+
+        <Image source={{uri: 'https://facebook.github.io/react/img/logo_og.png', cache: 'only-if-cached'}}
+               style={{width: 400, height: 400}} />
+    》本地文件系统中的图片
+        参考相册（CameraRoll）这个例子来看如何使用在Images.xcassets以外的本地资源。 https://reactnative.cn/docs/0.49/cameraroll.html
+
+        最合适的相册图片：
+        iOS会为同一张图片在相册中保存多个不同尺寸的副本。为了性能考虑，从这些副本中挑出最合适的尺寸显得尤为重要。对于一处200x200大小的
+        缩略图，显然不应该选择最高质量的3264x2448大小的图片。如果恰好有匹配的尺寸，那么React Native会自动为你选好。如果没有，则会选择
+        最接近的尺寸进行缩放，但也至少缩放到比所需尺寸大出50%，以使图片看起来仍然足够清晰。这一切过程都是自动完成的，所以你不用操心自己
+        去完成这些繁琐且易错的代码。
+    》为什么不在所有情况下都自动指定尺寸？
+        在浏览器中，如果不给图片指定尺寸，那么浏览器会首选渲染一个0x0大小的元素占位，然后下载图片，在下载完成后再基于正确的尺寸来渲染图片。
+        这样做的最大问题是UI会在图片加载的过程中上下跳动，使得用户体验非常糟糕。
+
+        在React native中避免了这个行为，如此一来开发者就需要做更多的工作来提前知晓远程图片的尺寸，但我们相信这样可以带来更好的用户体验，然而
+        从已经打包好的应用资源文件中读取图片(使用require('image!x'))则无需指定尺寸，因为他们在加载时就知道了尺寸。
+        如引用require('image!logo')的实际输出结果可能是：
+        {"__packager_asset":true,"isStatic":true,"path":"/Users/react/HelloWorld/iOS/Images.xcassets/react.imageset/logo.png","uri":"logo","width":591,"height":573}
+    》资源属性是一个对象
+        在React Native中，另一个值得提的是把src属性改为了source属性，而且并不接受字符串，正确的值是一个带有uri属性的对象
+        <Image source={{uri: 'something.jpg'}} />
+        深层次的考虑：这样可以是我们在对象中添加一些元数据，如使用require('./my-icon.png')，那么我们就会在其中添加真实的文件路径以及
+        尺寸等信息。此外也考虑未来的扩展，比如我们可能会加入精灵图（sprites）的支持：在输出{uri: ...}的基础上，我们可以进一步输出裁切信息
+        {uri: ..., crop: {left: 10, top: 50, width: 20, height: 40}}，这样理论上就可以在现有的代码中无缝支持精灵图的切分。
+    》背景图片组件 ImageBackground
+        <ImageBackground source={...}>
+            <Text>Inside</Text>
+        </ImageBackground>
+    》iOS边框圆角的注意事项
+        请注意下列表边框圆角样式目前在iOS的图片组件上还不支持。
+        borderTopLeftRadius
+        borderTopRightRadius
+        borderBottomLeftRadius
+        borderBottomRightRadius
+    》在主线程外解码图片
+        图片解码有可能会需要超过一帧的时间。在web上这是页面掉帧的一大因素，因为解码是在主线程中完成的。
+        然而在React Native中，图片解码则是在另一线程中完成的。在实际开发中，一般对图片还没下载完成时的
+        场景都做了处理（添加loading等），而图片解码时显示的占位符只占用几帧时间，并不需要你改动代码去额外处理。
+17.处理触摸事件
+        》可点击的组件
+            在需要捕获用户点击操作时，可以使用'Touchable'开头的一系列组件，这些组件通过onPress属性接受一个点击事件的处理函数。
+            当一个点击操作开始并且终止于本组件时(即在本组件上按下手指并且抬起手指时也没有移开组件外)，此函数会被调用。
+
+            class MyButton extends Component{
+                _onPressButton(){
+                    console.log('You tapped the button!');
+                }
+
+                render(){
+                    return(
+                        <TouchableHighlight onPress={this._onPressButton}>
+                            <Text>Button</Text>
+                        <TouchableHighlight/>
+                    );
+                }
+            }
+            可点击的组件需要给用户提供视觉反馈，如：是那个组件正在响应用户的操作，以及当用户抬起手指后会发生什么，用户也应该可以通过把
+            手指移到一边来取消点击操作。
+            具体使用那种组件，取决于希望给用户带来什么样的视觉反馈：
+            》一般来说，你可以使用TouchableHighlight来制作按钮或链接，注意此组件的背景会在用户手指按下时变暗。
+            》在android上还可以使用TouchableNativeFeedback，它会在用户手指按下时形成类似墨水涟漪的视觉效果
+            》TouchableOpacity会在用户手指按下时降低按钮的透明度，而不会改变背景的颜色。
+            》如果你想在处理点击事件的同时不显示任何视觉反馈，则需要使用TouchableWithoutFeedback
+        》长按
+            某些场景中你可能需要检测用户是否进行了长按操作，可以在上面列出的任意组件中使用onLongPress属性来实现。
+        》在列表中上下滑动和在视图上左右滑动
+            可滚动的列表是移动应用中一种常见的模式。用户会在列表中或快或慢的各种滑动，ScrollView组件可以满足这一需求。
+            ScrollView可以在垂直或水平方向滚动，还可以配置pagingEnabled属性来让用户整屏滑动，此外水平方向的滑动还可以使用
+            android上的ViewPagerAndroid组件。
+
+            ListView则是一种特殊的ScrollView，用于显示比较长的垂直列表，它还可以显示分区块的头部和尾部，类似于iOS上的UITableView控件。
+        》双指缩放
+            如果在ScrollView中只放置一个组件，则可以用户实现缩放操作。设置maximumZoomScale和minimumZoomScale属性即可以使用户能够缩放其中的内容。
+
+18.动画
+    React Native提供了两个互补的动画系统：用于全局的布局动画LayoutAnimation和用户创建更精细的交互控制的动画Animated。
+
+    》Animated
+        Animated库使得开发者可以非常容易地实现各种各样的动画和交互方式，并且具备极高的性能。Animated旨在以声明的形式来定义动画的输入和输出。
+        在其中建立一个可配置的变化函数，然后使用简单的start/stop方式来控制动画按顺序执行。Animated仅封装了四个可以动画化的组件:View Text Image
+        和ScrollView,不过你可以使用Animated.createAnimatedComponent()来封装你自己的组件。
+
+        //淡入动画的效果视图
+        import React,{Component} from 'react'
+        import {Animated,Text} from 'react-native'
+
+        /**
+         * 淡入动画效果
+         */
+        class FadeInView extends Component{
+
+            constructor(props){
+                super(props);
+                this.state = {
+                    fadeAnim:new Animated.Value(0)//透明度初始值为0
+                }
+            }
+
+            componentDidMount(){
+                Animated.timing(//随时间变化而执行的动画类型
+                    this.state.fadeAnim,{
+                        toValue:1//透明度最终值
+                    }
+                ).start();//开始执行动画
+
+            }
+
+            render(){
+                return(
+                    <Animated.View //可动画的视图组件
+                        style={{...this.props.style,
+                            opacity:this.state.fadeAnim //将透明度指定为动画变量值
+                        }}>
+                        {this.props.children}
+                    </Animated.View>
+                );
+
+            }
+        }
+
+        /**
+         * 然后就可以在组件中像使用View那样去使用FadeInView组件
+         */
+        class FadeInTest extends Component{
+
+            render(){
+                return (
+                    <FadeInView style={{width: 250, height: 50, backgroundColor: 'powderblue'}}>
+                        <Text style={{fontSize: 28, textAlign: 'center', margin: 10}}>Fading in</Text>
+                    </FadeInView>
+                );
+            }
+        }
+
+        export default FadeInTest
+
+        》配置动画
+            动画拥有非常灵活的配置项，自定义的或预定义easing函数、延迟、持续时间、衰减系数、spring常量，以及更多的可以根据动画的类型进行调整。
+
+            Animated提供了多种动画类型，其中最常见的是Animated.timing()。它支持使用各种预定义的缓变函数中的一个来对一个值进行动画化，或者您
+            可以使用自己的。在动画中通常使用缓动函数来表示物体的逐渐加速和减速。
+            在默认情况下，timing将使用一个easeInOut曲线，它将逐渐加速到全速，并通过逐渐减速到停止来结束。您可以通过传递一个easing参数来指定一个
+            不同的easing函数。还支持自定义duration持续时间，甚至在动画开始之前的延迟delay。
+            如：
+                Animated.timing(this.state.xPosition,{
+                    toValue:100,
+                    easing:Easing.back,
+                    duration:2000
+                }).start();
+
+        》组合动画
+            多个动画可以通过parallel(同时执行)、sequence(顺序执行)、stagger和delay来组合使用。它们中的每一个都接受一个要执行的动画数组，
+            并且自动在适当的时候调用start/stop。
+            Animated.sequence([//首先执行decay动画，结束后同时执行spring和twirl动画
+                Animated.decay(position,{//滑行一段距离后停止
+                    velocity: {x: gestureState.vx, y: gestureState.vy}, // 根据用户的手势设置速度
+                    deceleration: 0.997,
+                }),
+                 Animated.parallel([          // 在decay之后并行执行：
+                    Animated.spring(position, {
+                      toValue: {x: 0, y: 0}    // 返回到起始点开始
+                    }),
+                    Animated.timing(twirl, {   // 同时开始旋转
+                      toValue: 360,
+                    }),
+                  ]),
+            ]).start();//执行这一整套动画序列
+            //默认情况下，如果任何一个动画被停止或中断了，组内所有其他的动画也会被停止，Parallel有一个stopTogether属性，如果设置为false，可以禁用自动停止。
+        》合成动画值
+            你可以使用加减乘除以及取余等运算来把两个动画值合成为一个新的动画值。
+            const a = Animated.Value(1);
+            const b = Animated.divide(1, a);
+
+            Animated.spring(a, {
+              toValue: 2,
+            }).start();
+        》插值
+            Animated API还有一个很强大的部分就是interpolate插值函数，它可以接受一个输入区间，然后将其映射到另一个的输出区间。
+            //一个简单的从0-1区间到0-100区间的映射示例：
+                value.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 100],
+                });
+
+            interpolate还支持定义多个区间段落，常用来定义静止区间等。举个例子，要让输入在接近-300时取相反值，然后在输入接近-100时到达0，
+            然后在输入接近0时又回到1，接着一直到输入到100的过程中逐步回到0，最后形成一个始终为0的静止区间，对于任何大于100的输入都返回0。
+            具体写法如下：
+                value.interpolate({
+                  inputRange: [-300, -100, 0, 100, 101],
+                  outputRange: [300,    0, 1,   0,   0],
+                });
+
+            //interpolate还支持到字符串的映射，从而可以实现颜色以及带有单位的值得动画变换。例如你可以像下面这样实现的一个旋转动画：
+                value.interpolate({
+                    inputRange: [0, 360],
+                    outputRange: ['0deg', '360deg']
+                });
+
+            interpolation还支持任意的渐变函数，其中有很多已经在Easing类中定义了，包括二次、指数、贝塞尔等曲线以及step、bounce等方法。
+            interpolation还支持限制输出区间outputRange。你可以通过设置extrapolate、extrapolateLeft或extrapolateRight属性来限制输出区间。
+            默认值是extend（允许超出），不过你可以使用clamp选项来阻止输出值超过outputRange。
+        》跟踪动态值
+            动画中所设置的值还可以通过跟踪别的值得到，你只要把toValue设置成另一个动态值而不是一个普通数字就行了。比如我们可以用弹跳动画来实现聊天头像的
+            闪动，又比如通过timing设置duration:0来实现快速的跟随。它们还可以使用插值来进行组合：
+                Animated.spring(follower, {toValue: leader}).start();
+                Animated.timing(opacity, {
+                  toValue: pan.x.interpolate({
+                    inputRange: [0, 300],
+                    outputRange: [1, 0],
+                  }),
+                }).start();
+            //ValueXY是一个方便的处理2D交互的办法，譬如旋转或拖拽。他是一个简单的包含了两个Animated.Value实例的包装，然后提供了一系列的辅助函数，
+            //使得ValueXY在许多时候可以替代Value来使用。比如上面的代码片段中，leader和follower可以同时为valueXY类型，这样x y的值都会被跟踪。
+        》输入事件
+            Animated.event是Animated API中与输入有关的部分，允许手势或其他事件直接绑定到动态值上，它通过一个结构化的映射语法来完成，使得复杂事件对象中
+            的值可以被正确的解开。第一层是一个数组，允许同时映射多个值，然后数组的每个元素是一个嵌套对象。
+            在下面例子中，你可以发现scrollX被映射到了event.nativeEvent.contentOffset.x(event通常是回调函数的第一个参数)，并且pan.x和pan.y分别映射到
+            gestureState.dx和gestureState.dy(gestureState是传递给PanResponder回调函数的第二个参数)。
+
+            onScroll={
+                Animated.event([{nativeEvent:{contentOffset:{x:scrollX}}}])//scrollX = e.nativeEvent.contentOffset.x
+            }
+
+            onPanResponderMove = {
+                Animated.event([null,//忽略原生事件
+                {dx:pan.x,dy:pan.y}//从gestureState中解析出dx dy
+                ])
+            }
+
+            》响应当前的动画值
+                你可能会注意到这里没有一个明显得方法来在动画的过程中读取当前的值 -- 这是出于优化的角度考虑，有些值只有在原生代码运行阶段中才知道。
+                如果你需要在js中响应当前的值，有两种方式：
+                》spring.stopAnimation(callback)会停止动画并且把最终的值作为参数传递给回调函数callback——这在处理手势动画的时候非常有用。
+                》spring.addListener(callback) 会在动画的执行过程中持续异步调用callback回调函数，提供一个最近的值作为参数。这在用于触发状态切换的时候非常有用，
+                譬如当用户拖拽一个东西靠近的时候弹出一个新的气泡选项。不过这个状态切换可能并不会十分灵敏，因为它不像许多连续手势操作（如旋转）那样在60fps下运行。
+        》使用原生动画驱动
+            Animated的API是可序列化的 -- 即可转化为字符串表达以便通信或存储
+            通过启用原生驱动，我们在启动动画前就把其所有配置信息都发送到原生端，利用原生代码在UI线程执行动画，而不用每一帧都在两端间来回沟通。
+            如此一来动画一开始就完全脱离了js线程隐藏此时即便js线程被卡住，也不会影响到动画了。
+
+            在动画中启用原生驱动，只需要在开始动画之前，在动画配置中加一行useNativeDriver: true即可
+            Animated.timing(this.state.animatedValue, {
+              toValue: 1,
+              duration: 500,
+              useNativeDriver: true, // <-- 加上这一行
+            }).start();
+            注意：动画值在不同的驱动方式之间是不能兼容的，因此如果你在某个动画中启用了原生驱动，那么所有和此动画依赖相同的动画值得其他动画也必须启用原生驱动。
+
+            原生驱动还可以在Animated.event中使用。这对于跟随滚动位置的动画特别有用，因为没有本机驱动程序，动画将始终在手势后面运行一个框架，
+            这是由于react native的异步特性。
+            <Animated.ScrollView // <-- 使用Animated ScrollView wrapper
+              scrollEventThrottle={1} // <-- 设为1以确保滚动事件的触发频率足够密集
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { y: this.state.animatedValue } } }],
+                { useNativeDriver: true } // <-- 加上这一行
+              )}
+            >
+              {content}
+            </Animated.ScrollView>
+    》LayoutAnimation -- https://github.com/facebook/react-native/blob/master/Libraries/LayoutAnimation/LayoutAnimation.js
+        LayoutAnimation允许你在全局范围内创建和更新动画，这些动画会在下一次渲染或布局周期运行。它常用来更新flexbox布局，因为他可以无需测量或计算特定属性就能
+        直接产生动画。尤其是当布局变化可能影响到父节点(如：查看更多 -- 展开动画即增加父节点的尺寸又会将位于本行之下的所有行向下推动)时，如果不使用LayoutAnimation,
+        可能就需要显示声明组件的坐标，才能使得所有受影响的组件能够同步运行动画。
+
+        注意：尽管LayoutAnimation非常强大且有用，但它对动画本身的控制没有Animated或其他动画库那样方便，所以如果你使用LayoutAnimation无法实现一个效果，那可能还是要考虑其他方案。
+
+        另外如果要在Android上适应LayoutAnimation，那么目前还需要再UIManager中启用：
+        UIManager.setLayoutAnimationEnabledExperimental && UIManager.setLayoutAnimationEnabledExperimental(true);
+
+        import React from 'react'
+        import {NativeModules,LayoutAnimation,Text,TouchableOpacity,StyleSheet,View} from 'react-native'
+
+        //android需要启动
+        const {UIManager} = NativeModules;
+        UIManager.setLayoutAnimationEnabledExperimental && UIManager.setLayoutAnimationEnabledExperimental(true);
+
+        export default class App extends React.Component{
+            state = {
+                w:100,
+                h:100
+            }
+
+            _onPress = () =>{
+                //更新动画
+                LayoutAnimation.spring();
+                this.setState({w: this.state.w + 15, h: this.state.h + 15})
+            }
+
+            render(){
+
+                return(
+                    <View style={styles.container}>
+                        <View style={[styles.box,{width:this.state.w,height:this.state.h}]}/>
+                        <TouchableOpacity onPress={this._onPress}>
+                            <View style={styles.button}>
+                                <Text style={styles.buttonText}>点我啊！</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                );
+            }
+        }
+
+        const styles = StyleSheet.create({
+            container:{
+                flex:1,
+                alignItems:'center',
+                justifyContent:'center'
+            },
+            box:{
+                width:200,
+                height:200,
+                backgroundColor:'red'
+            },
+            button:{
+                backgroundColor:'black',
+                paddingHorizontal:20,
+                paddingVertical:15,
+                marginTop:15
+            },
+            buttonText:{
+                color:'#fff',
+                fontWeight:'bold'
+            }
+        });
+    》其他注意事项
+        》requestAnimationFrame
+            requestAnimationFrame是一个对浏览器标准API的兼容实现，它接受一个函数作为唯一的参数，并在下一次重绘之前调用此函数。一些基于
+            js的动画库高度依赖于这个API，通常你不必直接调用它 -- 那些动画库会替你管理好帧的更新。
+        》setNativeProps
+            正如直接操作文档所说，setNativeProps方法可以使我们直接修改原生视图的组件的属性，而不需要使用setState来重新渲染整个组件树。
+            如果我们要更新组件有一个非常深的内嵌结构，并且没有使用shouldComponentUpdate来优化，那么使用setNativeProps就将大有裨益。
+
+            如果你发现你的动画丢帧（低于60帧每秒），可以尝试使用setNativeProps或者shouldComponentUpdate来优化它们。Or you could run
+            the animations on the UI thread rather than the JavaScript thread with the useNativeDriver option(http://facebook.github.io/react-native/blog/2017/02/14/using-native-driver-for-animated.html)。你还可以考虑将部分计算
+            工作放在动画完成之后进行，这时可以使用InteractionManager。你还可以使用应用内的开发者菜单中的“FPS Monitor”工具来监控应用的
+            帧率。
+19.无障碍功能
+    iOS和Android原生app的无障碍功能(accessibility);
+    accessibility -- 即为残障人士提供便利。iOS和android都提供了便于残障人士无障碍使用App的API。此外，两个平台都提供了整套的辅助技术，如：都针对
+    视力受损人士的读屏软件(iOS的VoiceOver和Android的TalkBack)。同样地，在React Native中我们也封装了对应的API使开发者能够在APP中集成无障碍功能。
+
+    注意：iOS和Android在具体方法上会有所区别，因此React Native的实现也会因平台而异。
+
+    》使App能够无障碍使用
+
+        》无障碍功能属性
+            accessible(iOS,Android),设置为true表示当前视图是一个无障碍元素。无障碍元素会将其所有子组件视为一整个可以选中的组件，默认情况下
+            所有可点击组件(Touchable系列组件)都是无障碍元素。
+
+            在Android上，React Native视图的'accessible={true}'属性会被转义为原生视图对应的'focusable={true}'属性。
+                <View accessible={true}>
+                  <Text>text one</Text>
+                  <Text >text two</Text>
+                </View>
+                //上面例子中，当父视图开启无障碍属性后，我们就无法单独选中'text one'和'text two'而只能选中整个父视图
+
+            》无障碍标签accessibilityLabel(iOS,Android)
+                当一个视图启用无障碍属性后，最后再加上一个accessibilityLabel，这样可以让使用VoiceOver的人们清楚地知道自己选中了什么。
+                VoiceOver会读出选中元素的无障碍标签。
+
+                设定accessibilityLabel属性并赋予一个字符串内容即可在视图中启用无障碍标签：
+                    <TouchableOpacity accessible={true} accessibilityLabel={'Tap me!'} onPress={this._onPress}>
+                      <View style={styles.button}>
+                        <Text style={styles.buttonText}>Press me!</Text>
+                      </View>
+                    </TouchableOpacity>
+                    //如果不在TouchableOpacity上设置无障碍标签，那么其默认值就会是"Press me!"（即Text子组件的文本值）。
+                    //此时无障碍标签是通过自动取所有Text子节点的值，然后用空格连起来生成。
+            》无障碍元素特性accessibilityTraits(iOS)
+                无障碍元素特性可以使VoiceOver的用户知道自己选中了的是什么类型的元素，是文本标签还是按钮？accessibilityTraits回答了这个问题。
+                设定accessibilityTraits属性并赋予以下一个或多个(以数组的形式)特性字符串即可启用无障碍元素特性：
+                    none 无特性元素。
+                    button 具有按钮特性。
+                    link 具有链接特性。
+                    header 作为内容区域的头部（比如导航栏的标题）。
+                    search 用作搜索框的文本框。
+                    image 具有图片特性。可以和按钮或链接等连用。
+                    selected 元素被选中时使用。比如表格中被选中的一行或是segmented control中被选中的一个按钮。
+                    plays 在元素被点击后播放音效时使用。
+                    key 元素作为虚拟键盘的一个键使用。
+                    text 具有不可修改的文本的特性。
+                    summary 在App冷启动（指完全退出后台后再进入）时提供当前的简要总结信息的元素。比如当天气应用冷启动时，显示当前天气情况的元素就会被标记为summary。
+                    disabled 在元素被禁用，不接受用户输入时使用。
+                    frequentUpdates 有些元素会频繁更新其标签或值，但我们又不希望太频繁地接受到通知，那么就使用这一特性标记。这一特性标记会使无障碍功能的客户端隔一段时间后再去检查变化（避免频繁打扰用户）。秒表就是个典型的例子。
+                    startsMedia 在元素启动一个多媒体会话时使用（比如播放电影或是录音），此时不应该被VoiceOver这样的辅助技术打断。
+                    adjustable 元素具有可调整的特性（比如一个滑块）。
+                    allowsDirectInteraction 在元素可以接受VoiceOver用户的直接触摸交互时使用（比如展示钢琴键盘的视图）。
+                    pageTurn 用于通知VoiceOver当前页面已经阅读完毕，可以滚动到下一个页面了。
+            》无障碍元素的点击事件onAccessibilityTap(iOS)
+                使用这个属性来绑定一个自定义的事件处理函数，这个函数会在当用户双击某个已经选中的无障碍元素时调用
+            》MagicTap 双指双击事件onMagicTap(iOS)
+                使用这一属性来绑定一个自定义的事件处理函数，这一函数会在当用户执行"magic tap"操作（即使用两个指头来双击）时调用。
+                magic tap的事件处理函数应该做与当前组件相关性最高的操作，比如在电话应用中，magic tap的操作就应该接通电话，或是挂断已经接通的电话。
+                如果当前选中的元素并没有onMagicTap函数，则系统会自动遍历视图层，直到找到一个可以响应此操作的。
+            》无障碍组件类型accessibilityComponentType(Android)
+                在某些情况下，我们也希望告知用户他选中的组件的类型(如是按钮)。如果我们使用的是原生按钮，这个行为会自动进行，但既然我们主要使用js
+                则还需要为android的TalkBack技术提供更多信息，要实现这一点，就必须为所有UI组件提供accessibilityComponentType属性，如可以指定：button，radiobutton_checked以及radiobutton_unchecked等值。
+                <TouchableWithoutFeedback accessibilityComponentType=”button”
+                  onPress={this._onPress}>
+                  <View style={styles.button}>
+                    <Text style={styles.buttonText}>Press me!</Text>
+                  </View>
+                </TouchableWithoutFeedback>
+                //TouchableWithoutFeedback在TalkBack中被声明为一个原生按钮
+            》无障碍的动态区域accessibilityLiveRegion (Android)
+                组件发生动态变化时，我们希望TalkBack能够提醒用户，这一行为可以通过设置accessibilityLiveRegion属性来实现。具体值可以设置为
+                none、polite以及assertive。
+                》none 辅助服务不应该提醒用户当前视图的变化。
+                》polite 辅助服务应该提醒用户当前视图的变化。
+                》assertive 辅助服务应该立即打断当前的语音会话，提醒用户当前视图的变化。
+
+                <TouchableWithoutFeedback onPress={this._addOne}>
+                  <View style={styles.embedded}>
+                    <Text>Click me</Text>
+                  </View>
+                </TouchableWithoutFeedback>
+                <Text accessibilityLiveRegion="polite">
+                  Clicked {this.state.count} times
+                </Text>
+                //上面这个例子中，_addOne方法会改变state.count这个变量。那么只要用户点击了 TouchableWithoutFeedback，
+                //TalkBack就会读出Text组件中的值，因为它设置了accessibilityLiveRegion=”polite”属性。
+            》无障碍功能优先级importantForAccessibility (Android)
+                如果有两个UI组件同时层叠覆盖在父视图上，那么默认的无障碍功能的焦点位置就可能难以预料。importantForAccessibility属性解决了
+                这个问题，它可以控制某个视图是否触发无障碍功能事件，以及是否将其报告给辅助服务，具体值可以为 auto  yes  no 和no-hide-descendants(最后一个值会强制辅助服务忽略当前组件及其所有子组件)
+                <View style={styles.container}>
+                  <View style={{position: 'absolute', left: 10, top: 10, right: 10, height: 100,
+                    backgroundColor: 'green'}} importantForAccessibility=”yes”>
+                    <Text> First layout </Text>
+                  </View>
+                  <View style={{position: 'absolute', left: 10, top: 10, right: 10, height: 100,
+                    backgroundColor: 'yellow'}} importantForAccessibility=”no-hide-descendant”>
+                    <Text> Second layout </Text>
+                  </View>
+                </View>
+                //上面这个例子里，第二个View的组件对于TalkBack和其他一些辅助服务来说是完全不可见的。
+                //这样我们就可以轻易地把两个视图覆盖到同一个父容器上，而不用担心影响TalkBack服务。
+            》发送无障碍功能的相关事件(android)
+                有时候需要在UI组件上主动触发一个无障碍功能的事件(如：当某个自定义的视图出现在屏幕上或某个自定义的单选框被选中)。为此
+                Native UIManager模块提供了一个sendAccessibilityEvent方法，它接受两个参数：view标签和事件类型。
+                _onPress: function() {
+                  this.state.radioButton = this.state.radioButton === “radiobutton_checked” ?
+                  “radiobutton_unchecked” : “radiobutton_checked”;
+                  if (this.state.radioButton === “radiobutton_checked”) {
+                    RCTUIManager.sendAccessibilityEvent(
+                      React.findNodeHandle(this),
+                      RCTUIManager.AccessibilityEventTypes.typeViewClicked);
+                  }
+                }
+
+                <CustomRadioButton
+                  accessibleComponentType={this.state.radioButton}
+                  onPress={this._onPress}/>
+                //在上面这个例子里我们创建了一个自定义的单选框（CustomRadioButton），
+                //并且使其具有了和原生单选框一样的无障碍功能。具体来说，也就是TalkBack可以正确地通知用户当前选项的变更了。
+            》测试VoiceOver(iOS)
+                要开启VoiceOver功能，先打开iOS设备的设置选项。点击'通用',然后是'辅助选项'，你会看到很多为残疾人群使用手机减少障碍的工具。
+                如：更大的字体、更高的对比度以及VoiceOver。
+
+                在“视觉”菜单下点击VoiceOver，将开关置为打开状态即可启用。
+
+                在辅助选项的最底部，有一个“辅助选项快捷键”，开启之后可以通过点击三次Home按钮来快速关闭或打开VoiceOver工具。
+20.定时器
+    定时器是一个应用中非常重要的部分，React Native实现了和浏览器一致的定时器Timer。
+
+    》setTimeout, clearTimeout
+    》setInterval, clearInterval
+    》setImmediate, clearImmediate
+    》requestAnimationFrame, cancelAnimationFrame
+
+    requestAnimationFrame(fn)和setTimeout(fn,0)不同，前者会在每帧刷新之后执行一次，而后者则会尽可能快的执行(在iPhone5s上有可能每秒1000次以上)。
+
+    setImmediate则会在当js执行块结束的时候执行，就在将要发送批量响应数据到原生之前。注意如果你在setImmediate的回调函数中又执行了setImmediate，它
+    会紧接着立刻执行，而不会再调用之前等待原生代码。
+
+    Promise的实现就是使用了setImmediate来执行异步调用的。
+
+    》InteractionManager
+        原生应用感觉如此流畅的一个重要原因就是在互动和动画的过程中避免繁重的操作。在React Native里，我们目前受到限制，因为我们只有一个js
+        执行线程。不过你可以用InteractionManager来确保在执行繁重工作之前所有的交互和动画都已经处理完毕。
+
+        //应用可以通过一下代码来安排一个任务，使其在交互结束之后执行：
+        InteractionManager.runAfterInteractions(() => {
+           // ...需要长时间同步执行的任务...
+        });
+
+        //和前面几个任务安排方法对比一下
+        》requestAnimationFrame()；//用来执行在一段时间内控制视图动画的代码
+        》setImmediate/setTimeout/setInterval //在稍后执行代码，注意这有可能会延迟当前正在进行的动画
+        》runAfterInteractions//在稍后执行代码，不会延迟当前进行的动画
+        触摸处理系统会把一个或多个进行中的触摸操作认定为交互，并且会将runAfterInteractions()的回调函数延迟执行，直到所有的触摸操作都结束或取消了。
+
+        InteractionManager还允许应用注册动画，在动画开始创建一个交互句柄，然后再结束的时候清除它。
+        var handle = InteractionManager.createInteractionHandle();
+        // 执行动画... (`runAfterInteractions`中的任务现在开始排队等候)
+
+        // 在动画完成之后
+        InteractionManager.clearInteractionHandle(handle);
+        // 在所有句柄都清除之后，现在开始依序执行队列中的任务
+    》务必在卸载组件前清除定时器
+        发现很多React Native应用中发生致命错误(闪退)是与计时器有关的。具体来说，是在某个组件被卸载之后，计时器仍然运行。要
+        解决这个问题，只需要在卸载组件的时候 及时清除定时器：
+        import React,{
+          Component
+        } from 'react';
+
+        export default class Hello extends Component {
+          componentDidMount() {
+            this.timer = setTimeout(
+              () => { console.log('把一个定时器的引用挂在this上'); },
+              500
+            );
+          }
+          componentWillUnmount() {
+
+            // 如果存在this.timer，则使用clearTimeout清空。
+            // 如果你使用多个timer，那么用多个变量，或者用个数组来保存引用，然后逐个clear
+            this.timer && clearTimeout(this.timer);
+          }
+        };
+21.直接操作
+    有时候我们需要直接改动组件并触发局部的刷新，但不使用state或props。比如在浏览器中使用React库，有时候会需要直接修改一个DOM节点，而在手机
+    APP中操作View时也会碰到同样的情况。在React Native中，setNativeProps就是等价于直接操作DOM节点的方法。
+
+    》什么时候使用setNativeProps》
+        在不得不频繁刷新而又遇到了性能瓶颈的时候。直接操作组件并不是应该经常使用的工具，一般来说只有用来创建连续的动画。同时避免渲染组件结构
+        和同步太多视图变化所带来的大量开销。setNativeProps是一个简单粗暴的方法，它直接在底层DOM、UIView等。而不是React组件中记录state，这样会
+        使得代码逻辑难以理清，所以在使用这个方法之前请尽量先尝试使用setState和shouldComponentUpdate方法来解决问题。
+
+    》setNativeProps 与 TouchableOpacity
+        TouchableOpacity这个组件就是在内部使用了setNativeProps方法来更新其子组件的透明度：
+            setOpacityTo: function(value) {
+              // Redacted: animation related code
+              this.refs[CHILD_REF].setNativeProps({
+                opacity: value
+              });
+            },
+        由此我们可以写下面代码：子组件可以响应点击事件，更改自己的透明度。而子组件自身并不需要处理这件事，也不需要再实现中做任何修改。
+            <TouchableOpacity onPress = {this._handlePress}>
+                <View style={styles.button}>
+                    <Text>Press me!</Text>
+                </View>
+            </TouchableOpacity>
+        如果不使用setNativeProps这个方法来实现这需求，那么一种可能的办法是把透明度保存到state中，然后再onPress事件触发时更新这个值：
+            getInitialState(){
+                return {myButtonOpacity:1}
+            }
+
+            render(){
+                return (
+                    <TouchableOpacity
+                        onPress={ () => this.setState({myButtonOpacity:.5})}
+                        onPressOut={ () => this.setState({myButtonOpacity:1})}
+                    >
+                        <View style={[styles.button,{opacity:this.state.myButtonOpacity}]}>
+                            <Text>Press me!</Text>
+                        </View>
+                    </TouchableOpacity>
+                );
+            }
+            比起之前的例子，这一做法会消耗大量的计算 —— 每一次透明值变更的时候React都要重新渲染组件结构，
+            即便视图的其他属性和子组件并没有变化。一般来说这一开销也不足为虑，但当执行连续的动画以及响应用
+            户手势的时候，只有正确地优化组件才能提高动画的流畅度。
+    》复合组件与setNativeProps
+        复合组件并不是单纯的由一个原生视图构成，所以你不能对其直接使用setNativeProps，如下面案例：
+        var MyButton = React.createClass({
+            render(){
+                return (
+                    <View>
+                        <Text>{this.props.label}</Text>
+                    </View>
+                );
+            }
+        });
+
+        var App = React.createClass({
+            render(){
+                return (
+                    <TouchableOpacity>
+                        <MyButton label='Press me!'/>
+                    </TouchableOpacity>
+                );
+            }
+        });
+        //上面例子报错：Touchable child must either be native or forward setNativeProps to a native component，这是因为MyButton
+        并非直接由原生视图构成，而我们只能给原生视图设置透明值。你可以尝试这样去理解：如果你通过React.createClass方法自定义了一个组件，
+        直接给它设置样式prop是不会生效的，你得把样式props层层向下传递给子组件，直到子组件是一个能够直接定义样式的原生组件。同理，我们
+        也需要把setNativeProps传递给由原生组件封装的子组件。
+
+        》将setNativeProps传递给子组件
+            具体要做的就是在我们自定义组件中在封装一个setNativeProps方法，其内容为对合适的子组件调用真正的setNativeProps方法，并传递要设置
+            的参数。
+            var MyButton = React.createClass({
+                setNativeProps(nativeProps){
+                    this._root.setNativeProps(nativeProps);
+                },
+
+                render(){
+                    return (
+                        <View ref={ component => this._root = component} {...this.props}>
+                            <Text>{this.props.label}</Text>
+                        </View>
+                    );
+                }
+            });
+
+    》避免和render方法的冲突
+        如果要更新一个由render方法来维护的属性，则可能会碰到 一些出人意料的bug。因为每次组件重新渲染都可能引起属性变化，这样一来之前
+        通过setNativeProps所设定的值就被完全忽略和覆盖掉了。
+    》setNativeProps与shouldComponentUpdate
+        通过巧妙运用 shouldComponentUpdate方法，可以避免重新渲染那些实际没有变化的子组件所带来的额外开销，此时使用setState的性能已经可
+        以与setNativeProps相媲美了。
+22.调式
+    》访问App内的开发菜单
+        你可以通过摇晃设备或是选择iOS模拟器的Hardware菜单中的Shake Gesture选项来打开开发菜单。另外如果是在iOS模拟器中运行
+        还可以按下command+d ，android模拟器 command + M快捷键。(windows上可能是F1或F2)。
+
+        注意：在发布版本中 开发者菜单会被关闭。
+    》刷新js
+        传统的原生应用开发中，每次修改都需要重新编译，但在RN中你只需要刷新一下js代码就能立刻看到变化。
+        具体的操作：在开菜单中点击reload选项。也可以在iOS模拟器中按下command + r,android模拟器上对应的
+        则按两下r(注意：某些RN版本可能在windows中reload无效，请等待官方修复)。
+
+        注意：如果在iOS模拟器中按下 command+r 没有变化，则注意检查hardware菜单中，keyboard选项下的 connect hardware keyboard是否被选中。
+    》自动刷新
+        选着开发菜单中的Enable Live Reload可以开启自动刷新，这样可以节省开发时间。
+
+        更神奇的是，你还可以保持应用的当前运行状态，修改后的js文件会自动注入进来。要实现这个特性只需要开启开发菜单中的Hot Reloading选项。
+        某些情况下hot reload并不能顺序实施，如果碰到任何界面刷新上的问题，可以尝试手动完全刷新。
+
+        但有时候必须要重新编译应用才能使修改生效：
+        》增加了新的资源(比如给iOS的Images.xcassets或是Andorid的res/drawable文件夹添加了图片)
+        》更改了任何的原生代码（objective-c/swift/java）
+    》应用内的错误与警告提示(红屏和黄屏)
+        红屏或黄屏提示都只会在开发版本中显示，正式的离线包中是不会显示的。
+
+        》红屏错误
+            应用内的报错会以全屏红色显示在应用中(调式模式下)，我们称为红屏(red box)报错,你可以使用console.error()来手动触发
+            红屏错误。
+        》黄屏警告
+            应用内的警告会以全屏黄色显示在应用中(调式模式下)，我们称为黄屏(yellow box)报错。点击警告可以查看详情或忽略掉。
+            和红屏报错类似，你可以使用console.warn()来手动触发黄屏警告。在默认情况下，开发模式中启用了黄屏警告，可以通过
+            以下代码关闭：
+            console.disableYellowBox = true;
+            console.warn('YellowBox is disabled.');
+
+            //你也可以通过代码屏蔽指定的警告，像下面这样调用ignoreWarnings方法，参数为一个数组：
+            YellowBox.ignoreWarnings(['Warning: ']);//数组中的字符串就是要屏蔽的警告的开头的内容。
+
+        注意：红屏和黄屏在发布版本中都是自动禁用的。
+    》访问控制台日志
+        在运行RN应用时，可以在终端中运行如下命令来查看控制台的日志：
+        react-native log-ios
+        react-native log-android
+
+        此外，也可以在iOS模拟器的菜单中选择debug --》open system log来查看。
+        如果是android应用，无论是运行在模拟器还是真机上，都可以通过在终端命令行运行 adb logcat *:S ReactNative:V ReactNativeJS:V命令来查看。
+    》Chrome开发者工具
+        在开发者菜单中选择 debug js remotely 选项，即可以开始在chrome中调试js代码。点击这个选项的同时会自动打开调式页面http://localhost:8081/debugger-ui。
+        在chrome的菜单中选择 tools + developer tools可以打开开发者工具，也可以通过键盘快捷键来打开(mac上是command + option + I，windows上是
+        ctrl + shift + i 或f12)。打开有异常时暂停(pause on caught exception)选项，能够获得更好的开发体验。
+
+        注意：chrome中并不能直接看到app的用户界面，而只能提供console的输出，以及在sources项中断点调式js脚本。
+    》react developer tools
+        使用react native 0.43或更高的版本，您可以使用独立版本的React Developer工具来调试React组件层次结构。要使用它，请在全局环境中安装“react-devtools”包。
+        npm install -g react-devtools
+
+        注意：react-devtools依赖于electron，而electron需要到国外服务器下载二进制包，所以国内用户这一步很可能卡住。此时请在环境变量中添加
+        electron专用的国内镜像源ELECTRON_MIRROR="https://npm.taobao.org/mirrors/electron/"，然后再尝试安装react-devtools。
+
+        //安装完成后再命令行中执行react-devtools即可启动此工具：
+        react-devtools
+        //它应该在几秒之内链接到你的模拟器
+
+        注意：如果你避免全局安装react-devtools,你可以添加react-devtools作为一个项目的依赖：
+        yarn add --dev react-devtools//安装
+        yarn react-devtools//运行
+        或
+        npm install --save-dev react-devtools
+        在package.json中scripts添加："react-devtools": "react-devtools"
+        npm run react-devtools//运行
+
+        》和react native inspector集成
+            你可以打开app developer menu并且选择 show inspector。它会弹出一个模态框，让你选择ui element并且查看它的相关信息。
+
+            》show inspector
+                当react-devtools是运行时，inspector会进入一个特殊的模式，并使用devTools作为主ui。在此模式下，在模拟器中单击
+                某个东西将会在DevTools中打开相关的组件。
+
+                你能够选择 hide inspector来退出这个模式。
+    》使用chrome开发者工具来在设备上调试
+        对于iOS真机来说，需要打开 RCTWebSocketExecutor.m文件,然后将其中的localhost改为你电脑的IP地址，最后启用开发者菜单中的debug js remotely选项。
+
+        对于android 5.0+ 设备(包括模拟器)来说，将设备通过USB链接到电脑上后，可以使用adb命令行工具来设定从设备到电脑的端口转发：
+        adb reverse tcp:8081 tcp:8081
+        如果设备android版本在5.0以下，则可以在开发者菜单中选择'Dev Settings - Debug server host for device',然后再其中填入电脑的ip地址:端口。
+
+        注意：如果在chrome调式时遇到一些问题，那么有可能是某些chrome的插件引起的，试着禁用所有的插件，然后逐个启用，以确定是否某个插件影响到了调试。
+    》使用自定义的js调试器来调试
+        如果想用其他的js调试器来替代chrome，可以设置一个名为REACT_DEBUGGER的环境变量，其值为启动自定义调试器的命令。调试的流程依然是从开发者菜单
+        中的debug js remotely选项开始。
+        被指定的调试器需要知道项目所在的目录(可以一次传递多个目录参数，以空格隔开)。例如，如果你设定了REACT_DEBUGGER="node /某个路径/launchDebugger.js
+        --port 2345 --type ReactNative"，那么启动调试器的命令就应该是node /某个路径/launchDebugger.js --port 2345 --type ReactNative /某个路径/你的RN项目目录。
+
+        注意：以这种方式执行的调试器最好是一个短进程的(short-lived processes)，同时最好也不要超过200k的文字输出。
+    》在Android上使用Stetho来调试
+        在android/app/build.gradle文件中添加：
+        compile 'com.facebook.stetho:stetho:1.3.1'
+        compile 'com.facebook.stetho:stetho-okhttp3:1.3.1'
+
+        在android/app/src/main/java/com/{yourAppName}/MainApplication.java文件中添加：
+        import com.facebook.react.modules.network.ReactCookieJarContainer;
+        import com.facebook.stetho.Stetho;
+        import okhttp3.OkHttpClient;
+        import com.facebook.react.modules.network.OkHttpClientProvider;
+        import com.facebook.stetho.okhttp3.StethoInterceptor;
+        import java.util.concurrent.TimeUnit;
+
+        在android/app/src/main/java/com/{yourAppName}/MainApplication.java文件中添加：
+        public void onCreate() {
+              super.onCreate();
+
+              Stetho.initializeWithDefaults(this);
+              OkHttpClient client = new OkHttpClient.Builder()
+              .connectTimeout(0, TimeUnit.MILLISECONDS)
+              .readTimeout(0, TimeUnit.MILLISECONDS)
+              .writeTimeout(0, TimeUnit.MILLISECONDS)
+              .cookieJar(new ReactCookieJarContainer())
+              .addNetworkInterceptor(new StethoInterceptor())
+              .build();
+              OkHttpClientProvider.replaceOkHttpClient(client);
+        }
+
+        运行react-native run-android
+
+        打开一个新的chrome选项卡，在地址栏中输入 chrome://inspect并回车，在页面中选择 Inspect device(标有Powered
+        by stetho字样)
+    》调试原生代码
+        在和原生代码打交道时(如：编写原生模块)，可以直接从android studio或xcode中启动应用，并利用这些IDE的内置功能来调试(如设置断点)。
+        这一方面和开发原生应用并无二至。
+    》性能监测
+        你可以在开发者菜单中选择Pref Monitor选项以开启一个悬浮层，其中会显示应用的当前帧数。
+
+23.自动化测试
+
+24.js环境
+    在使用React Native时，你的js代码将会运行在两个不同的环境上：
+
+    在iOS、Android的模拟器或真机上，React Native使用的是JavaScriptCore，也就是Safari所使用的js引擎。但是在iOS上JavaScriptCore
+    并灭有使用及时编译技术(JIT),因为在iOS中应用无权拥有可写可执行的内存页(因而无法动态生成代码)。
+    在使用chrome调试时，所有js代码都运行在chrome中，并通过WebSocket与原生代码通信，此时的运行环境是V8引擎。
+
+    虽然两个环境非常类似，但开发者还是可能碰到一些不一致的地方。未来我们很可能会尝试一些其他的js引擎，所以尽量避免使用依赖于
+    特定环境的代码。
+
+    》js语法的转换器
+        语法转换器可以使编写代码的过程更加享受，因为开发者可以借助转换器直接使用新的js语法标准而无需等待js解释器的支持。
+
+        React Native从.5之后开始已经内置了Babel转换器，可以查看Babel文档来了解它可以转换的语法。
+        目前React Native默认开启的语法转换特性：
+        》ES5
+            保留关键字 promise.catch(function(){})
+        》ES6
+            箭头函数 Arrow functions ：() => {}
+            块级作用于 Block scoping ：let a = 'hi'
+            数组的扩展运算 Call spread ：Math.max(...array)
+            类class ：class C extends React.Component { render() { return <View />; } }
+            常量Constants : const answer = 42;
+            解构Destructuring：var {isActive, style} = this.props;
+            for...of：for (var num of [1, 2, 3]) {}
+            模块Modules:import React, { Component } from 'react';
+            动态属性键Computed Properties:var key = 'abc'; var obj = {[key]: 10};
+            对象方法的简写 Object consise method:var obj = { method() { return 10; } };
+            对象属性的简写Object short notaion:var name = 'vjeux'; var obj = { name };
+            参数的扩展运算rest params :function(type, ...args) { }
+            字符串模板template literals:var who = 'world'; var str = `Hello ${who}`;
+        》ES7
+            对象的扩展运算Object Spread：var extended = { ...obj, a: 10 };
+            参数列表末尾允许放置逗号Function trailing comma:function f(a, b, c,) { }
+            Async函数: async function doStuffAsync() { const foo = await doOtherStuffAsync(); }
+        》其他特性
+            JSX: <View style={{color: 'red'}} />
+            Flow: function foo(x: ?number): string {}//facebook自己推出的
+    》接口兼容 Polyfills
+        许多标准功能也都在支持的js运行环境上做了兼容支持。
+        》浏览器
+            console.{log, warn, error, info, trace, table}
+            CommonJS require
+            XMLHttpRequest, fetch
+            {set, clear}{Timeout, Interval, Immediate}, {request, cancel}AnimationFrame
+            navigator.geolocation
+        》ES6
+            Object.assign
+            String.prototype.{startsWith, endsWith, repeat, includes}
+            Array.from
+            Array.prototype.{find, findIndex}
+        》ES7
+            Object.{entries, values}
+        》其他特性
+            __DEV__
+
+25.性能
+    使用React Native替代基于webView的框架来开发app的理由，就是为了使App可以达到每秒60帧(足够流畅)，并且能有类似原生app的外观和手感。
+    因此我们尽可能的优化React Native，使开发者能集中精力处理app的业务逻辑而不是费心考虑性能。
+
+    》关于 帧
+        老一辈人常常把电影称为“移动的画”，是因为视频中逼真的动态效果其实是一种幻觉，这种幻觉是由一组静态的图片以一个稳定的速度
+        快速变化所产生的。我们把这组图片中的每一张图片叫做一帧，而每秒钟显示的帧数直接的影响了视频（或者说用户界面）的流畅度和真
+        实感。iOS设备提供了每秒60的帧率，这就留给了开发者和UI系统大约16.67ms来完成生成一张静态图片（帧）所需要的所有工作。如果在
+        这分派的16.67ms之内没有能够完成这些工作，就会引发‘丢帧’的后果，使界面表现的不够流畅。
+
+        下面要讲的事情可能更为复杂：请先调出你应用的开发菜单，打开Show FPS Monitor. 你会注意到有两个不同的帧率.
+    》js帧率
+        对大多数React Native应用来说，业务逻辑是运行在JavaScript线程上的。这是React应用所在的线程，也是发生API调用，以及处理触摸事件等操作
+        的线程。更新数据到原生支持的视图是批量进行的，并且在事件循环每进行一次的时候被发送到原生端，这一步通常会在一帧时间结束之前处理完（
+        如果一切顺利的话）。如果JavaScript线程有一帧没有及时响应，就被认为发生了一次丢帧。 例如，你在一个复杂应用的根组件上调用了this.setState，
+        从而导致一次开销很大的子组件树的重绘，可想而知，这可能会花费200ms也就是整整12帧的丢失。此时，任何由JavaScript控制的动画都会卡住。只要卡
+        顿超过100ms，用户就会明显的感觉到。
+
+        这种情况经常发生在Navigator的切换过程中：当你push一个新的路由时，JavaScript需要绘制新场景所需的所有组件，以发送正确的命令给原生端去
+        创建视图。由于切换是由JavaScript线程所控制，因此经常会占用若干帧的时间，引起一些卡顿。有的时候，组件会在componentDidMount函数中做一
+        些额外的事情，这甚至可能会导致页面切换过程中多达一秒的卡顿。
+
+        另一个例子是触摸事件的响应：如果你正在JavaScript线程处理一个跨越多个帧的工作，你可能会注意到TouchableOpacity的响应被延迟了。这是因
+        为JavaScript线程太忙了，不能够处理主线程发送过来的原始触摸事件。结果TouchableOpacity就不能及时响应这些事件并命令主线程的页面去调整
+        透明度了。
+    》主线程即UI线程帧率
+        很多人会注意到，NavigatorIOS的性能要比Navigator好的多。原因就是它的切换动画是完全在主线程上执行的，因此不会被JavaScript线程上的掉帧所影响。
+
+        同样，当JavaScript线程卡住的时候，你仍然可以欢快的上下滚动ScrollView，因为ScrollView运行在主线程之上（尽管滚动事件会被分发到JS线程，
+        但是接收这些事件对于滚动这个动作来说并不必要）。
+    》性能问题的常见原因
+        》console.log语句
+            在运行打好了离线包的应用时，控制台的打印语句可能会极大的拖累js线程。注意有些第三方调试库也可能包含控制台打印语句，如：redux-logger,
+            所以在发布应用前务必仔细检查，确保全部移除。
+
+            这里有个小技巧在发布时屏蔽掉所有的console.*调用。React Native中有个全局变量__DEV__用于指示当前运行环境是否是开发环境。我们可以据此在
+            正式环境中替换掉原系统原先的console实现。
+                if (!__DEV__) {
+                  global.console = {
+                    info: () => {},
+                    log: () => {},
+                    warn: () => {},
+                    debug: () => {},
+                    error: () => {},
+                  };
+                }
+            //这样在打包发布时，所有的控制台语句就会被自动替换为空函数，而在调式时它们仍然会被正常调用。
+
+            还有个babel插件可以帮你移除所有的console.*调用，首先需要使用yarn add --dev babel-plugin-transform-remove-console来安装，
+            然后再项目根目录下编译(或新建)一个名为.babelrc的文件，在其中加入：
+                {
+                  "env": {
+                    "production": {
+                      "plugins": ["transform-remove-console"]
+                    }
+                  }
+                }
+                //这样在打包发布时，所有的控制台语句就会被自动移除，而在调试时它们仍然会被正常调用。
+        》开发模式 dev = true
+            JavaScript线程的性能在开发模式下是很糟糕的。这是不可避免的，因为有许多工作需要在运行的时候去做，
+            譬如使你获得良好的警告和错误信息，又比如验证属性类型（propTypes）以及产生各种其他的警告。
+        》缓慢的导航器Navigator切换
+            如之前说，Navigator的动画是由JavaScript线程所控制的。想象一下“从右边推入”这个场景的切换：
+            每一帧中，新的场景从右向左移动，从屏幕右边缘开始（不妨认为是320单位宽的的x轴偏移），最终移动
+            到x轴偏移为0的屏幕位置。切换过程中的每一帧，JavaScript线程都需要发送一个新的x轴偏移量给主线程。
+            如果JavaScript线程卡住了，它就无法处理这项事情，因而这一帧就无法更新，动画就被卡住了。
+
+            长远的解决方法，其中一部分是要允许基于JavaScript的动画从主线程分离。同样是上面的例子，我们可
+            以在切换动画开始的时候计算出一个列表，其中包含所有的新的场景需要的x轴偏移量，然后一次发送到主
+            线程以某种优化的方式执行。由于JavaScript线程已经从更新x轴偏移量给主线程这个职责中解脱了出来，
+            因此JavaScript线程中的掉帧就不是什么大问题了 —— 用户将基本上不会意识到这个问题，因为用户的
+            注意力会被流畅的切换动作所吸引。
+
+            新的React Navigation库的一大目标就是为了解决这个问题。React Navigation中的视图是原生组件，同时
+            用到了运行在原生线程上的Animated动画库，因而性能表现十分流畅。
+        》ListView初始化渲染太慢以及列表过长时滚动性能太差
+            这是一个频繁出现的问题。因为iOS配备了UITableView，通过重用底层的UIViews实现了非常高性能的体验（相比之下ListView的性能没有那么好）。
+            用React Native实现相同效果的工作仍正在进行中，但是在此之前，我们有一些可用的方法来稍加改进性能以满足我们的需求。
+            》initialListSize
+                这个属性定义了首次渲染中绘制的行数。如果我们关注于快速的显示出页面，可以设置initialListSize为1，然后会发现其他行在接下来的帧
+                中被快速绘制到屏幕上，而每帧所显示的行数由pageSize所决定。
+            》pageSize
+                在初始渲染也就是initialListSize被使用之后，ListView将利用pageSize来决定每一帧所渲染的行数。默认为1 -- 但是如果你的页面很小
+                而且渲染的开销不大的话，你会希望这个值更大一些，稍加调整，你会发现它所起到的作用。
+            》scrollRenderAheadDistance
+                在将要进入屏幕区域之前的某个位置，开始绘制一行，距离按像素计算。
+                如果我们有一个2000个元素的列表，并且立刻全部渲染出来的话，无论是内存还是计算资源都会显得很匮乏，还很可能导致非常可怕的阻塞。
+                因此该属性允许我们来指定一个超出视野范围之外所需要渲染的行数。
+            》removeClippedSubviews
+                当这一选项设置为true时，超出屏幕的子视图(同时overflow的值为hidden)会从它们的原生父视图中移除。这个属性可以在列表很长的时候提高滚动
+                的性能。默认为false(.14版本后默认为true)。
+
+                这是一个应用在长列表上极其重要的优化。Android上，overflow值总是hidden的，所以你不必担心没有设置它。而在iOS上，你需要确保在行容器
+                上设置了overflow: hidden。
+        》我的组件渲染太慢，我不需要立即显示全部
+            这在初始浏览ListView时很常见，适当的使用它时获得稳定性性能的关键，就像之前所提到的，它可以提供一些手段在不同帧中来分开渲染页面，
+            稍加改进就可以满足你的需求。此外要记住的是ListView也可以横向滚动。
+        》在重绘一个几乎没有什么变化的页面时，JS帧率严重降低
+            如果你正在使用一个ListView，你必须提供一个rowHasChanged函数，它通过快速的算出某一行是否需要重绘，来减少很多不必要的工作。
+            如果你使用了不可变的数据结构，这项工作就只需检查其引用是否相等。
+
+            同样的，你可以实现shouldComponentUpdate函数来指明在什么样的确切条件下，你希望这个组件得到重绘。如果你编写的是纯粹的组件
+            （返回值完全由props和state所决定），你可以利用PureComponent来为你做这个工作。再强调一次，不可变的数据结构在提速方面非常
+            有用 —— 当你不得不对一个长列表对象做一个深度的比较，它会使重绘你的整个组件更加快速，而且代码量更少。
+        》由于在js线程中同时做了很多事情，导致js线程掉帧
+            导航切换极慢是该问题的常见表现，在其他情形下，这种问题也可能会出现。使用InteractionManager是一个好的方法。但是如果在动画中为了
+            用户体验的开销而延迟其他工作并不太能接受，那么你可以考虑一下使用LayoutAnimation。
+
+            Animated的接口一般会在JavaScript线程中计算出所需要的每一个关键帧，而LayoutAnimation则利用了Core Animation，使动画不会被JS线程
+            和主线程的掉帧所影响。
+
+            注意：LayoutAnimation只工作在 一次性 的动画上('静态'动画) -- 如果动画可能会被中途取消，你还是需要使用Animated。
+        》在屏幕上移动视图(滚动，切换，旋转)时，UI线程掉帧
+            当具有透明背景的文本位于一张图片上时，或者在每帧重绘视图时需要用到透明合成的任何其他情况下，这种现象尤为明显。
+            设置shouldRasterizeIOS或者renderToHardwareTextureAndroid属性可以显著改善这一现象。 注意不要过度使用该特性，否
+            则你的内存使用量将会飞涨。在使用时，要评估你的性能和内存使用情况。如果你没有需要移动这个视图的需求，请关闭这一属性。
+        》使用动画改变图片的尺寸时，UI线程掉帧
+            在iOS上，每次调整Image组件的宽度或者高度，都需要重新裁剪和缩放原始图片。这个操作开销会非常大，尤其是大的图片。比起直
+            接修改尺寸，更好的方案是使用transform: [{scale}]的样式属性来改变尺寸。比如当你点击一个图片，要将它放大到全屏的时候，就
+            可以使用这个属性。
+        》Touchable系列组件不能很好的响应
+            有些时候，如果我们有一项操作与点击事件所带来的透明度改变或高亮效果发生在同一帧中，那么有可能在onPress函数结束之前我们都看不到
+            这些效果。比如在onPress执行了一个setState的操作，这个操作需要大量计算工作并且导致了掉帧。对此的一个解决方案是将onPress处理函
+            数中的操作封装到requestAnimationFrame中：
+            handleOnPress() {
+              // 谨记在使用requestAnimationFrame、setTimeout以及setInterval时
+              // 要使用TimerMixin（其作用是在组件unmount时，清除所有定时器）
+              this.requestAnimationFrame(() => {
+                this.doExpensiveAction();
+              });
+            }
+        》分析
+            你可以利用内置的分析器来同时获取JavaScript线程和主线程中代码执行情况的详细信息。
+            对于iOS来说，Instruments是一个宝贵的工具库，Android的话，你可以使用systrace，参见调试Android UI性能
+26.升级
+    时刻将React Native更新到最新的版本，可以获得更多API、视图、开发者工具以及其他有用的东西(注：官方开发任务繁重，人手紧缺，几乎不会对旧版本提供维护支持
+    所以即便更新可能带来一些兼容上的变更，但建议开发者还是尽一切可能第一时间更新)。由于一个完整的React Native项目是由android项目 iOS项目和js项目组成的，
+    且打包在一个npm包中，所以升级可能会有一些麻烦。我们会尽量简化这个流程。你在项目目录下使用react-native -v命令查看当前的版本。以下是目前所需的升级步骤：
+
+    》基于Git的自动合并更新
+        注意：现在你不需要运行npm install去下载新版本的React Native了，按照下面的步骤即可自动进行更新。
+
+        》安装Git
+            你需要安装Git，但这并不要求你自己使用Git去管理项目，只是我们的更新过程会使用到Git，安装Git后把git路径添加到PATH变量中。
+        》安装react-native-git-upgrade工具模块
+            npm install -g react-native-git-upgrade
+
+            react-native-git-upgrade提供了豪华的一条龙自动合并更新流程，主要包含两个服务：
+            》首先它会利用Git工具计算新旧版本文件间的差异并生成补丁
+            》然后再用户的项目文件上应用补丁
+        》运行更新命令
+            react-native-git-upgrade //这样会直接把react native升级到最新版本
+
+            react-native-git-upgrade X.Y.Z //这样会把react native升级到指定的x.y.z版本
+
+            //升级过程会如丝般顺滑。当然在少数情况下，取决于具体的版本和你修改的程度，Git的合并算法也可能遭遇失败产生一些冲突，需要你人工介入。
+        》解决冲突
+            文件中的冲突会以分割线隔开，并清楚的标记出处，如下面：
+            13B07F951A680F5B00A75B9A /* Release */ = {
+              isa = XCBuildConfiguration;
+              buildSettings = {
+                ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+            <<<<<<< ours
+                CODE_SIGN_IDENTITY = "iPhone Developer";
+                FRAMEWORK_SEARCH_PATHS = (
+                  "$(inherited)",
+                  "$(PROJECT_DIR)/HockeySDK.embeddedframework",
+                  "$(PROJECT_DIR)/HockeySDK-iOS/HockeySDK.embeddedframework",
+                );
+            =======
+                CURRENT_PROJECT_VERSION = 1;
+            >>>>>>> theirs
+                HEADER_SEARCH_PATHS = (
+                  "$(inherited)",
+                  /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+                  "$(SRCROOT)/../node_modules/react-native/React/**",
+                  "$(SRCROOT)/../node_modules/react-native-code-push/ios/CodePush/**",
+                );
+                //ours表示自己的代码，theirs表示react native的官方代码。然后你可以根据实际的情况判断，选择某一方晋级，另一方出局。
+    》老式升级方案
+        》更新react-native的node依赖包
+            去https://www.npmjs.com/package/react-native查看react-native的npm包的最新版本或使用npm info react-native命令查看。
+
+            打开项目目录下的package.json文件，然后再dependencies模块下找到react-native，将当前版本号改到最新，然后再命令行中运行：
+            npm install //如果提示权限错误就再命令前面加sudo
+
+            注意：从0.24版本开始，react-native还需要额外安装react模块，且对react的版本有严格要求，高于或低于某个范围都不可以。本文
+            无法在这里列出所有react native和对应的react模块版本要求，只能提醒读者先尝试执行npm install，然后注意观察安装过程中的报
+            错信息，例如require react@某.某.某版本, but none was installed，然后根据这样的提示，执行npm install react@某.某.某版本
+             --save。
+        》升级项目模版文件
+            新版本的npm包通常还会包含一些动态生成的文件，这些文件是在运行react-native init创建新项目时生成的，如iOS和Android的项目
+            文件。为了使老项目的项目文件也能得到更新(不重新init)，你需要在命令行中运行：
+            react-native upgrade
+            这一命令会检查最新的项目模版，然后进行如下操作：
+            如果是新添加的文件，则直接创建。
+            如果文件和当前版本的文件相同，则跳过。
+            如果文件和当前版本的文件不同，则会提示你一些选项：查看两者的不同，选择保留你的版本或是用新的模板覆盖。你可以按下h键来查看所有可以使用的命令
+
+            注意：如果你有修改原生代码，那么在使用upgrade升级前，先备份，在覆盖。覆盖完成后，使用比对工具找出差异，将你之前修改的代码逐步搬运到新文件中。
+    》手动升级
+        有时候react native的项目结构改动较大，此时还需要手动做一些修改，如从.13到.14或.28到.29版本。
+        所以在升级时请阅读更新日志(http://bbs.reactnative.cn/category/1/%E5%85%AC%E5%91%8A)，以确定是否需要做一些额外的手动修改。
+27.特定平台代码
+    》在制作跨平台的App时，多半会碰到针对不同平台编写不同代码的需求。最直接的方案就是把组件放置到不同的文件夹下：
+        /common/components/
+        /android/components/
+        /ios/components/
+    》另一个选择是根据平台不同的组件的文件命令上加以区分如：
+        BigButtonIOS.js
+        BigButtonAndroid.js
+
+    //但除此以外React Native提供了另外两种简单区分平台的方案。
+    》特定平台扩展名
+        React Native会检测某个文件是否具有.ios.和.android.的扩展名，然后根据当前运行的平台加载正确对应的文件。
+        如：
+        BigButton.ios.js
+        BigButton.android.js
+
+        //这样命名组件后你就可以在其他组件中直接引用，而不需关心当前运行的平台是那个。
+        import BigButton from './components/BigButton';
+        //React Native会根据运行平台的不同引入正确对应的组件
+    》还有个实用的方法是Platform.select(),它可以以Platform.OS为key，从传入的对象中返回对应平台的值：
+        import {Platform,StyleSheet} from 'react-native'
+        var styles = StyleSheet.create({
+            container:{
+                flex:1,
+                ...Platform.select({
+                    ios:{
+                        backgroundColor:'red'
+                    },
+                    android:{
+                        backgroundColor:'blue'
+                    }
+                })
+            }
+        });
+        //上面的代码会根据平台的不同返回不同的container样式——iOS上背景色为红色，而android为蓝色。
+
+        这个方法可以接受任何合法类型的参数，因此你也可以直接用它针对不同平台返回不同的组件：
+        var Component = Platform.select({
+            ios: () => require('ComponentIOS'),
+            android:() => require('ComponentAndroid')
+        });
+
+        <Component/>
+    》平台模块
+        React Native提供了一个检测当前运行平台的模块。如果组件只有一小部分代码需要依据平台定制，那么这个模块就可以派上用场。
+        import {Platform,StyleSheet} from 'react-native'
+        var styles = StyleSheet.create({
+            height: (Platform.OS === 'ios') ? 200 : 100
+        });
+        //Platform.OS在iOS上会返回ios，而在Android设备或模拟器上则会返回android。
+
+        》检测iOS版本
+            在iOS上，Version属性是-[UIDevice systemVersion]的返回值，具体形式为一个表示当前系统版本的字符串。比如可能是"10.3"。
+        》检测Android版本
+            在Android上，Version属性是一个数字，表示Android的api level：
+            import { Platform } from 'react-native';
+
+            if(Platform.Version === 21){
+              console.log('当前api level是21，即运行的是Android 5.0，代号Lolipop');
+            }
+28.手势响应系统
+    触摸响应系统可以使组件在不关心父组件或子组件的前提下自行处理触摸交互，具体的实现在ResponderEventPlugin.js文件中，可以在源码中读到
+    更多细节和文档。
+
+    》最佳实践
+        用户之所以会觉得web app和原生app在体验上有巨大的差异，触摸响应是一大关键因素。用户的每一个操作都应该具有下列属性：
+        》反馈/高亮 -- 让用户看到他们到底按到了什么东西，以及松开手后会发生什么。
+        》取消功能 -- 当用户正在触摸操作时，应该是可以通过把手指移开来终止操作。
+        //这些特性使得用户在使用App时体验更好，因为它们可以让用户大胆试用，而不必担心点错了什么。
+    》TouchableHighlight与Touchable系列组件
+        响应系统用户起可能比较复杂，所以我们提供了一个抽象的Touchable实现，用来做'可触控'的组件。这一实现利用了响应系统，使得你
+        可以简单的以声明的方式来配置触控处理。如果要做一个按钮或网页链接，那么使用TouchableHighlight就可以了。
+    》响应者的生命周期
+        一个View只要实现了正确的协商方法，就可以成为触摸事件的响应者。我们通过两个方法去'询问'一个View是否愿意成为响应者：
+        》View.props.onStartShouldSetResponder: (evt) => true,用户在开始触摸的时候(手指刚刚接触屏幕的瞬间)是否愿意成为响应者
+        》View.props.onMoveShouldSetResponder: (evt) => true,如果View不是响应者，那么在每个触摸点开始移动(没有停下也没有离开屏幕)
+          时再询问一次是否愿意响应触摸交互
+
+        如果View返回true，并开始尝试成为响应者，那么会触发下列事件之一：
+        》View.props.onResponderGrant: (evt) => {} -- View现在要开始响应触摸事件了，这也是需要做高亮的时候，使得用户知道他到底点到了哪里。
+        》View.props.onResponderReject: (evt) => {} -- 响应者现在 '另有其人'而且暂时不会放权，请另作安排。
+
+        如果View已经开始响应触摸事件了，那么这些处理函数会被一一调用：
+        》View.props.onResponderMove: (evt) => {} -- 用户正在屏幕上移动手指时(没有停下也没有离开屏幕)
+        》View.props.onResponderRelease: (evt) => {} -- 触摸操作结束时触发，如：touchUp(手指抬起离开屏幕)。
+        》View.props.onResponderTerminationRequest: (evt) => true -- 有其他组件请求接替响应者，当前的View是否放权 ？返回true的话则释放响应者权利。
+        》View.props.onResponderTerminate: (evt) => {} -- 响应者权利已经交出，这可能是由其他View通过onResponderTerminationRequest请求的，也可能是由
+          操作系统强制夺权(如：iOS上的控制中心或通知中心)。
+
+        evt是一个合成事件，它包含以下结构：
+            nativeEvent
+                changedTouches - 在上一次事件之后，所有发生变化的触摸事件的数组集合（即上一次事件后，所有移动过的触摸点）
+                identifier - 触摸点的ID
+                locationX - 触摸点相对于父元素的横坐标
+                locationY - 触摸点相对于父元素的纵坐标
+                pageX - 触摸点相对于根元素的横坐标
+                pageY - 触摸点相对于根元素的纵坐标
+                target - 触摸点所在的元素ID
+                timestamp - 触摸事件的时间戳，可用于移动速度的计算
+                touches - 当前屏幕上的所有触摸点的集合
+    》捕获ShouldSet事件处理
+        onStartShouldSetResponder与onMoveShouldSetResponder是以冒泡的形式调用，即嵌套最深的节点最先调用。这意味着当多个View同时在
+        *ShouldSetResponder中返回true时，最底层的View将优先夺权。在多数情况下这并没有什么问题，因为这样可以确保所有控件和按钮是可用的。
+
+        但有些时候某个父View会希望能先成为响应者。我们可以利用捕获期来解决这一需求、响应系统在从最底层的组件开始冒泡之前，会首先执行一个
+        捕获期，在此期间会触发on*ShouldSetResponderCapture系列事件，因此如果某个父View想要在触摸操作开始时阻止子组件成为响应者，那就应该处理
+        onStartShouldSetResponderCapture事件并返回true的值。
+        View.props.onStartShouldSetResponderCapture: (evt) => true,
+        View.props.onMoveShouldSetResponderCapture: (evt) => true,
+
+    》PanResponder
+
+29.使用指南 iOS
+
+30.使用指南 Android
+  》原生模块
+    有时候App需要访问平台API，但React Native可能还没有相应的模块包装；或者你需要复用一些java代码，而不是用js重新实现一遍；
+    又或者你需要实现某些高性能的、多线程的代码，譬如图片处理、数据库、或者各种高级扩展等等。
+
+    我们把React Native设计为可以在其基础上编写真正的原生代码，并且可以访问平台所有的能力。这是一个相对高级的特性，我们并不认为它
+    应当在日常开发的过程中经常出现，但具备这样的能力是很重要的。如果React Native还不支持某个你需要的原生特性，你应当可以自己实现
+    该特性的封装。
+
+    》Toast模块
+        本向导会用Toast(http://developer.android.com/reference/android/widget/Toast.html)作为例子。假设我们希望可以从js发起一个Toast消息
+        --Android中的一种会在屏幕下方弹出、保持一段时间的消息通知。
+
+        首先来创建一个原生模块。一个原生模块是一个继承了ReactContextBaseJavaModule的Java类，它可以实现一些js所需的功能。
+        我们这里的目标是可以在js里写ToastExample.show('Awesome', ToastExample.SHORT);来调起一个Toast通知。
+            package com.facebook.react.modules.toast;
+
+            import android.widget.Toast;
+
+            import com.facebook.react.bridge.NativeModule;
+            import com.facebook.react.bridge.ReactApplicationContext;
+            import com.facebook.react.bridge.ReactContext;
+            import com.facebook.react.bridge.ReactContextBaseJavaModule;
+            import com.facebook.react.bridge.ReactMethod;
+
+            import java.util.Map;
+            import java.util.HashMap;
+
+            public class ToastModule extends ReactContextBaseJavaModule {
+
+              private static final String DURATION_SHORT_KEY = "SHORT";
+              private static final String DURATION_LONG_KEY = "LONG";
+
+              public ToastModule(ReactApplicationContext reactContext) {
+                super(reactContext);
+              }
+            }
+
+        ReactContextBaseJavaModule要求派生类实现getName方法，这个函数用于返回一个字符串名字，这个名字在js端标记这个模块。
+        这里我们把这个模块叫做ToastExample，这样就可以在js中通过React.NativeModule.ToastExample访问到这个模块。
+
+        注意：RN已经内置了一个名为ToastAndroid的模块，所以在练习时请勿使用ToastAndroid的名字，否则运行时报错名字冲突。
+         @Override
+          public String getName() {
+            return "ToastExample";
+          }
+        注意：模块名前面的RCT前缀会被自动移除。所以如果返回的字符串为'RCTToastExample',在js端依然可以通过
+        React.NativeModules.ToastExample访问到这个模块。
+
+        一个可选的方法getConstants返回了需要导出给js使用的常量。它并不一定需要实现，但在定义一些可以被js同步访问到的预定义
+        的值时非常有用。
+             @Override
+              public Map<String, Object> getConstants() {
+                final Map<String, Object> constants = new HashMap<>();
+                constants.put(DURATION_SHORT_KEY, Toast.LENGTH_SHORT);
+                constants.put(DURATION_LONG_KEY, Toast.LENGTH_LONG);
+                return constants;
+              }
+
+        要导出一个方法给js使用，Java方法需要使用注解@ReactMethod。方法返回的类型必须为void。React Native的跨语言访问是异步进行的。所以要想给
+        js返回一个值得唯一办法是使用回调函数或发送事件。
+             @ReactMethod
+              public void show(String message, int duration) {
+                Toast.makeText(getReactApplicationContext(), message, duration).show();
+              }
+    》参数类型
+        下面的参数类型在@ReactMethod注明的方法中，会被直接映射到它们对应的js类型。
+        Boolean -> Bool
+        Integer -> Number
+        Double -> Number
+        Float -> Number
+        String -> String
+        Callback -> function
+        ReadableMap -> Object
+        ReadableArray -> Array
+    》注册模块
+        在Java这边要做的最后一件事是注册这个模块。我们需要在应用的Package类的createNativeModules方法中添加这个模块。如果模块
+        没有被注册 它也无法再js中被访问到。
+            package com.facebook.react.modules.toast;
+
+            import com.facebook.react.ReactPackage;
+            import com.facebook.react.bridge.NativeModule;
+            import com.facebook.react.bridge.ReactApplicationContext;
+            import com.facebook.react.uimanager.ViewManager;
+
+            import java.util.ArrayList;
+            import java.util.Collections;
+            import java.util.List;
+
+            public class AnExampleReactPackage implements ReactPackage {
+
+              @Override
+              public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
+                return Collections.emptyList();
+              }
+
+              @Override
+              public List<NativeModule> createNativeModules(
+                                          ReactApplicationContext reactContext) {
+                List<NativeModule> modules = new ArrayList<>();
+
+                modules.add(new ToastModule(reactContext));
+
+                return modules;
+              }
+
+        这个package需要在MainApplication.java文件的getPackages方法中提供。这个文件位于你的react-native应用文件夹的android目录中。
+        具体路径android/app/src/main/java/com/your-app-name/MainApplication.java。
+            protected List<ReactPackage> getPackages() {
+                return Arrays.<ReactPackage>asList(
+                        new MainReactPackage(),
+                        new AnExampleReactPackage()); // <-- 添加这一行，类名替换成你的Package类的名字.
+            }
+
+        为了让你的功能从js端访问起来更为方便，通常我们都会把原生模块封装成一个js模块，这不是必须的。但省下了每次都从
+        NativeModules中获取对应模块的步骤。这个js文件也可以用于添加一些其他js端实现的功能。
+            import { NativeModules } from 'react-native';
+
+            // 下一句中的ToastExample即对应上文
+            // public String getName()中返回的字符串
+
+            export default NativeModules.ToastExample;
+
+        现在，在别处的js 代码中可以这样调用你的方法：
+        import ToastExample from './ToastExample';
+        ToastExample.show('Awesome', ToastExample.SHORT);
+
+    》更多特性
+        》回调函数
+            原生模块还支持一种特殊的参数 -- 回调函数，它提供了一个函数来把返回值传回给js。
+            public class UIManagerModule extends ReactContextBaseJavaModule {
+
+            ...
+
+              @ReactMethod
+              public void measureLayout(
+                  int tag,
+                  int ancestorTag,
+                  Callback errorCallback,
+                  Callback successCallback) {
+                try {
+                  measureLayout(tag, ancestorTag, mMeasureBuffer);
+                  float relativeX = PixelUtil.toDIPFromPixel(mMeasureBuffer[0]);
+                  float relativeY = PixelUtil.toDIPFromPixel(mMeasureBuffer[1]);
+                  float width = PixelUtil.toDIPFromPixel(mMeasureBuffer[2]);
+                  float height = PixelUtil.toDIPFromPixel(mMeasureBuffer[3]);
+                  successCallback.invoke(relativeX, relativeY, width, height);
+                } catch (IllegalViewOperationException e) {
+                  errorCallback.invoke(e.getMessage());
+                }
+              }
+
+            ...
+
+            这个函数可以在js里这样使用：
+            UIManager.measureLayout(
+              100,
+              100,
+              (msg) => {
+                console.log(msg);
+              },
+              (x, y, width, height) => {
+                console.log(x + ':' + y + ':' + width + ':' + height);
+              }
+            );
+            原生模块通常只应调用回调函数一次。但是，它可以保持callback并在将来调用。
+            请务必注意callback并非在对应的原生函数返回后立即执行 -- 注意跨语言通讯是异步的，这个执行过程会通过消息循环来进行。
+        》Promises
+            原生模块还可以使用promise来简化代码，搭配async/await语法则效果更佳。如果桥接原生方法的最后一个参数是一个Promise，
+            则对应js的方法就会返回一个Promise对象。
+            import com.facebook.react.bridge.Promise;
+
+            public class UIManagerModule extends ReactContextBaseJavaModule {
+
+            ...
+
+              @ReactMethod
+              public void measureLayout(
+                  int tag,
+                  int ancestorTag,
+                  Promise promise) {
+                try {
+                  measureLayout(tag, ancestorTag, mMeasureBuffer);
+
+                  WritableMap map = Arguments.createMap();
+
+                  map.putDouble("relativeX", PixelUtil.toDIPFromPixel(mMeasureBuffer[0]));
+                  map.putDouble("relativeY", PixelUtil.toDIPFromPixel(mMeasureBuffer[1]));
+                  map.putDouble("width", PixelUtil.toDIPFromPixel(mMeasureBuffer[2]));
+                  map.putDouble("height", PixelUtil.toDIPFromPixel(mMeasureBuffer[3]));
+
+                  promise.resolve(map);
+                } catch (IllegalViewOperationException e) {
+                  promise.reject(e.getMessage());
+                }
+              }
+
+            ...
+
+            现在js端的方法会返回一个Promise。这样就可以声明async的异步函数 使用await关键字来调用，并等待其结果返回。
+            虽然这样写看起来像同步操作，但实际仍然是异步的，并不会阻塞执行来等待。
+            async function measureLayout() {
+              try {
+                var {
+                  relativeX,
+                  relativeY,
+                  width,
+                  height,
+                } = await UIManager.measureLayout(100, 100);
+
+                console.log(relativeX + ':' + relativeY + ':' + width + ':' + height);
+              } catch (e) {
+                console.error(e);
+              }
+            }
+
+            measureLayout();
+        》多线程
+            原生模块不应对自己被调用时所处的线程做任何假设，当前的状况有可能会在将来的版本中改变。如果一个过程要阻塞执行
+            一段时间，这个工作当分配到一个内部管理的工作线程中，然后从那边可以调用任意的回调函数。
+            注意：通常用AsyncTask来完成这项工作。
+        》发送事件到js
+            原生模块可以在没有被调用的情况下往js发送事件通知。最简单的办法就是通过RCTDeviceEventEmitter，这可以通过
+            ReactContext来获得对应的引用。
+        》从startActivityForResult中获取结果
+            如果你使用startActivityForResult调起了一个activity并想从其中获取返回结果，那么你需要监听onActivityResult事件。
+            具体的做法是继承BaseActivityEventListener或实现ActivityEventListener。我们推荐前一种做法，因为它相对来说不太会
+            受到API变更的影响，然后你需要在模块的构造器中注册这一监听事件。
+            reactContext.addActivityEventListener(mActivityResultListener);
+            //现在你可以通过重写下面的方法来实现对onActivityResult的监听：
+            @Override
+            public void onActivityResult(
+              final Activity activity,
+              final int requestCode,
+              final int resultCode,
+              final Intent intent) {
+              // 在这里实现你自己的逻辑
+            }
+
+            //下面我们写一个简单的图片选择器来实践一下。这个图片选择器会把pickImage方法暴露给js，而这个方法在调用时就会把图片的路径
+            //返回到js端
+                public class ImagePickerModule extends ReactContextBaseJavaModule {
+
+                  private static final int IMAGE_PICKER_REQUEST = 467081;
+                  private static final String E_ACTIVITY_DOES_NOT_EXIST = "E_ACTIVITY_DOES_NOT_EXIST";
+                  private static final String E_PICKER_CANCELLED = "E_PICKER_CANCELLED";
+                  private static final String E_FAILED_TO_SHOW_PICKER = "E_FAILED_TO_SHOW_PICKER";
+                  private static final String E_NO_IMAGE_DATA_FOUND = "E_NO_IMAGE_DATA_FOUND";
+
+                  private Promise mPickerPromise;
+
+                  private final ActivityEventListener mActivityEventListener = new BaseActivityEventListener() {
+
+                    @Override
+                    public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent intent) {
+                      if (requestCode == IMAGE_PICKER_REQUEST) {
+                        if (mPickerPromise != null) {
+                          if (resultCode == Activity.RESULT_CANCELED) {
+                            mPickerPromise.reject(E_PICKER_CANCELLED, "Image picker was cancelled");
+                          } else if (resultCode == Activity.RESULT_OK) {
+                            Uri uri = intent.getData();
+
+                            if (uri == null) {
+                              mPickerPromise.reject(E_NO_IMAGE_DATA_FOUND, "No image data found");
+                            } else {
+                              mPickerPromise.resolve(uri.toString());
+                            }
+                          }
+
+                          mPickerPromise = null;
+                        }
+                      }
+                    }
+                  };
+
+                  public ImagePickerModule(ReactApplicationContext reactContext) {
+                    super(reactContext);
+
+                    // Add the listener for `onActivityResult`
+                    reactContext.addActivityEventListener(mActivityEventListener);
+                  }
+
+                  @Override
+                  public String getName() {
+                    return "ImagePickerModule";
+                  }
+
+                  @ReactMethod
+                  public void pickImage(final Promise promise) {
+                    Activity currentActivity = getCurrentActivity();
+
+                    if (currentActivity == null) {
+                      promise.reject(E_ACTIVITY_DOES_NOT_EXIST, "Activity doesn't exist");
+                      return;
+                    }
+
+                    // Store the promise to resolve/reject when picker returns data
+                    mPickerPromise = promise;
+
+                    try {
+                      final Intent galleryIntent = new Intent(Intent.ACTION_PICK);
+
+                      galleryIntent.setType("image/*");
+
+                      final Intent chooserIntent = Intent.createChooser(galleryIntent, "Pick an image");
+
+                      currentActivity.startActivityForResult(chooserIntent, IMAGE_PICKER_REQUEST);
+                    } catch (Exception e) {
+                      mPickerPromise.reject(E_FAILED_TO_SHOW_PICKER, e);
+                      mPickerPromise = null;
+                    }
+                  }
+                }
+            //为了让你的功能从js端访问起来更为方便，通常我们都会把原生模块封装成一个js模块。这不是必须的，但省下了每次都从
+            //NativeModules中获取对应的模块的步骤，这个js文件也可以用于添加一些其他js端实现的功能。
+                import { NativeModules } from 'react-native';
+
+                export default NativeModules.ImagePickerModule;
+            //现在在别处js代码中可以这样调用你的方法
+                import ImagePickerModule from './ImagePickerModule';
+                ImagePickerModule.pickImage()
+                                .then((msg) => {
+                                    //此处为成功之后回调的信息（指的是：uri.toString() 的值 ）
+                                    alert(msg);
+                                 })
+                               .catch((err) => {
+                                   //此处为失败之后回调的信息
+                                    alert(err);
+                                });
+        》监听生命周期事件
+            监听activity的生命周期事件(如：onResume onPause等等)和我们在前面实现ActivityEventListener的做法类似。模块必须实现
+            LifecycleEventListener，然后需要在构造器中注册一个监听函数：
+                reactContext.addLifecycleEventListener(this);
+            现在可以通过实现下列方法来监听activity的生命周期事件了：
+                @Override
+                public void onHostResume() {
+                    // Activity `onResume`
+                }
+
+                @Override
+                public void onHostPause() {
+                    // Activity `onPause`
+                }
+
+                @Override
+                public void onHostDestroy() {
+                    // Activity `onDestroy`
+                }
+ 》原生UI组件
+    在React Native应用程序中封装和植入已有的组件非常简单。和原生模块向导一样，本向导也是一个相对高级的向导，本向导会引导你如何
+    构建一个原生UI组件。带领你了解React Native核心库中ImageView组件的具体实现。
+
+    》ImageView示例
+        为了让js中可以使用ImageView，需要做哪些准备工作？
+        原生视图需要被一个ViewManager的派生类(或更常见的SimpleViewManger的派生类)创建和管理。一个SimpleViewManager可以用
+        于这个场景，是因为它能够包含更多公共属性，譬如背景颜色、透明度、Flexbox布局等等。
+
+        这些子类本质上都是单例——React Native只会为每个管理器创建一个实例。它们创建原生的视图并提供给NativeViewHierarchyManager。
+        NativeViewHierarchyManager则会反过来委托它们在需要的时候去设置和更新视图的属性。ViewManager还会代理视图的所有委托，并给js
+        发回对应的事件。
+
+        提供原生视图很简单：
+            》创建一个ViewManager的子类
+                在这个例子里我们创建一个视图管理类ReactImageManager，它继承自SimpleViewManager<ReactImageView>。ReactImageView是这个视图
+                管理类所管理的对象类型，这应当是一个自定义的原生视图。getName方法返回的名字会用于在js端引用这个原生视图类型。
+                public class ReactImageManager extends SimpleViewManager<ReactImageView>{
+                    public static final String REACT_CLASS = "RCTImageView";
+
+                    @Override
+                    public String getName(){
+                        return REACT_CLASS;
+                    }
+                }
+
+            》实现createViewInstance的方法
+                视图在createViewInstance中创建，且应当把自己初始化为默认的状态，所有属性的设置都通过后续的updateView来进行。
+                @Override
+                public ReactImageView createViewInstance(ThemedReactContext context){
+                    return new ReactImageView(context,Fresco.newDraweeControllerBuilder(), mCallerContext);
+                }
+            》导出视图的属性设置器：使用@ReactProp或@reactPropGroup注解
+                要导出给js使用的属性，需要申明带有@ReactProp或@ReactPropGroup注解的设置方法。方法的第一个参数是要修改属性的视图实例。
+
+
+
+            》把这个视图管理类注册到应用程序包的createViewManagers里
+            》实现js模块
+
+
+
+
+
+
+31.组件
+
+32.API
+
+33.布局样式属性
+
+34.阴影样式属性
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

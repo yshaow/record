@@ -43,6 +43,7 @@ class MyHomeScreen extends React.Component {
     };
 
     render() {
+        alert(JSON.stringify(this.props.navigation));
         return (
             <Button
                 onPress={() => this.props.navigation.navigate('Notifications')}
