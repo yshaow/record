@@ -1,0 +1,154 @@
+1.Node简介
+    》什么是javascript
+        脚本语言
+        运行在浏览器中
+        一般用来做客户端页面的交互(interactive)
+    》js的运行环境
+        运行在浏览器内核中的 js engine(引擎)
+
+        》浏览器的作用
+            》请求一个http地址(封装一个请求报文)
+                浏览器的最大作用就是将一个URL地址封装成一个请求报文
+            》解析服务器给回的响应报文
+                html 、 css 、image =》 渲染
+                js =》 解释(执行)JS
+    》浏览器中的 js 可以做什么？
+        操作DOM(对DOM的增删改、注册事件)
+        AJAX
+        跨域(Jsonp)
+        BOM(页面跳转，历史记录、console、alert)
+        ECMAScript
+    》浏览器中的js不可以做什么？
+        文件操作(文件和文件夹的CRUD)
+        无法操作系统信息
+
+        不可以做得原因？
+            安全 -- 由于运行环境特殊(我们写的代码是在不认识人的浏览器中运行的)
+    》编程语言的能力取决于什么？
+        语言本身只是提供了定义变量，定义函数，定义类型，流程控制，循环结构之类的操作
+
+        语言的能力取决于运行该语言的平台(环境)
+        对于js来说，我们常说的js实际是ES，大部分能力都是由浏览器的执行引擎决定得，BOM和DOM可以说是浏览器开放出来的接口。
+        如：Cordova中提供了js调用摄像头，操作本地文件的API，都是cordova平台提供的，和js本身没有太大的关系。
+
+        Java既是语言也是平台，java运行在java虚拟机(跨平台的(操作系统))
+
+        C#语言 平台：.NET Framework(windows)
+        C#可以运行在MONO平台(Linux)
+    》js只可以运行在浏览器中吗？
+        不是
+        能运行在那取决于，这个环境有没有特定的平台
+    》Node -- 创始人 Ryan Dahl
+        Node.js是一个基于chrome V8引擎的 js 的运行环境。Node使用了一个事件驱动、非阻塞式I/O的模型，使其轻量又高效。
+        Node的包管理器npm是全球最大的开源库生态系统。
+
+        Node就是js语言在服务器端的运行环境。
+        所谓 运行环境(平台) 有两层意思：
+            》首先 js语言通过Node在服务器运行，在这个意义上，Node有点像javascript的虚拟机
+            》其次 Node提供了大量工具库，使得js语言与操作系统互动(如：读写文件，新建子进程)，在这个意义上，Node又是js的工具库。
+
+    》是Node选择了js，而不是js发展出来了一个Node
+        为什么选择js？ -- 会的人很多，便于上手，推广
+
+    》Node的实现
+        Node内部采用 chrome的 V8引擎，作为js语言的解释器。
+
+        通过自行开发的 libuv 库，调用操作系统资源。
+
+    》Node在web中的用途
+        》直接作为 应用服务端
+        》作为客户端和服务端的中间层 -- 它的功能：分发数据请求，渲染HTML (天猫就是采用这样结构)
+            这样做的目的：因为node的并发 抗压性比传统的(java .Net)好很多，提升应用的稳定性
+
+        注意：Node是一个js的运行环境，不是一门语言，也不是js的框架。
+2.环境配置
+    》下载安装包 安装 -- 不推荐，原因：无法再多个版本之间切换
+    》NVM 的方式安装
+        nvm是一个可以让你在同一台机器上安装和切换不同版本node的工具(node的版本管理工具)。只需要把node的包放在nvm.exe同级别的目录即可统一管理。
+
+        》下载nvm-windows
+        》解压到一个全英文路径
+        》编辑解压目录下的settings.txt文件 -- 不存在则新建
+            root配置为当前nvm.exe所在目录
+            path配置为node快捷方式所在的目录，使用nvm use 版本号(如:5.7.0),nvm会复制对应的node文件，该位置就是复制文件生成后的位置
+            arch配置为当前操作系统的位数32/64
+            proxy不用配置 -- 下载node时翻墙用的
+        》配置环境变量  window+r : sysdm.cpl
+            NVM_HOME=当前nvm.exe所在目录
+            NVM_SYMLINK=node快捷 方式所在的目录
+            PATH += %NVM_HOME%;%NVM_SYMLINK%
+
+            打开cmd 通过set [环境变量名称]查看环境变量是否配置成功
+            也可以在PowerShell中通过 dir env:[环境变量名称] 命令查看
+
+            通过nvm ls 查看node可用的版本
+            nvm use 版本号 [32的需要带上系统号:32] 切换node的版本
+        》nmp的目录后面再配置
+    》配置Python环境
+
+    》windows常用命令
+        切换当前目录  cd
+        创建目录 mkdir
+        查看当前目录列表 dir
+            别名 ls
+        清空当前控制台 cls
+            别名 clear
+        删除文件 del
+            别名 rm
+        注意：所有别名必须在新版(windows 8以上)的powershell中才能使用(pwd 获取当前路径)
+
+        echo 'aaa' 输出aa在控制台
+        echo 'aaa' >> 1.txt 输出到文件，通过 '>> 文件名称' 所有的控制台输出都可以输出到文件 如：node -v >> 2.txt
+        cat 1.txt 查看文件内容
+3.快速入门
+    》Node命令的基本用法
+        进入REPL环境 -- node
+            node --use_strict 启用严格模式进入REPL环境
+        执行脚本字符串 -- node -e 'console.log("hello world")'
+        运行脚本文件：
+            node index.js 或 path/index.js 或 path/index
+        查看帮助： node --help
+
+        命令行中的REPL环境，不方便，推荐使用VScode，它本身就可以使用REPL环境，是写node项目比较好的工具。
+
+    》REPL环境 -- 类似于浏览器的控制台
+        全称 read eval print loop
+        接受用户输入 -> 执行用户输入 -> 打印执行结果到控制台 ->循环到下一次即开始接受用户输入的位置
+
+        在该环境中：
+            特殊变量下划线(_)表示上一个命令的返回结果
+            通过 .exit 或执行 process.exit()退出REPL交互
+    》全局对象
+        》global
+            类似于客户端js运行环境中的window，可以在上面挂载一些全局的变量等等。
+
+        》process
+            用于获取当前的node进程信息，一般用于获取环境变量之类的信息
+
+            》process.argv 属性返回一个数组，这个数组包含了启动Node.js进程时的命令行参数
+            》process.env属性返回一个包含用户环境信息的对象
+            》process.stdin 主要用于操作控制台,在程序运行中采集用户输入
+            》process.stdout 主要用于操作控制台，process.stdout.write('hello') -- 在控制台中输出hello
+                清空控制台：
+                    process.stdout.write('\033[2J');
+                    process.stdout.write('\033[0f');
+                    或
+                    process.stdout.getWindowSize();//获取行数以及列数，在对应的列数上换空行  达到视觉上清空的效果
+                将图片转成字符画：http://www.degraeve.com/img2txt.php
+
+
+
+
+        》console
+            node中内置的console模块，提供了操作控制台的输入输出功能，常见使用方式与客户端类似
+
+    》全局变量
+
+    》全局函数
+
+    》异步操作之回调函数
+
+
+
+
+
