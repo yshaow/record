@@ -278,6 +278,115 @@
         》__filename
             用来获取 *当前文件* 的完整路径
             在REPL环境同样无效
+        》module 模块对象
+            Node内部提供了一个Module构建函数，所有模块都是Module的实例，其属性
+            如下：
+            》id 模块的识别符，通常是带有绝对路径的模块文件名
+            》filename 模块定义的文件的绝对路径
+            》loaded 返回一个布尔值，表示模块是否已经完成加载
+            》parent 返回一个对象，表示调用该模块的模块
+            》children 返回一个数组，表示该模块要用到的其他模块
+            》exports 表示模块对外输出的值
+
+            其实 载入一个模块就是构建一个Module实例
+        》exports 映射到module.exports的别名
+            var module = {};
+            module.exports = {};
+            var exports = module.exports;
+
+        》require()
+            require.cache
+            require.extensions
+            require.main
+            require.resolve()   
+    》模块的定义
+        一个新的js文件就是一个模块；
+        一个合格的模块应该是有导出成员的，否则模块就失去了定义的价值。
+
+        模块内部是一个独立(封闭)的作用域(模块与模块之间不会冲突);
+        模块之间必须通过导出或导入的方式协同。
+
+        导出方式：
+            exports.name = value;
+            或
+            module.exports = {name:value};
+            或
+            exports = module.exports = {name:value}
+        》module.exports 和 exports的区别
+            module.exports是用于为模块导出成员的接口
+            exports是指向module.exports的别名，相当于在模块开始的时候执行：
+                var exports = module.exports;
+            一旦为module.exports赋值，就会切断之前两者的相关性。
+            最终模块的导出成员以module.exports为准。
+    》载入模块
+        》require简介
+            Node使用commonJs模块规范，内置的require函数用于加载模块文件。
+            require的基本功能是，读入并执行一个js文件，然后返回该模块的exports对象。
+            如果没有发现指定模块，会报错。
+        》模块的加载机制
+            读取模块文件 -》 执行读取的模块内容 -》 返回模块的exports对象
+
+            require的实现机制：
+            》将传入的模块ID通过加载规则找到对应的模块文件
+            》读取这个文件里面的代码
+            》通过拼接的方式为该段代码构建私有空间
+            》执行该代码
+            》拿到module.exports返回
+
+        》require扩展名
+            require加载文件时可以省略扩展名
+            当文件名相同，扩展名不同时的优先级：js>json(通常用作配置文件)>node(此时文件**.node预编译好的C++模块执行)
+
+            当模块名是一个文件夹时，默认载入其中的index.js,但是当文件夹中有package.json,并且package.json
+            中定义的main的入口文件存在时，它会去加载main对应的入口文件。
+        》require加载文件规则
+            》通过./或../开头：则按照相对路径从当前文件所在文件夹开始寻找模块
+            》通过/开头：则以系统根目录开始寻找模块
+            》如果参数字符串不以'./'或'/'开头，则表示加载的是一个默认提供的核心模块(位于Node的系统安装目录中)
+                require('fs');//加载核心模块中的文件系统模块
+              或者从当前目录向上搜索node_modules目录中的文件：(如果你自己的模块不想通过相对或绝对路径导入，可以把它放到node_modules中)
+                require('my_module');//各级node_modules文件夹中搜索my_modules.js文件
+
+            注意：模块名重复时，系统模块的优先级最高
+        》模块的缓存
+            第一次加载某个模块时，Node会缓存该模块。以后在加载该模块就直接从缓存中取出该模块的
+            module.exports属性(不会再次执行该模块)。
+
+            如果需要多次执行模块中的代码，一般可以让模块暴露行为函数。 //用的比较多
+                module.exports = new date();//有缓存  时间不会改变
+                module.exports = () => {//暴露行为函数，时间会改变
+                    return new date();
+                }
+            模块的缓存可以通过require.cache拿到，同样也可以删除。//用的比较少
+                清空缓存:delete require.cache[key];
+8.node的核心模块
+    》核心模块的意义
+        如果只是在服务器运行js代码，意义并不大，因为无法实现任何功能(读写文件，访问网络)。
+        Node的用处在于它本身还提供的一系列功能模块，用于与操作系统互动。
+
+        这些核心的功能模块在Node中已经内置了。
+    》常用的内置模块
+        》path 处理文件路径
+
+        》fs 操作文件系统
+
+        》child_process 新建子进程
+
+        》util 提供了一系列实用小工具
+
+        》http 提供了http服务器功能
+
+        》url 用于解析URL
+
+        》querystring 解析URL中的查询字符串
+
+        》crypto 提供了加密和解密功能
+    》包
+        
+
+
+
+
 
 
 
