@@ -54,7 +54,47 @@ angular应用的：用angular扩展语法编写html模块，用组件类管理�
 
 》模块 
   angular应用是模块化的，并且angular有自己的模块系统，它被称为angular模块或NgModules。
+  每个angular应用至少有一个模块 -- 根模块，习惯命名为AppModule。
+  根模块在一些小型应用中可能是唯一的模块，大多数应用汇有很多特性模块，每个模块都是一个内聚的代码块专注于某个应用的领域 工作流 或紧密相关的功能。
   
+  angular模块 无论是根模块还是特性模块 都是一个带有@NgModule装饰器的类。
+  
+  装饰器是用来装饰 js 类的函数，angular有很多装饰器，他们负责把元数据附加到类上。
+  
+  NgModule是一个装饰器函数 它接受一个用来描述模块属性的元数据对象。其中最重要的属性是：
+  》declarations -- 声明本模块中拥有的视图类。angular有三种视图类：组件  指令  管道。
+  》exports -- declarations的子集 可用于其他模块的组件模板。
+  》imports -- 本模块声明的组件模板 需要的类所在的其他模块
+  》providers -- 服务的创建者 并加入到全局服务列表中，可用于应用任何部分
+  》bootstrap -- 指定应用的主视图(根组件)，他是所有其他视图的宿主，***只有根模块才能设置bootstrap属性***
+  
+  示例：
+  //app.module.ts
+  import {NgModule} from '@angular/core'
+  import {BrowserModule} from '@angular/platform-browser'
+  
+  @NgModule({
+  	import:[BrowserModule],
+	providers:[Logger],
+	declarations:[AppComponent],
+	exports:[AppComponent ],
+	bootstrap:[AppComponent ]
+  });
+  
+  export class AppModule{}
+  //AppComponent 的export语句只是用于演示如何导出，并不是必须的，根模块不需要导出任何东西，因为其他组件不需要导入根模块。
+  
+  //我们通过引导根模块来启动应用，在开发期间，你通常在一个main.ts文件中引导 AppModule :
+  import {enableProdMode} from '@angular/core'
+  import {platfromBrowserDynamic} from '@angular/platform-browser-dynamic';
+  import {AppModule} from './app/app.module'
+  import {enviroment} from './environments/environment'
+  
+  if(environment.production) enableProdMode();
+  
+  platformBrowserDynamic().bootstrapModule(AppModule);
+》NgModules VS JS 模块
+	
 
 
 
