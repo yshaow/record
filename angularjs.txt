@@ -1,50 +1,59 @@
 http://www.360doc.com/content/14/0414/15/14416931_368816305.shtml
-1.angularjs������
-	������һ��crud(�����ɾ)Ӧ�ÿ����õ���ȫ�����ݣ����ݰ� ����ģ���ʶ�� ������֤ ·�� 
-							������� ������� ����ע��
-	�����Է��棺��Ԫ���� �˶Զ˲��� ģ����Զ������Կ��
-	������Ŀ¼���ֺͲ��Խű�������Ӧ����Ϊ���
-	*****angularjs��Ҫ���ǵ��ǹ���crudӦ��*****
-2.<html ng-app>//�����ظ�ҳ��ʱ�����ng-app����angularjs����**����**HTMLҳ������Ӧ��
-	ng-appָ������ng�ű��������� ��<html>����ng-app˵������<html>����ng�ű������� ��ȻҲ���Ծֲ�ʹ��ng-app
-3.{{}}��ng�����ڰ�(����)����ʽ�õ� --����ʽ�����Ǳ���ʽ������������  ***���������ڶ�����������ݸ�ʽ��
-	����󶨸���ng��Ҫ����{{}}�еı���ʽ�����������DOM�У�*****ng����ʽ����ng������������*****
-4.ng��˫�����ݰ�
-	���ı�����ָ��<input ng-model='yourname'/>�����ı���������ݰ󶨵�һ����yourname��ģ�ͱ�����--һ�����ݰ󶨷���
-	������ͨ��{{yourname}}����ȡģ�ͱ����е�ֵ �����õ�html�ĵ���--��һ�����ݰ󶨷���
-5.angularjsӦ�õĽ���--ģ��-��ͼ-���������ģʽ(mvc)
-	��ģ�弴չ��Ӧ�õ���ͼ����ͨ��angularjs��html�й������Լ���html���
-	��Ӧ�ó����߼�����Ϊ����js����Ŀ�����
-	��ģ�����ݣ�
-		��ģ����ng�����������������꣬ģ���е����ݶ�����ng���������
-		��ngͨ������������������ĪС����ͼ����ui��˫��ͬ����һ��ģ��״̬�����ı� ng������ˢ�·�ӳ����ͼ�����У���֮��Ȼ��
-		������ ng���ṩ��һЩ���õķ������ԣ�
-			���ײ�����������ע�� xhr ���� url·�� ��������������
-			����������չ�������Լ��ض���Ӧ�÷���
-6.ng-repeat ng�ĵ�����
-	��<li ng-repeat="phone in phones"></li>����liΪģ��Ϊÿ��phone����һ��<li>Ԫ��
+1.angularjs包括：
+	》构建一个crud(增查更删)应用可能用到的全部内容：数据绑定 基本模板标识符 表单验证 路由 
+							深度链接 组件重用 依赖注入
+	》测试方面：单元测试 端对端测试 模拟和自动化测试框架
+	》具有目录布局和测试脚本的种子应用作为起点
+	*****angularjs主要考虑的是构建crud应用*****
+2.<html ng-app>//当加载该页面时，标记ng-app告诉angularjs处理**整个**HTML页并引导应用
+	ng-app指令标记了ng脚本的作用域 在<html>添加ng-app说明整个<html>都是ng脚本作用域 当然也可以局部使用ng-app
+3.{{}}是ng中用于绑定(数据)表达式用的 --表达式可以是表达式与过滤器的组合  ***过滤器用于对输入输出数据格式化
+	这个绑定告诉ng需要运算{{}}中的表达式并将结果插入DOM中，*****ng表达式仅在ng作用域中运行*****
+4.ng的双向数据绑定
+	》文本输入指令<input ng-model='yourname'/>即把文本输入的内容绑定到一个叫yourname的模型变量中--一个数据绑定方向
+	》可以通过{{yourname}}来获取模型变量中的值 并设置到html文档中--另一个数据绑定方向
+5.angularjs应用的解析--模型-视图-控制器设计模式(mvc)
+	》模板即展现应用的视图，可通过angularjs在html中构建您自己的html标记
+	》应用程序逻辑和行为即用js定义的控制器
+	》模型数据：
+		》模型是ng作用域对象的属性引申，模型中的数据都属于ng作用域对象
+		》ng通过作用域来保持数据莫小鱼视图界面ui的双向同步，一旦模型状态发生改变 ng会立即刷新反映在视图界面中，反之亦然。
+		》此外 ng还提供了一些有用的服务特性：
+			》底层服务包括依赖注入 xhr 缓存 url路由 和浏览器抽象服务
+			》还可以扩展和添加自己特定的应用服务
+6.ng-repeat ng的迭代器
+	如<li ng-repeat="phone in phones"></li>即以li为模板为每个phone创建一个<li>元素
 *************************************
-1.ng�Զ���ʼ��
-	ng����DOMContentLoaded�¼�����ʱִ�У���ͨ��ng-appָ��Ѱ�����Ӧ�ø�������
-	���ng-app�ҵ���ng��������
-		�������ָ��������ص�ģ��
-		������һ��Ӧ�õ�"ע����(injector)"
-		ע�⣺����ӵ�е�ng-appָ��ı�ǩΪ���ڵ����������е�DOM ��ʹ�������ָֻ��DOM�е�һ������Ϊ���ngӦ��
-2.ng���ĸ���
-	������ startup
-	��ִ���� runtime
-	�������� scope ��ͼ��������ļ�����
-	�������� controller Ӧ�õ���Ϊ
-	��ģ�� model Ӧ�õ�����
-	����ͼ view �û��ܿ�����
-	��ָ�� directives ��չhtml�﷨
-	�������� filter ���ݱ��ػ�
-	��ע���� injector �ۺ����Ӧ��
-	��ģ�� module ����ע����
-	��$ ng�������ռ� namespace
-		ע�⣺Ϊ�˷�ֹ�����������ͻ��ngΪ���ܳ�ͻ�Ķ���������ǰ׺"$"�������벻Ҫ�����Լ��Ĵ�������"$"ǰ׺
-********contentEditable html�е�һ�����ԡ�����html��contentEditable='true'ʱ�����ɿ�����Ԫ�صı༭ģʽ��*******
+1.ng自动初始化
+	ng会在DOMContentLoaded事件触发时执行，并通过ng-app指令寻找你的应用根作用域
+	如果ng-app找到：ng将会做：
+		》载入和指令内容相关的模块
+		》创建一个应用的"注入器(injector)"
+		注意：以已拥有的ng-app指令的标签为根节点来编译其中的DOM 这使得你可以只指定DOM中的一部分作为你的ng应用
+2.ng核心概述
+	》启动 startup
+	》执行期 runtime
+	》作用域 scope 视图与控制器的集合区
+	》控制器 controller 应用的行为
+	》模型 model 应用的数据
+	》视图 view 用户能看到的
+	》指令 directives 扩展html语法
+	》过滤器 filter 数据本地化
+	》注入器 injector 聚合你的应用
+	》模块 module 配置注入器
+	》$ ng的命名空间 namespace
+		注意：为了防止意外的命名冲突，ng为可能冲突的对象名加以前缀"$"，所以请不要在你自己的代码里用"$"前缀
+********contentEditable html中的一个属性。设置html的contentEditable='true'时，即可开启该元素的编辑模式。*******
 
+/********************angular*********************/
+1.架构概述
+angular是一个用html和js或者一个可以编译成js的语言如：Dart或TypeScript，来构建客户端应用的框架。
+该框架包括一系列库，有些是核心库 有些是可选库。
+angular应用的：用angular扩展语法编写html模块，用组件类管理这些模块，用服务添加应用逻辑，用模块打包发布组件与服务。
+通过引导根模块来启动该应用，angular在浏览器中接管 展示应用的内容，并根据我们提供的操作指令响应用户的交互。
+
+》模块
+	
 
 
 
