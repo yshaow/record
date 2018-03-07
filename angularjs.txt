@@ -94,6 +94,90 @@ angular应用的：用angular扩展语法编写html模块，用组件类管理�
   
   platformBrowserDynamic().bootstrapModule(AppModule);
 》NgModules VS JS 模块
+   NgModule是一个带有@NgModule装饰器的类，是angular的基础特性之一。
+   
+   js也有自己的模块系统，用来管理一组js对象，他与angular的模块系统完全不同 且 完全无关。
+   js中每个文件是一个模块，文件中定义的所有对象都从属于哪个模块，通过export关键字 模块可以把他的某些对象声明为公共的。其他
+   js模块可以使用import语句来访问这些公共对象。
+   
+   import {NgModule} from '@angular/core'
+   import {AppComponent} from './app.component'
+   
+   export class AppModule{}
+ 》angular模块库
+   angular提供了一组js模块，可以把它们看做库模块。每个angular库的名字都带有@angular前缀。
+   如：
+   //导入装饰器
+   import {Component} from '@angular/core'
+   
+   //导入angular模块
+   import { BrowserModule } from '@angular/platform-browser';
+   
+   //使用angular的模块系统
+   @NgModule({
+   	imports:[BrowserModule],
+	exports:[]
+   });
+   
+ 》组件
+   组件负责控制屏幕上的一个小块区域，称之为 视图。
+   我们在类中定义组件的应用逻辑，为视图提供支持，组件通过一些由属性和方法组成的API和视图交互。
+   //hero-list.component.ts
+   export class HeroListComponent implements OnInit{
+   	heroes:Hero[];
+	selectedHero:Hero;
+	
+	constructor(private service:HeroService){}
+	
+	ngOnInit(){//生命周期钩子
+		this.heroes = this.service.getHeroes();
+	}
+	
+	selectHero(hero:Hero){this.selectedHero = hero;}
+   }
+》模板
+     我们通过组件的自带的模板来定义组件视图，模板以HTML形式存在，告诉angular如何渲染组件。
+     //hero-list.component.html
+	<h2>Hero List</h2>
+
+	<p><i>Pick a hero from the list</i></p>
+	<ul>
+	<li *ngFor="let hero of heroes" (click)="selectHero(hero)">
+	{{hero.name}}
+	</li>
+	</ul>
+
+	<app-hero-detail *ngIf="selectedHero" [hero]="selectedHero"></app-hero-detail>
+    模板除了可以使用像<h2>这样的html元素，还能使用其他元素(angular自己的一些模板语法)。
+    
+》元数据
+    元数据告诉angular如何处理一个类。
+    如：HeroListComponent只是一个类，需要我们告诉angular 它是一个组件。
+    要告诉angular HeroListComponent是个组件，只要把元数据附加到这个类上即可。
+    
+    在TypeScript中，我们用装饰器decorator来附加元数据
+    @Component({
+    	selector:'app-hero-list',//css选择器，它告诉angular在父级html中查找<hero-list>标签，创建并插入该组件。
+	templateUrl:'./hero-list.component.html',//组件html模板的模块的相对地址
+	providers:[HeroService]//组件所需服务的依赖注入提供商数组，这是在告诉angular该组件的构造函数需要一个HeroService服务，这样组件就可以从服务中获取英雄数据了。
+    })
+    export class HeroListComponent implements OnInit {
+	/* . . . */
+    }
+    //@Component装饰器 它把紧随其后的类标记为组件类。
+    //@Component装饰器能接受一个配置对象，angular会基于这些信息创建和展示组件及其视图。 里面的元数据会告诉angular从哪里获取你为组件指定的主要的构建块。
+
+》数据绑定
+   angular支持数据绑定，一种让模板的各部分与组件的各部分相互合作的机制。
+   数据绑定的四种形式：
+   》绑定值 {{value}}
+   》属性绑定 [property] = 'value'
+   》事件绑定 (event) = 'handler'
+   》双向绑定 [(ng-module)] = 'property'
+      双向数据绑定是最重要的，它使用ngModel指定组合了属性绑定和事件绑定的功能
+      <input [(ngModel)]="hero.name">
+      在双向绑定中，数据属性值通过属性绑定从组件流到输入框，用户的修改通过事件绑定流回组件，把属性值设置为最新的值。
+》指令 directive
 	
 
 
