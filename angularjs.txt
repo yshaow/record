@@ -266,8 +266,121 @@ angular应用的：用angular扩展语法编写html模块，用组件类管理�
  
 2.模板与数据绑定
   》显示数据
-  	
-
+     在angular中最典型的数据显示方式，就是把HTML模板中的空间绑定到angular组件的属性。
+     
+     //使用插值表达式显示组件属性
+     要显示组件的属性，最简单的方式就是通过插值表达式interpolation来绑定属性名。要使用插值表达式，就是把属性名包裹在双花括号里面放进视图模板。
+     如:{{myHero}}
+        //app.component.ts
+	import {Component} from '@angular/core'
+	const obj = {
+		selector:'app-root',
+		template:`
+			<h1>{{title}}</h1>
+		`
+	}
+	
+	@Component(obj)
+	export class AppComponent {
+		title = 'Tour of Heroes';
+	}
+	
+	angular自动从组件中提取title属性的值，并且把这些值插入浏览器中。当这些属性发生变化时，angular就会自动刷新显示。
+	
+        注意：我们没有调用new来创建AppComponent类型的实例，是angular替我们创建了它，那么它是如何创建的呢？
+        @Component装饰器中指定的CSS选择器selector它指定了一个叫app-root的元素，该元素是index.html的body里的占位符。
+        //index.html
+	<body>
+	  <app-root></app-root>
+	</body>
+	//当我们通过main.ts中的AppComponent类启动时，angular在index.html中查找一个<app-root>元素，然后实例化一个AppComponent，并将其
+        渲染到<app-root>标签中。
+	
+    》内联inline模板还是模板文件
+       你可以在两种地方存放组件模板，你可以使用template属性把它定义为内联的，或者把模板定义在一个独立的html文件中，在通过@Component装饰器中的
+       templateUrl属性，在组件元数据中把它链接到组件。
+    
+    》使用构造函数还是变量初始化？
+    	 export class AppComponent{
+	 	title:string = 'Tour of Heroes';//变量初始化 更简单
+		myHero:string;
+		
+		constructor(){
+			this.myHero = 'Windstorm'//构造函数初始化
+		}
+	 }
+     》使用ngFor显示数组属性
+       <ul>
+       	<li *ngFor='let hero of heroes'>
+		{{hero}}
+	</li>
+       </ul>	
+       *ngFor是angular的迭代指令 它将<li>元素及其子元素标记为 迭代模板。
+     》为数据创建一个类
+     	 //hero.ts
+	 export class Hero{
+	 	 //利用typeScript 提供的简写形式 用构造函数的参数直接定义属性
+	 	constructor(
+			public id:number,
+			public name:string
+			 //这个简写语法做了很多事
+			 》声明了一个构造函数的参数及其类型
+			 》声明了一个同名的公共属性
+			 》当我们new出该类的一个实例时，把该属性初始化为相应的参数值
+		){}
+	 }
+	
+	 //使用Hero类
+	 导入了Hero类之后 组件的heros属性就可以返回一个类型化的Hero对象数组了
+	 heroes = [
+	 	new Hero(1,'windstorm')
+	 ];
+      》通过NgIf进行条件显示
+      	 当应用需要只在特定情况下显示视图或视图的一部分时。
+	 ngIf指令会根据一个布尔条件来显示或移除一个元素
+	 <p *ngIf='heroes.length > 3'>more heroes!</p>
+	 注意：ngIf并不是在显示和隐藏着条消息，它是在从DOM中添加和移除这个段落元素，这会提高性能 特别是在一些大的项目中 有条件地包含或排除
+	 一大堆带着很多数据绑定的html时。
+》模板语法
+      angular应用管理着用户之所见和所为，并通过Component类的实例(组件)和面向用户的模板来与用户交互。
+      
+      从使用模型-视图-控制器(MVC)或模型-视图-视图模型(MVVM)的经验中，很多开发人员都熟悉了组件和模板两个概念。在angular中组件扮演者控制器或视图
+      模型的角色，模板扮演视图的角色。
+      
+      》模板中的HTML
+      	 html是angular模板的语言，几乎所有html语法都是有效的模板语言。但值得注意的例外是<Script>元素被禁用了，以阻止脚本注入攻击的风险。实际上      	      <script>只是被忽略了
+	 
+	 有的合法的HTML被用在模板中是没有意义的<html> <body> <base>元素这个舞台上中并没有扮演有用的角色，剩下的所有元素基本上就都一样用了。
+	 
+	 可以通过组件和指令来扩展模板中的HTML词汇，它们看上去就是新的元素和属性。
+	 
+      》插值表达式 {{ ... }} interpolation
+      	 插值表达式可以把计算后的字符串插入到HTML元素标签内的文本或对标签的属性进行赋值。
+	 <h3>{{ title }} <img src="{{heroImageUrl}}" style="height:30px"/></h3>
+	 在括号之间的'素材'通常是组件属性的名字。一般来说 括号间的素材是一个模板表达式 angular先对他求值，再把它转换成字符串。
+	 <p>{{ getVal() }}</p>
+      》模板表达式
+      	 模板表达式产生一个值，angular执行这个表达式，并把它赋值给绑定目标的属性，这个绑定目标可能是HTML元素 组件 或 指令。
+	 {{ 1+1 }}中所包含的模板表达式是1+1。在属性绑定中会再次看到模板表达式，它出现在 = 右侧的引号中 如：[property]='expression'。
+	 
+	 很多js表达式也是合法的模板表达式但是不是全部。
+	 js中那么具有或可能引发副作用的表达式是被禁止的，包括：
+		 赋值(= += -= ...)
+		 new运算符
+		 使用;或,的链式表达式
+		 自增或自减操作符(++和--)
+	 和js语法的其他显著不同包括：
+	 	 不支持位运算 | 和 &
+		 具有新的模板表达式运算符 如：|、?.和!
+       》表达式上下文
+       	  典型的表达式上下文就是这个组件实例，它是各种绑定值得来源。如组件的属性。
+	  
+	  表达式的上下文可以包括组件之外的对象，如：模板的输入变量(let hero)和模板引用变量(#heroInput)就是备选的上下文对象之一
+	  <div *ngFor='let hero of heroes'>{hero.name}</div>
+	  <input #heroInput>{{heroInput.value}}
+	  
+	 
+	 
 
 
 
