@@ -52,8 +52,9 @@ angular是一个用html和js或者一个可以编译成js的语言如：Dart或T
 angular应用的：用angular扩展语法编写html模块，用组件类管理这些模块，用服务添加应用逻辑，用模块打包发布组件与服务。
 通过引导根模块来启动该应用，angular在浏览器中接管 展示应用的内容，并根据我们提供的操作指令响应用户的交互。
 
-》模块
-	
+》模块 
+  angular应用是模块化的，并且angular有自己的模块系统，它被称为angular模块或NgModules。
+  
 
 
 
