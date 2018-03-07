@@ -378,7 +378,57 @@ angular应用的：用angular扩展语法编写html模块，用组件类管理�
 	  表达式的上下文可以包括组件之外的对象，如：模板的输入变量(let hero)和模板引用变量(#heroInput)就是备选的上下文对象之一
 	  <div *ngFor='let hero of heroes'>{hero.name}</div>
 	  <input #heroInput>{{heroInput.value}}
+	  表达式中的上下文变量是由模板变量 指令的上下文变量(如果有) 和组件的成员叠加而成的。如果我们要引用的变量名存在于一个以上的命名空间
+	  中，那么模板变量是最优先的  其次是指令的上下文变量 最后是组件的成员。
+	  模板表达式不能引用全局命名空间中的任何东西，如：window和document ，它也不能调用console.log或Math.max,它只能引用表达式上下文中的成员。
+       》表达式指南
+          模板表达式能成就或毁掉一个应用：遵循下面规则：
+	  	 没有可见的副作用
+		 执行迅速
+		 非常简单
+		 幂等性
+       》模板语句
+          模板语句用来响应由绑定目标(如html元素 组件 或 指令)触发的事件，模板语句将在事件绑定一节看到 它出现在=号右侧的引号中如：
+	  (event)='statement'
+	  <button (click)='deleteHero()'>Delete hero</button>
+	  模板语句有副作用，这是事件处理的关键，因为我们要根据用户的输入更新应用状态。
 	  
+	  响应事件是angular中单向数据流的另一方面，在一次事件循环中，可以随意改变任何地方的任何东西。和模板表达式一样，模板语句使用的语言也是像js
+	  。模板语句解析器和模板表达式解析器有所不同，特别之处在于它支持基本赋值(=)和表达式链(;和,)。
+	  
+	  然而某些js语法仍然是不允许的：
+	   new运算符
+	   自增和自减运算符 ++ --
+	   操作并赋值 如 += -=
+	   位操作符 | &
+	   模板表达式运算符
+	   
+	   》语句上下文
+	   	 语句只能引用语句上下文中 -- 通常是正在绑定事件的那个组件实例
+		 
+		 语句上下文可以引用模板自身上下文中的属性，在下面的例子中就把模板的$event对象 模板输入变量(let hero)和模板引用变量(#heroForm)
+		 传递给了组件中的一个事件处理器方法。
+		 <button (click)="onSave($event)">Save</button>
+		 <button *ngFor="let hero of heroes" (click)="deleteHero(hero)">{{hero.name}}</button>
+		 <form #heroForm (ngSubmit)="onSubmit(heroForm)"> ... </form>
+		 
+		 模板上下文中的变量名的优先级高于组件上下文中的变量名，
+		 模板语句不能引用全局命名空间的任何东西 如：不能引用window document 也不能调用console Math等。
+		 
+	    》语句指南
+	    	 和表达式一样 避免写复杂的模板语句  常规是函数调用或者属性赋值。
+        》绑定语法
+	    数据绑定是一种机制 用来协调用户所见和应用数据的。
+	    绑定的类型可以根据数据流的方向分成三类：从数据源到视图 从视图到数据源 以及双向的 从视图到数据源再到视图。
+	    单向：
+	     从数据源到视图目标 {{expression}} [target]='expression' bind-target='expression'
+	     
+	     从视图目标到数据源(事件)  (target)='statement'  on-target='statement'
+	    双向:
+	     [(target)] = 'expression' bindon-target='expression'
+	     
+	    除了插值表达式之外的绑定类型，在等号左边的目标名，无论是包在括号中[] ()还是用前缀形式 bind- on- bindon-。
+	    
 	 
 	 
 
