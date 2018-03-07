@@ -178,7 +178,95 @@ angular应用的：用angular扩展语法编写html模块，用组件类管理�
       <input [(ngModel)]="hero.name">
       在双向绑定中，数据属性值通过属性绑定从组件流到输入框，用户的修改通过事件绑定流回组件，把属性值设置为最新的值。
 》指令 directive
+   angular模板是动态的，当angular渲染它们时，它会根据指令提供的操作对DOM进行转换。
+   
+   组件是一个带有模板的指令；@Component装饰器实际上就是一个@Directive装饰器，只是扩展了一些面向模板的特性。
+   
+   还有两种其他类型的指令：结构型指令和属性型指令。
+   它们往往像属性attribute一样出现在元素标签中，偶尔会以名字的形式出现，但多数时候还是作为赋值目标或绑定目标出现。
+   
+   结构型指令通过在DOM中添加 移除  和 替换元素来修改布局。
+   如：
+   <li *ngFor='let hero of heroes'></li>
+   <app-hero-detail *ngIf='selectedHero'></app-hero-detail>
+   
+   属性型指令修改一个现有元素的外观或行为，在模板中它们看起来就像是标准的html属性。
+   如：ngModel指令就是属性型指令，它实现了双向数据绑定。ngModel修改现有元素(一般是<input>)的行为：设置其显示属性值，并响应change事件。
+   <input [(ngModel)]='hero.name'/>
+   
+   angular还有少量指令，它们或者修改结构布局(如：ngSwitch)，或者修改DOM元素和组件的各个方面(如：ngStyle 和 ngClass)。
+   
+   当然我们也能编写自己的指令，像HeroListComponent这样的组件就是一种自定义指令。
+  
+  
+ 》服务
+   服务是一个广义范畴，包括：值 函数 或应用所需的特性。
+   几乎任何东西都可以是一个服务，典型的服务是一个类，具有专注的 明确的用途，它应该做一件特定的事情并把它做好。
+   
+   服务没有什么特别属于angular的特性，angular对于服务也没有什么定义，它甚至都没有定义服务的基类，也没有地方注册一个服务。
+   即便如此 服务仍然是任何angular应用的基础。组件就是最大的服务消费者。
+   
+   如：日志服务
+   //logger.service.ts
+   export class Logger{
+   	log(msg:any){
+		console.log(msg);
+	}
 	
+	error(msg:any){
+		console.error(msg);
+	}
+	
+	warn(msg:any){
+		console.warn(msg);
+	}
+   }
+   
+   组件类应保持简洁，组件本身不从服务器获取数据，不进行验证输入，也不直接往控制台写日志。它们把这些任务委托给服务。
+   组件的任务就是提供用户体验，仅此而已，它介于视图(模板渲染)和应用逻辑(通常包括模型的某些概念)之间。设计良好的组件为数据绑定提供属性和方法，
+   把其它琐事都委托给服务。
+   
+   angular不会强制要求我们遵循这些原则，但它帮助我们遵循这些原则，它让我们能轻易地把应用逻辑拆分到服务，并通过依赖注入来在组件中使用这些服务。
+   
+》依赖注入
+   依赖注入是提供类的新实例的一种方式，还负责处理好类所需的全部依赖。大多数依赖都是服务。angular使用依赖注入来提供新组件以及组件所需的服务。
+   
+   angular通过查看构造函数的参数类型得知组件需要哪些服务。如：HeroListComponent组件的构造函数需要一个HeroService服务：
+   constructor(private service:HeroService){}
+   
+   当angular创建组件时，会首先为组件所需的服务请求一个注入器(injector)。注入器维护了一个服务实例的容器，存放着以前创建的实例。如果所请求的服务实例不在容器中，注入器就会创建一个服务实例，并添加到容器中，然后把这个服务返回给angular。当所有请求的服务都被解析完并返回时，angular会以这些服务为参数去调用组件的构造函数 -- 这就是依赖注入。
+   
+   如果注入器还没有HeroService，它怎么知道该如何创建一个呢？
+   简单点说我们必须先用注入器injector为HeroService注册一个提供商provider。提供商用来创建或返回服务。通常就是这个服务类本身(相当于 new HeroService())。
+   
+   我们可以在模块中或组件中注册提供商。
+   但通常会把提供商添加到根模块上，以便于在任何地方都使用服务的同一个实例：
+   //app.module.ts
+   providers:[
+   	BackendService,
+  	HeroService,
+  	Logger
+   ]
+   
+   或者也可以在@Component元数据中的providers属性中把它注册在组件层
+   @Component({
+    selector:    'app-hero-list',
+    templateUrl: './hero-list.component.html',
+    providers:  [ HeroService ]
+   })
+   //把它注册在组件级表示该组件的每一个新实例都会有一个服务的新实例。
+   
+   需要记住的关于依赖注入的要点：
+      》依赖注入渗透在整个angular框架中，被到处使用。
+      》注入器injector是本机制的核心
+          注入器负责维护一个容器，用于存放它创建过的服务实例
+	  注入器能使用提供商创建一个新的服务实例。
+      》提供商是一个用于创建服务的配方
+      》把提供商注册到注入器中
+ 
+2.模板与数据绑定
+  》显示数据
+  	
 
 
 
