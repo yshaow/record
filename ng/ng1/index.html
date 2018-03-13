@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>angular1.x</title>
+    <script src="http://cdn.static.runoob.com/libs/angular.js/1.4.6/angular.min.js"></script>
+    <script src="http://cdn.static.runoob.com/libs/angular.js/1.4.6/angular-animate.min.js"></script>
+    <script src="http://apps.bdimg.com/libs/angular-route/1.3.13/angular-route.js"></script>
+</head>
+<body ng-app="myApp">
+    <!-- <div>
+        <p>名字：<input ng-model="name" type="text"/></p>
+        <h1>hello {{name}}</h1>
+        <h2 ng-bind="name" />>
+    </div>
+
+    <div ng-init="firstName='John'">
+        <p>name: <span ng-bind="firstName" /></p>
+    </div>
+
+    <div data-ng-init="a='b'">
+        <p>a: <span data-ng-bind="a"/></p>
+    </div>
+
+    <div ng-app="myApp" ng-controller="myCtrl">
+        <input ng-model="firstName" type="text"/>
+        <hr/>
+        <input ng-model="lastName" type="text" />
+        <h1>firstName:{{firstName}},lastName:{{lastName}}</h1>
+    </div>
+    <script>
+        //定义应用
+        var app = angular.module('myApp',[]);
+        //控制应用
+        app.controller('myCtrl',function($scope){
+            $scope.firstName = 'John';
+            $scope.lastName = 'Doe';
+        })
+    </script>
+
+    <div>
+        <p>第一个表达式: {{ 5 +5 }}</p>
+    </div>
+
+    <div ng-init="quantity=10;cost=5">
+        <p>总价:{{quantity * cost}}</p>
+        <p>总价:<span ng-bind="quantity * cost"/></p>
+    </div>
+
+    <div ng-init="first='John';last='Doe'">
+        <p>姓名：{{ first + " " + last}}</p>
+        <p>姓名：<span ng-bind=" first + ' ' + last"/></p>
+    </div>
+
+    <div ng-init=" person={firstName:'哈哈'} ">
+        <p>姓名:{{person.firstName}}</p>
+        <p>姓名:<span ng-bind="person.firstName"/></p>
+    </div>
+
+    <div ng-init=" points=[1,2] ">
+        <p>points第二个值:{{points[1]}}</p>
+        <p>points第二个值:<span ng-bind="points[1]"/></p>
+    </div>
+
+    <div ng-init="quantity=1;price=5">
+        <h2>价格计算器</h2>
+        <div>
+            数量：<input ng-model="quantity" type="number"/>
+        </div>
+        <div>
+            价格：<input ng-model="price" type="number"/>
+        </div>
+        <p><strong>总价：</strong>{{quantity*price}}</p>
+    </div>
+
+    <div ng-init="names=['a','b','c']">
+        <ul>
+            <li ng-repeat="name in names">{{name}}</li>
+        </ul>
+    </div>
+    <hr> -->
+    <!-- <div>
+            <my-derictive></my-derictive>
+    </div>
+    <div my-derictive></div>
+    <div class="my-derictive"></div>-->
+    <!-- 指令: my-derictive -->
+    <!-- <script>
+        var myDeri = angular.module('myApp',[]);
+        myDeri.directive('myDerictive',function(){
+            return {
+                template:"<h1>自定义指令！</h1>",
+                restrict:"M"
+            }
+        })
+    </script> --> 
+
+    <!-- <div ng-controller="myCtrl">
+        姓名:<input ng-model="name"/>
+        <h1>输入了:{{name}}</h1>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('myCtrl',function($scope){
+            $scope.name = 'John Doe'
+        });
+    </script> -->
+
+    <!-- <form name="myForm" ng-init="myText='yshaow@126.com'">
+        Email:
+        <input type="email" name='myAddress' ng-model="myText" required>
+        <h1>状态</h1>
+        {{myForm.myAddress.$valid}}
+        {{myForm.myAddress.$dirty}}
+        {{myForm.myAddress.$touched}}
+        {{myForm.myAddress.$error}}
+    </form> -->
+    <!-- <div ng-controller="ctrl1">
+        <h1>{{name}}</h1>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope){
+            $scope.name='我是$scope';
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">
+        <input type="text" ng-model="name">
+        <h1>名字：{{name}}</h1>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope){
+            $scope.name='我是$scope';
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">
+        <ul>
+            <li ng-repeat="name in names">{{name}}</li>
+        </ul>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope){
+            $scope.names=["Emil","Tobias","Linus"];
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">
+        <ul>
+            <li ng-repeat="name in names">{{name}}</li>
+        </ul>
+        <h1>{{name}}</h1>
+    </div>
+    <div ng-controller="ctrl2">
+        <ul>
+            <li ng-repeat="name in names">{{name}}</li>
+        </ul>
+        <h1>{{name}}</h1>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope,$rootScope){
+            $scope.names=["Emil","Tobias","Linus"];
+            $rootScope.name ='我是root scope'
+        });
+        app.controller('ctrl2',function($scope){
+
+        })
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">
+        <ul>
+            <li ng-repeat="name in names">{{name}}</li>
+        </ul>
+        <button ng-click="say()">点我！</button>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope){
+            $scope.names=["Emil","Tobias","Linus"];
+            $scope.say = function(){
+                alert('你好！')
+            }
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">
+            <p><input type="text" ng-model="test"></p>
+        <ul>
+            <li ng-repeat="name in names | filter:test | orderBy:'country'">
+                {{(name.name | uppercase) + ', ' + name.country }}</li>
+        </ul>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope){
+            $scope.names=[
+            {name:'Jani',country:'Norway'},
+            {name:'Hege',country:'Sweden'},
+            {name:'Kai',country:'Denmark'}
+            ];
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">{{myUrl}}</div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope,$location){
+            $scope.myUrl = $location.absUrl();
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">{{data}}</div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope,$http){
+           $http.get('test.json').then(function (response) { 
+               $scope.data = JSON.stringify(response.data);
+           })
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">{{data}}</div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope,$timeout){
+           $scope.data = '你好';
+           $timeout(function(){
+            $scope.data = "不好！"
+           },3000)
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">{{date}}</div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope,$interval){
+           $scope.date = new Date().toLocaleTimeString();
+           $interval(function(){
+            $scope.date = new Date().toLocaleTimeString()
+           },1000)
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">{{255 | myFormat}}</div>
+    <script>
+        var app = angular.module('myApp',[]);
+        //创建名为myService的服务
+        app.service('myService',function(){
+            this.myFunc = function(x){
+                return x.toString(16);
+            };
+
+            this.say = function(msg){
+                alert(msg);
+            }
+
+        })
+        //在控制器中使用自定义的服务
+        app.controller('ctrl1',function($scope,myService){
+           myService.say('自定义服务！');
+        });
+
+        //自定义过滤器中使用自定义服务
+        app.filter('myFormat',['myService',function(myService){
+            return function(x){
+                return myService.myFunc(x);
+            }
+        }])
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">
+        <ul>
+            <li ng-repeat="name in names">{{name.Name + ', ' + name.Country }}</li>
+        </ul>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        //在控制器中使用自定义的服务
+        app.controller('ctrl1',function($scope,$http){
+           $http.get('http://www.runoob.com/try/angularjs/data/Customers_JSON.php')
+           .success(function(response){
+               $scope.names = response.records;
+           });
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">
+        <select 
+        ng-model="selectedName"
+        ng-options="key for (key,value) in names"
+        ></select>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        //在控制器中使用自定义的服务
+        app.controller('ctrl1',function($scope){
+           $scope.names = {
+            site01 : "Google",
+            site02 : "Runoob",
+            site03 : "Taobao"
+           };
+           $scope.selectedName = "Runoob";
+        });
+    </script> -->
+
+
+    <!-- <div ng-controller="ctrl1">
+       <table>
+           <tr ng-repeat="x in names | orderBy:'Country'">
+               <td>{{$index + 1 +","+ $even+","+ $odd}}</td>
+               <td>{{x.City}}</td>
+               <td>{{x.Country | uppercase}}</td>
+           </tr>
+       </table>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope,$http){
+            $http.get('test.json')
+            .success(function(response){
+                $scope.names = response.records;
+            })
+        });
+    </script>
+    <style>
+        table, th , td {
+        border: 1px solid grey;
+        border-collapse: collapse;
+        padding: 5px;
+        }
+        table tr:nth-child(odd) {
+        background-color: #f1f1f1;
+        }
+        table tr:nth-child(even) {
+        background-color: #ffffff;
+        }
+    </style> -->
+
+    <!-- <div ng-controller="ctrl1" ng-init="mySwitch=true">
+        <button ng-disabled="mySwitch" ng-click="click()">点我啊</button>
+        <p><input type="checkbox" ng-model="mySwitch"></p>
+        <p>{{mySwitch}}</p>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope){
+           $scope.click = function(){
+               alert('哈哈');
+           };
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1" ng-init="count = 0">
+        <button ng-click="count = count + 1">点我啊！</button>
+        <p>{{ count }}</p>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope){
+            $scope.click = function(){
+                alert('哈哈');
+            };
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">
+       <form>
+           <div>
+               First Name:
+               <input ng-model="user.firstName" type="text">
+           </div>
+           <div>
+               Last Name:
+               <input ng-model="user.lastName" type="text">
+           </div>
+           <button ng-click="reset()">重置</button>
+       </form>
+       <p>form:{{user}}</p>
+       <p>master:{{master}}</p>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope){
+            $scope.master = {firstName:'哈哈',lastName:'嘻嘻'};
+            $scope.reset = function(){
+                $scope.user = angular.copy($scope.master);
+            }
+            $scope.reset();
+        });
+    </script> -->
+
+    <!-- <div ng-controller="ctrl1">
+        <form name="myForm" novalidate>
+            <p>
+                用户名:<br/>
+                <input type="text" name="user" ng-model="user" required>
+                <span style="color:red" ng-show="myForm.user.$dirty && myForm.user.$invalid">
+                    <span ng-show="myForm.user.$error.required">用户名是必须的</span>
+                </span>
+            </p>
+            <p>
+                邮箱:<br/>
+                <input type="email" name='email' ng-model='email' required>
+                <span style="color:red" ng-show="myForm.email.$dirty && myForm.email.$invalid">
+                    <span ng-show="myForm.email.$error.required">邮箱是必须的</span>
+                    <span ng-show="myForm.email.$error.email">非法的邮箱</span>
+                </span>
+            </p>
+            <p>
+                <input 
+                ng-disabled="
+                myForm.user.$dirty && myForm.user.$invalid ||
+                myForm.email.$dirty && myForm.email.$invalid
+                "
+                type="submit">
+            </p>
+        </form>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope){
+            $scope.user = '小五';
+            $scope.email = 'yshaow@126.com';
+        });
+    </script> -->
+
+    <!-- <div>
+        <div ng-include=" 'test.html' "></div>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+        app.controller('ctrl1',function($scope){
+            $scope.user = '小五';
+            $scope.email = 'yshaow@126.com';
+        });
+    </script>  -->
+
+    <!-- <div ng-controller="ctrl1">
+        隐藏: <input type="checkbox" ng-model="myCheck">
+        <div ng-hide='myCheck' class="test">哈哈哈</div>
+    </div>
+    <style>
+        div.test{
+            transition:height linear 3000ms;
+            text-align: center;
+            background-color:lightblue;
+            height:100px;
+        }
+
+        .ng-hide{
+            height:0 !important
+        }
+    </style>
+    <script>
+        //如果我们应用已经设置了应用名，可以把 ngAnimate 直接添加在模型中：
+        var app = angular.module('myApp',['ngAnimate']);
+        app.controller('ctrl1',function($scope){
+            
+        });
+    </script>  -->
+    <!-- <div ng-controller="ctrl1">
+        隐藏: <input type="checkbox" ng-model="myCheck">
+        <div ng-hide='myCheck' class="test">哈哈哈</div>
+    </div>
+    <style>
+        div.test{
+            text-align: center;
+            background-color:lightblue;
+            height:100px;
+        }
+
+        .ng-hide{
+            animation: .5s myChange;
+        }
+
+        @keyframes myChange {
+            0%{
+                height:100px;
+            }
+            100%{
+                height:0;
+            }
+        }
+    </style>
+    <script>
+        //如果我们应用已经设置了应用名，可以把 ngAnimate 直接添加在模型中：
+        var app = angular.module('myApp',['ngAnimate']);
+        app.controller('ctrl1',function($scope){
+            
+        });
+    </script>  -->
+
+    <!-- <div ng-controller="CaloController">
+        <p>输入一个数字: <input type="number" ng-model="number"></p>
+        <button ng-click="square()">X<sup>2</sup></button>
+        <p>结果:{{ result }}</p>
+    </div>
+    <script>
+        var app = angular.module('myApp',[]);
+
+        // app.config(function($provide){
+        //     $provide.provider('MathService',function(){
+        //         this.$get = function() {
+        //             var factory = {};
+
+        //             factory.multiply = function(a,b) {
+        //                 return a * b;
+        //             }
+
+        //             return factory;
+        //         }
+        //     });
+        // });
+
+        app.value('defaultInput',5);
+
+        app.factory('MathService',function(){
+            return {
+                multiply:function(a,b){
+                    return a * b;
+                }
+            }
+        });
+
+        app.service('CalcService',function(MathService){
+            this.square = function(a){
+                return MathService.multiply(a,a);
+            }
+        });
+
+        app.controller('CaloController',function($scope,CalcService,defaultInput){
+            $scope.number = defaultInput;
+            $scope.result = CalcService.square($scope.number);
+
+            $scope.square = function(){
+                $scope.result = CalcService.square($scope.number);
+            }
+        });
+    </script> -->
+
+    <div>
+        <h2>angularjs 路由应用</h2>
+        <ul>
+            <li><a href="#/">首页</a></li>
+            <li><a href="#/computers">电脑</a></li>
+            <li><a href="#/printers">打印机</a></li>
+            <li><a href="#/blabla">其他</a></li>
+        </ul>
+        <!-- 会根据路由的变化而变化 -->
+        <div ng-view></div>
+    </div>
+    <script>
+        var app = angular.module('myApp',['ngRoute']);
+
+        app.config(['$routeProvider',function($routeProvider){
+            $routeProvider
+            .when('/',{
+                template:'首页'
+            })
+            .when('/computers',{
+                template:'电脑分页'
+            })
+            .when('/printers',{
+                template:'打印页面'
+            })
+            .otherwise({
+                redirectTo:'/'
+            });
+        }]);
+    </script>
+</body>
+</html>

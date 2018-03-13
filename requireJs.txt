@@ -1,33 +1,33 @@
 /*****************************************/
 http://javascript.ruanyifeng.com/tool/requirejs.html
-ͨ���ж�������Ƿ�ΪIE ��ѡ�����zepto��jQuery
-define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' in {} ieΪfalse  ����Ϊtrue
+通过判断浏览器是否为IE 而选择加载zepto或jQuery
+define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' in {} ie为false  其他为true
     return $;
 });
-1.requireJs���ŵ㣺
-	����ֹjs��������ҳ����Ⱦ
-	��ʹ�ó�����õķ�ʽ����js ���Լ�����script����js�ļ�������
-2.require�������������� define require requirejs ����require===requirejs��һ��ʹ��require��
-��̣�
-	��define ��������һ��ģ��
-	��require ��������ģ�� ��ִ�м������Ļص�����
-	�磺
-	a.js��:ͨ��define����������һ��ģ��
+1.requireJs的优点：
+	》防止js加载阻塞页面渲染
+	》使用程序调用的方式加载js 可以减少用script加载js文件的数量
+2.require定义了三个变量 define require requirejs 其中require===requirejs，一般使用require更
+简短：
+	》define 用来定义一个模块
+	》require 加载依赖模块 并执行加载完后的回调函数
+	如：
+	a.js中:通过define函数定义了一个模块
 		define(function(){
 			function fun1(){
 				alert("it works");
 			}
 			fun1();
 		});
-	��ҳ����ʹ�ø�ģ�飺
+	在页面中使用该模块：
 		require(["js/a"],function(){
 			alert("load finished");
 		});
-		ע�⣺require�е�������һ�����飬��ʹֻ��һ��������Ҳ����ʹ�����������壬require�ĵڶ�������
-		��callback һ��function ����������������Ϻ���߼�
-	�����ļ���ǰ��Ķ��Ǽ��ر���js ���Ǵ󲿷������ҳ����Ҫ���ص�js�������Ա��ط����� ������վ cdn �����Ļ�
-		  ��Ҫ���·�ʽ����
-		  �����һ��jQuery��
+		注意：require中的依赖是一个数组，即使只有一个依赖，也必须使用数组来定义，require的第二个参数
+		是callback 一个function 是用来处理加载完毕后的逻辑
+	加载文件：前面的都是加载本地js 但是大部分情况下页面需要加载的js可能来自本地服务器 其他网站 cdn 这样的话
+		  需要如下方式加载
+		  如加载一个jQuery库
 		  require.config({
 			paths:{
 				"jquery" : ["http://libs.baidu.com/jquery/2.0.3/jquery"]
@@ -38,41 +38,41 @@ define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' 
 				alert("load finished");
 			});
 		  });
-		  ע�⣺require.config����������ģ�����λ�ã���˵���Ǹ�ģ����һ�����̸��üǵ����� ��Ȼ���ص�js
-		  ����Ҳ������������
+		  注意：require.config是用来配置模块加载位置，简单说就是给模块起一个更短更好记的名字 当然本地的js
+		  我们也可以这样配置
 		  require.config({
 			paths:{
 				"a":"js/a",
 			}
 		  });
-		  ע�⣺ͨ��paths�����û�ʹ���ǵ�ģ�����ָ��Ӿ��� paths����һ����Ҫ�Ĺ��� ���ǿ������ö��·�������
-		  Զ��cdn��û�м��سɹ� ���Լ��ر��صĿ�
-		  �磺
+		  注意：通过paths的配置会使我们的模块名字更加精炼 paths还有一个重要的功能 就是可以配置多个路径，如果
+		  远程cdn库没有加载成功 可以加载本地的库
+		  如：
 			require.config({
 				paths:{
 					"jquery":["http://libs.baidu.com/jquery/2.0.3/jquery","js/jquery"],
 				}
 			});
-			ע�⣺��ʹ��requirejsʱ������ģ��ʱ����д.js��׺�� ��ȻҲ�ǲ���д��׺��
-			      ������callback�����з�����$�������������������jQueryģ���������� ����������ģ��
-			      ��������д����������ʹ��
-			      �磺
+			注意：在使用requirejs时，加载模块时不用写.js后缀的 当然也是不能写后缀的
+			      在上面callback函数中发现有$参数，这个就是依赖的jQuery模块的输出变量 如果依赖多个模块
+			      可以依次写入多个参数来使用
+			      如：
 			      require(["jquery","underscore"],function($,_){});
-			      ע�⣺���ĳ��ģ�鲻�������ֵ����û�У����Ծ����������ģ��д��ǰ�� ��ֹλ�ô����������
-	ȫ�����ã������������ظ�������require.config���� ���ÿ��ҳ���ж��������� ��Ȼ�Եò��š�requirejs�ṩ��һ�ֽ�
-		  "������"�Ĺ��� �������ȴ���һ��main.js д��require.config({paths:{....}});������,
-		  Ȼ����ҳ����ʹ������ķ�ʽ��ʹ��requirejs
+			      注意：如果某个模块不输出变量值，则没有，所以尽量将输出的模块写在前面 防止位置错乱引发误解
+	全局配置：上面例子中重复出现了require.config配置 如果每个页面中都加入配置 必然显得不雅。requirejs提供了一种叫
+		  "主数据"的功能 我们首先创建一个main.js 写入require.config({paths:{....}});的配置,
+		  然后再页面中使用下面的方式来使用requirejs
 		  <script data-main='js/main' src='js/require.js'></script>
-		  ע�⣺����requirejs�ű���script��ǩ������data-main���ԣ��������ָ����js���ڼ�����require.js������
-		  ���ǰ�require.config�����ü��뵽data-main�󣬾Ϳ���ʹÿ��ҳ�涼ʹ��������ã�Ȼ��ҳ���оͿ���ֱ��ʹ��
-		  require���������еĶ�ģ����
-		  data-main����һ����Ҫ���ܣ���script��ǩָ��data-main����ʱ��require��Ĭ�ϵĽ�data-mainָ����jsΪ��·����
-		  ��û������jQuery��paths��·������ʹ��require("jquery")��ʾjs/jquery.js;
-	������ģ�飺
-		ͨ��require���ص�ģ��һ�㶼��Ҫ����AMD�淶��ʹ��define������ģ�飬��ʱ����ʱ����Ҫ���ط�AMD�淶
-		��js����ʱ�����Ҫ�õ���һ�����ܣ�shim("��")
-		Ŀǰ��Ҫ���ڵĵط���
-			��AMDģ����������Ǳ�׼��AMD"��"�ɿ���ģ��,����underscore��⣬������û��ʵ��AMD�淶�����ǿ�����������
+		  注意：加载requirejs脚本的script标签加入了data-main属性，这个属性指定的js将在加载完require.js后处理，
+		  我们把require.config的配置加入到data-main后，就可以使每个页面都使用这个配置，然后页面中就可以直接使用
+		  require来加载所有的短模块名
+		  data-main还有一个重要功能，当script标签指定data-main属性时，require会默认的将data-main指定的js为根路径，
+		  即没有配置jQuery的paths短路径，而使用require("jquery")表示js/jquery.js;
+	第三方模块：
+		通过require加载的模块一般都需要符合AMD规范即使用define来申明模块，当时部分时候需要加载非AMD规范
+		的js，这时候就需要用到另一个功能：shim("垫")
+		目前主要用在的地方：
+			非AMD模块输出，将非标准的AMD"垫"成可用模块,如用underscore类库，但他并没有实现AMD规范，我们可以这样配置
 			require.config({
 				shim:{
 					"underscore":{
@@ -83,43 +83,43 @@ define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' 
 			require(["underscore"],function(_){
 				_.each([1,2,3],alert);
 			});
-			�����ʽ�ķ�AMDģ�飬���Ǿ������õ�jQuery�����������Щ�������������AMD�淶������jQuery.form�������ʱ
-			������Ҫ��form���"��"��jQuery��
+			插件形式的非AMD模块，我们经常会用到jQuery插件，而且这些插件基本不符合AMD规范，比如jQuery.form插件，这时
+			我们需要将form插件"垫"到jQuery中
 			requery.config({
 				shim:{
 					"jquery.form":{
 						deps:["jquery"]
-					}=>��дΪ��
+					}=>简写为：
 					"jquery.form":["jquery"]
 				}
 			});
-***********************************requirejs�ĵ��ܽ�*****************************************
-1.����js�ļ�
-	�����
-		requirejsĿ���ǹ��������ģ�黯����ʹ���˲�ͬ�ڴ�ͳ<script>��ǩ�Ľű����ز��衣������
-	    �������١��Ż����룬������Ҫ��Ŀ�Ļ���Ϊ�˴����ģ�黯����������ʹ�ýű�ʱ��module id���
-	    URL��ַ
-	        requirejs��һ�������baseurl�ĵ�ַ���������еĴ��롣ҳ�涥��<script>��ǩ����һ�������
-	    ����data-main��require.jsʹ�����������ű����ع��̣���baseurlһ�����õ����������һ�µ�Ŀ¼
+***********************************requirejs文档总结*****************************************
+1.加载js文件
+	》简介
+		requirejs目标是鼓励代码的模块化，它使用了不同于传统<script>标签的脚本加载步骤。它可以
+	    用来加速、优化代码，但其主要的目的还是为了代码的模块化。它鼓励在使用脚本时已module id替代
+	    URL地址
+	        requirejs以一个相对于baseurl的地址来加载所有的代码。页面顶层<script>标签含有一个特殊的
+	    属性data-main，require.js使用它来启动脚本加载过程，而baseurl一般设置到与该属性相一致的目录
 	    <script data-main='scripts/main.js' src='scripts/require.js'></script>
-	    baseurl˵����
-		��baseurl��ͨ��requirejs config�ֶ����� ���û����ʾָ��config�Լ�data-main����Ĭ�ϵ�baseurl
-	    Ϊ����requirejs���Ǹ�HTMLҳ�������Ŀ¼
-	        ��requirejsĬ�ϼٶ����е�������Դ����js�ű������������module id���ټ���".js"��׺��requirejs
-	    �ڽ���module id��path�Ľ���ʱ���Զ����Ϻ�׺
-	    ע�⣺��ʱ����ܿ�"baseurl+paths"�Ľ������̣�����ֱ��ָ������ĳһ��Ŀ¼�µĽű�����ʱ������������
-	    ���һ��module id������������֮һ����id������ܿ������"baseurl+paths"���ã�����ֱ�ӽ������Ϊһ��
-	    ����ڵ�ǰHTML�ĵ��Ľű�
-	    *****����".js"����
-	    *****����"/"��ʼ
-	    *****������URLЭ�� ��"http:��https:"
-	��data-main��ڵ�
+	    baseurl说明：
+		》baseurl可通过requirejs config手动设置 如果没有显示指定config以及data-main，则默认的baseurl
+	    为包含requirejs的那个HTML页面的所属目录
+	        》requirejs默认假定所有的依赖资源都是js脚本，因此无需再module id上再加上".js"后缀，requirejs
+	    在进行module id到path的解析时会自动补上后缀
+	    注意：有时候想避开"baseurl+paths"的解析过程，而是直接指定加载某一个目录下的脚本，此时可以这样做：
+	    如果一个module id符合下述规则之一，其id解析会避开常规的"baseurl+paths"配置，而是直接将其加载为一个
+	    相对于当前HTML文档的脚本
+	    *****》以".js"结束
+	    *****》以"/"开始
+	    *****》包含URL协议 如"http:或https:"
+	》data-main入口点
 		<script data-main='scripts/main' src='scripts/require.js'></script>
-		require.js�ڼ��ص�ʱ�����data-main���ԣ�
-		�������data-mainָ��Ľű�������ģ�����ѡ�Ȼ����ص�һ��Ӧ��ģ��
-		***ע�⣺��main.js�������õĽű����첽���صģ�����������ҳ��������������js
-		���أ����ܱ�֤������������js�Ѿ����سɹ�
-		�磺
+		require.js在加载的时候会检查data-main属性，
+		你可以再data-main指向的脚本中设置模块加载选项，然后加载第一个应用模块
+		***注意：在main.js中所设置的脚本是异步加载的，所以如果你的页面中配置了其他js
+		加载，则不能保证他们所依赖的js已经加载成功
+		如：
 		<script data-main="scripts/main" src="scripts/require.js"></script>
 		<script src="scripts/other.js"></script>
 		//**main.js:
@@ -132,17 +132,17 @@ define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' 
 		require( ['foo'], function( foo ) {
 
 		});
-	������ģ��
-		ģ�鲻ͬ�ڴ�ͳ�Ľű��ļ��������õĶ�����һ��������������ȫ�����ƿռ���Ⱦ��
-		��������ʾ���г���������ϵ�����Ժ���(�����ģ����Ǹ�����)��������ʽ����Щ��������
-		ע�룬����������ȫ�ֱ�����requirejs��ģ����ģ��ģʽ��һ����չ����ô�������ȫ�ֵ���������
-		ģ��
-		requirejs��ģ���﷨����������ļ��ض��ģ�飬��Ȼ���ص�˳�򲻶�����������˳����������ȷ�ġ�ͬʱ������
-		����ȫ�ֱ��� ��������������ͬһ��ҳ����ͬʱ����ͬһģ��Ĳ�ͬ�汾
-		���򵥵�ֵ�� ���һ��ģ�����ֵ�ԣ�û���κ����� ����define()�ж�����Щֵ�Ծͺ���
-		define({size:"unsize",});//****���ﲻ��return Ҳ���Է��ش˶���
-		������ʽ���� ���һ��ģ��û���κ����� ����Ҫһ����setup�����ĺ���������define()�ж���ú���
-		�����䴫��define();
+	》定义模块
+		模块不同于传统的脚本文件，它良好的定义了一个作用域来避免全局名称空间污染。
+		它可以显示地列出其依赖关系，并以函数(定义此模块的那个函数)参数的形式将这些依赖进行
+		注入，而无需引用全局变量。requirejs的模块是模块模式的一个拓展，其好处是无需全局地引用其他
+		模块
+		requirejs的模块语法允许它尽快的加载多个模块，虽然加载的顺序不定，但依赖的顺序最终是正确的。同时因无需
+		穿件全局变量 甚至可以做到在同一个页面上同时加载同一模块的不同版本
+		》简单的值对 如果一个模块仅含值对，没有任何依赖 则在define()中定义这些值对就好了
+		define({size:"unsize",});//****这里不用return 也可以返回此对象
+		》函数式定义 如果一个模块没有任何依赖 但需要一个做setup工作的函数，则在define()中定义该函数
+		病将其传给define();
 		define(function(){
 			//do setup work here
 			return {
@@ -150,74 +150,74 @@ define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' 
 				size:"unsize",
 			}
 		});
-		�����������ĺ���ʽ����
-			���ģ��������� ���һ���������������������� �ڶ��������Ǻ��� ��ģ�����������������Ϻ󣬸ú���
-			�ᱻ�����������ģ�飬��˸�ģ��Ӧ�÷���һ�������˱�ģ���object��������ϵ���Բ�������ʽע��
-			���ú����ϣ������б������������б�һһ��Ӧ
+		》存在依赖的函数式定义
+			如果模块存在依赖 则第一个参数是依赖的名称数组 第二个参数是函数 在模块的所有依赖加载完毕后，该函数
+			会被调用来定义该模块，因此该模块应该返回一个定义了本模块的object。依赖关系会以参数的形式注入
+			到该函数上，参数列表与依赖名称列表一一对应
 			define(["./cart"],function(cart){
-				return {//����������˸�ģ��  ��ʱ��ģ�鲻��һ��ȫ�ֱ���
+				return {//这个对象定义了该模块  此时该模块不是一个全局变量
 					size:"large",
 					addToCart:function(){
 						cart.add(this);
 					}
 				}
 			});
-		����ģ�鶨��Ϊһ������
-			��ģ��ķ���ֵ���Ͳ�û��ǿ��Ϊһ���Ǹ�object �κκ����ķ���ֵ����������
+		》将模块定义为一个函数
+			对模块的返回值类型并没有强制为一定是个object 任何函数的返回值都是允许的
 			define(['my/cart',function(cart){
 				return function(title){
 					return ...;
 				}
 			}]);
-		���򵥰�װcommonjs������ģ��
-			�������һЩ��commonjsģ���ʽ��д�Ĵ��룬����Щ��������ʹ�������������������������ʽ
-			���ع������Կ���ֱ�ӽ���Щ������Ӧ��һЩ���ر����н���ʹ��
+		》简单包装commonjs来定义模块
+			如果现有一些以commonjs模块格式编写的代码，而这些代码难于使用上述依赖名称数组参数的形式
+			来重构，可以考虑直接将这些依赖对应到一些本地变量中进行使用
 			define(function(require,exports,module){
 				var a=require("a"),b=require("b");
-				return function(){//���ظ�ģ���ֵ
+				return function(){//返回该模块的值
 				
 				}
 			});
-		������һ������ģ��--һ����ñ����ģ��Ӳ���� ���ǽ����Ż�����ȥ���ɡ��Ż�������Ҫ����ģ�����Խ�
-			���ģ����һ���� �ӿ쵽������������ٶ�
+		》定义一个命名模块--一般最好避免对模块硬编码 而是交给优化工具去生成。优化工具需要生成模块名以将
+			多个模块大成一个包 加快到浏览器的载入速度
 			define("foo/title",['my/cart'],function(cart){
 				
 			});
-		ע�⣺****һ���ļ�һ��ģ��--ÿ��js�ļ�Ӧֻ����һ��ģ�� ���ģ����-��-�ļ������һ��Ƶ���ȻҪ�󡣶��
-		ģ��ᱻ�Ż�������֯�Ż� ������ʹ���Ż�����ʱӦ�����ģ����õ�һ���ļ���
-		      ****define()�е����ģ���� Ϊ�˿�����define()�ڲ�ʹ������require("./relative/name")�ĵ���
-		      ����ȷ����������� ��Ҫ��"require"������Ϊһ������ע�뵽ģ����;
+		注意：****一个文件一个模块--每个js文件应只定义一个模块 这个模块名-至-文件名查找机制的自然要求。多个
+		模块会被优化工具组织优化 但你在使用优化工具时应将多个模块放置到一个文件中
+		      ****define()中的相对模块名 为了可以在define()内部使用诸如require("./relative/name")的调用
+		      以正确解析相对名称 需要将"require"本身作为一个依赖注入到模块中;
 		      define(["require","./relative/name"],function(require){
 			var mod=require("./relative/name");
 		      });
-		      ��
+		      或
 		      define(function(require){
 			var mod=require("./relative/name");
 		      });
-		�����������ģ���URL��ַ���������Ҫ����һ�������ģ���URL��ַ ����Խ�"require"��Ϊһ������ע�����
-		Ȼ�����require.toUrl()�����ɸ�URL
+		》生成相对于模块的URL地址，你可能需要生成一个相对于模块的URL地址 你可以将"require"作为一个依赖注入进来
+		然后调用require.toUrl()以生成该URL
 		define(['require'],function(require){
 			var cssUrl=require.toUrl("./style.css");
 		});
-	��jsonp��������--Ϊ����requirejs��ʹ��json���� ��Ҫ��callback������ֵָ��Ϊdefine
+	》jsonp服务依赖--为了在requirejs中使用json服务 需要将callback参数的值指定为define
 		require(["http://example.com/api/data.json?callback=define"],
-		    function (data) {//���ص�data  ��Ҫʱjson object�ķ���ֵ����
+		    function (data) {//返回的data  需要时json object的返回值类型
 			console.log(data);
 		    }
 		);
-2.����
-	requirejsʹ��head.appendChild()��ÿ����������Ϊһ��script��ǩ��requirejs�ȴ����е�����
-	������Ϻ󣬼����ģ�鶨�庯����ȷ����˳��Ȼ�����ε�������
-3.����ѡ��
-	��ʽ1��
+2.机制
+	requirejs使用head.appendChild()将每个依赖加载为一个script标签，requirejs等待所有的依赖
+	加载完毕后，计算出模块定义函数正确调用顺序，然后依次调用他们
+3.配置选配
+	方式1：
 	<script src="scripts/require.js"></script>
 	<script>
 	  require.config({
-	    baseUrl: "/another/path",//����ģ��Ĳ��Ҹ�·��
-	    paths: {//pathӳ����Щ��ֱ�ӷ�����baseUrl�µ�ģ���� ����pathʱ��ʼλ���������baseUrl��
+	    baseUrl: "/another/path",//所有模块的查找根路径
+	    paths: {//path映射那些不直接放置于baseUrl下的模块名 设置path时起始位置是相对于baseUrl的
 		"some": "some/v1.0"
 	    },
-	    shim��//Ϊ��Щû��ʹ��define()������������ϵ������ģ��� �����ȫ�ֱ���ע�� �ͽű��������͵�������
+	    shim：//为那些没有使用define()来声明依赖关系、设置模块的 浏览器全局变量注入 型脚本做依赖和导出配置
 	    waitSeconds: 15
 	  });
 	  /*****************/
@@ -242,7 +242,7 @@ define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' 
 	define(['backbone'], function (Backbone) {
 	  return Backbone.Model.extend({});
 	});
-	map:���ڸ�����ģ��ǰ׺ ʹ��һ����ͬ��ģ��id�����ظ�ģ��
+	map:对于给定的模块前缀 使用一个不同的模块id来加载该模块
 	requirejs.config({
 	    map: {
 		'some/newmodule': {
@@ -253,9 +253,9 @@ define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' 
 		}
 	    }
 	});
-	config:������Ҫ��������Ϣ����һ��ģ�顣��Щ����������application�������Ϣ��
-	��Ҫһ���ֶν��������´��ݸ�ģ�顣��RequireJS�У�����requirejs.config()��config��������ʵ�֡�
-	Ҫ��ȡ��Щ��Ϣ��ģ����Լ��������������module����������module.config()��ʾ����
+	config:常常需要将配置信息传给一个模块。这些配置往往是application级别的信息，
+	需要一个手段将它们向下传递给模块。在RequireJS中，基于requirejs.config()的config配置项来实现。
+	要获取这些信息的模块可以加载特殊的依赖“module”，并调用module.config()。示例：
 	requirejs.config({
 	    config: {
 		'bar': {
@@ -274,7 +274,7 @@ define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' 
 	define(['module'], function (module) {
 	    var color = module.config().color;
 	});
-	��Ҫ��config����������Ŀ������Ϊ������ģ������ǰ�ID:
+	若要将config传给包，将目标设置为包的主模块而不是包ID:
 	requirejs.config({
 	    //Pass an API key for use in the pixie package's
 	    //main module.
@@ -292,25 +292,25 @@ define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' 
 		}
 	    ]
 	});
-	packages: ��CommonJS��(package)�м���ģ�顣�μ��Ӱ��м���ģ�顣
-	nodeIdCompat: �ڷ�������һ���ű�֮ǰ�ȴ�����������Ϊ0���õȴ���ʱ��Ĭ��Ϊ7�롣
-	waitSeconds: ����һ�����������ġ�������require.js��ͬһҳ���ϼ���ģ��Ķ���汾��
-	���ÿ������require���ö�ָ����һ��Ψһ���������ַ�������Ҫ��ȷ��ʹ�ã���ο���汾֧��һ�ڡ�
-	context: ָ��Ҫ���ص�һ���������顣����require����Ϊһ��config object�ڼ���require.js֮ǰʹ��ʱ�����á�
-	һ��require.js�����壬��Щ�������Ѽ��ء�ʹ��deps�������require([])��������loader�����������֮���������Ч������������������require()���ã�������ָ��ĳЩģ����Ϊconfig���һ���ֶ��첽���ص��ֶζ��ѡ�
-	deps: ָ��Ҫ���ص�һ���������顣����require����Ϊһ��config object�ڼ���require.js֮ǰʹ��ʱ�����á�
-	һ��require.js�����壬��Щ�������Ѽ��ء�ʹ��deps�������require([])��������loader�����������֮���
-	������Ч������������������require()���ã�������ָ��ĳЩģ����Ϊconfig���һ���ֶ��첽���ص��ֶζ��ѡ�
-	callback: ��deps������Ϻ�ִ�еĺ���������require����Ϊһ��config object�ڼ���require.js֮ǰʹ��ʱ�����ã�����Ϊ���õ�deps���������Ϻ�Ϊrequireָ���ĺ�����
-	enforceDefine: �������Ϊtrue����һ���ű�����ͨ��define()�����Ҳ��߱��ɹ�����shim�����ִ�ֵʱ��
-	�ͻ��׳����󡣲ο���IE�в�����ش���һ�ڡ�
-	xhtml: �������Ϊtrue����ʹ��document.createElementNS()ȥ����scriptԪ�ء�
-	urlArgs: RequireJS��ȡ��Դʱ������URL����Ķ����query��������Ϊ������������δ��ȷ����ʱ�ġ�cache bust��
-	�ֶκ����á�ʹ��cache bust���õ�һ��ʾ����
+	packages: 从CommonJS包(package)中加载模块。参见从包中加载模块。
+	nodeIdCompat: 在放弃加载一个脚本之前等待的秒数。设为0禁用等待超时。默认为7秒。
+	waitSeconds: 命名一个加载上下文。这允许require.js在同一页面上加载模块的多个版本，
+	如果每个顶层require调用都指定了一个唯一的上下文字符串。想要正确地使用，请参考多版本支持一节。
+	context: 指定要加载的一个依赖数组。当将require设置为一个config object在加载require.js之前使用时很有用。
+	一旦require.js被定义，这些依赖就已加载。使用deps就像调用require([])，但它在loader处理配置完毕之后就立即生效。它并不阻塞其他的require()调用，它仅是指定某些模块作为config块的一部分而异步加载的手段而已。
+	deps: 指定要加载的一个依赖数组。当将require设置为一个config object在加载require.js之前使用时很有用。
+	一旦require.js被定义，这些依赖就已加载。使用deps就像调用require([])，但它在loader处理配置完毕之后就
+	立即生效。它并不阻塞其他的require()调用，它仅是指定某些模块作为config块的一部分而异步加载的手段而已。
+	callback: 在deps加载完毕后执行的函数。当将require设置为一个config object在加载require.js之前使用时很有用，其作为配置的deps数组加载完毕后为require指定的函数。
+	enforceDefine: 如果设置为true，则当一个脚本不是通过define()定义且不具备可供检查的shim导出字串值时，
+	就会抛出错误。参考在IE中捕获加载错误一节。
+	xhtml: 如果设置为true，则使用document.createElementNS()去创建script元素。
+	urlArgs: RequireJS获取资源时附加在URL后面的额外的query参数。作为浏览器或服务器未正确配置时的“cache bust”
+	手段很有用。使用cache bust配置的一个示例：
 	urlArgs: "bust=" +  (new Date()).getTime()
-	�ڿ�����������ã�����ǵ��ڲ������ɻ���֮ǰ�Ƴ�����
-	scriptType: ָ��RequireJS��script��ǩ����documentʱ���õ�type=""ֵ��Ĭ��Ϊ��text/javascript����
-	��Ҫ����Firefox��JavaScript 1.8���ԣ���ʹ��ֵ��text/javascript;version=1.8����
+	在开发中这很有用，但请记得在部署到生成环境之前移除它。
+	scriptType: 指定RequireJS将script标签插入document时所用的type=""值。默认为“text/javascript”。
+	想要启用Firefox的JavaScript 1.8特性，可使用值“text/javascript;version=1.8”。
 	skipDataMain: Introduced in RequireJS 2.1.9: If set to true, skips the data-main attribute 
 	scanning done to start module loading. Useful if RequireJS is embedded in a utility library that 
 	may interact with other RequireJS library on the page, and the embedded version should not do data-main 
@@ -321,7 +321,7 @@ define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' 
 	    }
 	  );
 	</script>
-	��ʽ2��
+	方式2：
 	<script>
 	    var require = {
 		deps: ["some/module1", "my/module2", "a.js", "b.js"],
@@ -331,7 +331,7 @@ define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' 
 	    };
 	</script>
 	<script src="scripts/require.js"></script>
-	��ʽ3��
+	方式3：
 	requirejs.config({
 	    bundles: {
 		'primary': ['main', 'util', 'text', 'text!template.html'],
@@ -342,21 +342,77 @@ define(('__proto__' in {} ? ['zepto'] : ['jquery']), function($) {//'__proto__' 
 	require(['util', 'text'], function(util, text) {
 	    
 	});
-4.�Ӱ��м���ģ��
-	requirejs֧�ִ�commonjs���ṹ�м���ģ�飬����ҪһЩ���������
+4.从包中加载模块
+	requirejs支持从commonjs包结构中加载模块，但需要一些额外的配置
 	packages: [
 		{
-		    name: 'pixie',//����
-		    main: 'index'//Ĭ��Ϊmain.js�ļ�
-		    location://�����ϵ�λ�ã�λ��������������е�baseurlֵ �����ǰ���Э���"/"��ͷ
+		    name: 'pixie',//包名
+		    main: 'index'//默认为main.js文件
+		    location://磁盘上的位置，位置是相对于配置中的baseurl值 或它们包含协议或"/"开头
 		}
 	    ]
-5.��汾֧��
+5.多版本支持
 
 
+/***********************************requirejs******************************************/
+1.引入require.js
+<script data-main='main.js' src='require.js'></script>
+//main.js 设置require的配置项
+require.config(
+	//设置资源的基础路径
+	 baseUrl:'../resource'
+	//定义模块
+	 paths:{
+	 	'jquery':'lib/jquery.min',
+		'angular':'lib/angular.min',
+		'bootstrap':'lib/bootstrap.min',
+		'css':'lib/css.min.js'//如果要加载css文件  则需要该库
+		'hd':'hd'//该模块是非标准的模块 即不是通过define定义的标准require模块
+	 }
+	 
+	 //配置依赖关系
+	 shim:{
+	 	'hd':{
+			exports":'modal',//hd非标准模块中只有一个函数modal
+			 init:function(){//hd非标准模块中有多个函数
+			 	return {
+					modal:modal,
+					success:success
+				}
+			 }
+		}
+	 	'bootstrap':{
+			'deps':['jquery','css!../css/bootstrap.min.css']//bootstap依赖 jquery 和它的css 使用方式css!css path
+		}
+	 }
+);
+
+注意：如果有些代码需要立即执行 放到main.js最后  因为只有require的配置项完了之后  require才能正常工作。
+或者使用script阻塞的功能实现 即先引入require  在通过script引入main即可
+
+//使用某个模块
+require([jquery],function($){//引入jquery 并赋值给$
+
+})
 
 
+//定义自己的模块 require会自动把require加载到require容器中
+define(['jquery'//该模块需要依赖的模块],function($//接收依赖模块){
 
+	 //需要加入到require容器中的模块内容
+	 return {
+	 	change:function(){
+			$('body')//很多方法使用jquery
+		},
+		
+		test:function(){
+			 //局部使用jquery 上面就可以不用载入需要依赖的模块
+			require('jquery',function($){
+				$('body')
+			})
+		}
+	 }
+});
 
 
 

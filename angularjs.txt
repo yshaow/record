@@ -1,51 +1,436 @@
 http://www.360doc.com/content/14/0414/15/14416931_368816305.shtml
-1.angularjs������
-	������һ��crud(�����ɾ)Ӧ�ÿ����õ���ȫ�����ݣ����ݰ� ����ģ���ʶ�� ������֤ ·�� 
-							������� ������� ����ע��
-	�����Է��棺��Ԫ���� �˶Զ˲��� ģ����Զ������Կ��
-	������Ŀ¼���ֺͲ��Խű�������Ӧ����Ϊ���
-	*****angularjs��Ҫ���ǵ��ǹ���crudӦ��*****
-2.<html ng-app>//�����ظ�ҳ��ʱ�����ng-app����angularjs����**����**HTMLҳ������Ӧ��
-	ng-appָ������ng�ű��������� ��<html>����ng-app˵������<html>����ng�ű������� ��ȻҲ���Ծֲ�ʹ��ng-app
-3.{{}}��ng�����ڰ�(����)����ʽ�õ� --����ʽ�����Ǳ���ʽ������������  ***���������ڶ�����������ݸ�ʽ��
-	����󶨸���ng��Ҫ����{{}}�еı���ʽ�����������DOM�У�*****ng����ʽ����ng������������*****
-4.ng��˫�����ݰ�
-	���ı�����ָ��<input ng-model='yourname'/>�����ı���������ݰ󶨵�һ����yourname��ģ�ͱ�����--һ�����ݰ󶨷���
-	������ͨ��{{yourname}}����ȡģ�ͱ����е�ֵ �����õ�html�ĵ���--��һ�����ݰ󶨷���
-5.angularjsӦ�õĽ���--ģ��-��ͼ-���������ģʽ(mvc)
-	��ģ�弴չ��Ӧ�õ���ͼ����ͨ��angularjs��html�й������Լ���html���
-	��Ӧ�ó����߼�����Ϊ����js����Ŀ�����
-	��ģ�����ݣ�
-		��ģ����ng�����������������꣬ģ���е����ݶ�����ng���������
-		��ngͨ������������������ĪС����ͼ����ui��˫��ͬ����һ��ģ��״̬�����ı� ng������ˢ�·�ӳ����ͼ�����У���֮��Ȼ��
-		������ ng���ṩ��һЩ���õķ������ԣ�
-			���ײ�����������ע�� xhr ���� url·�� ��������������
-			����������չ�������Լ��ض���Ӧ�÷���
-6.ng-repeat ng�ĵ�����
-	��<li ng-repeat="phone in phones"></li>����liΪģ��Ϊÿ��phone����һ��<li>Ԫ��
+1.angularjs包括：
+	》构建一个crud(增查更删)应用可能用到的全部内容：数据绑定 基本模板标识符 表单验证 路由 
+							深度链接 组件重用 依赖注入
+	》测试方面：单元测试 端对端测试 模拟和自动化测试框架
+	》具有目录布局和测试脚本的种子应用作为起点
+	*****angularjs主要考虑的是构建crud应用*****
+2.<html ng-app>//当加载该页面时，标记ng-app告诉angularjs处理**整个**HTML页并引导应用
+	ng-app指令标记了ng脚本的作用域 在<html>添加ng-app说明整个<html>都是ng脚本作用域 当然也可以局部使用ng-app
+3.{{}}是ng中用于绑定(数据)表达式用的 --表达式可以是表达式与过滤器的组合  ***过滤器用于对输入输出数据格式化
+	这个绑定告诉ng需要运算{{}}中的表达式并将结果插入DOM中，*****ng表达式仅在ng作用域中运行*****
+4.ng的双向数据绑定
+	》文本输入指令<input ng-model='yourname'/>即把文本输入的内容绑定到一个叫yourname的模型变量中--一个数据绑定方向
+	》可以通过{{yourname}}来获取模型变量中的值 并设置到html文档中--另一个数据绑定方向
+5.angularjs应用的解析--模型-视图-控制器设计模式(mvc)
+	》模板即展现应用的视图，可通过angularjs在html中构建您自己的html标记
+	》应用程序逻辑和行为即用js定义的控制器
+	》模型数据：
+		》模型是ng作用域对象的属性引申，模型中的数据都属于ng作用域对象
+		》ng通过作用域来保持数据莫小鱼视图界面ui的双向同步，一旦模型状态发生改变 ng会立即刷新反映在视图界面中，反之亦然。
+		》此外 ng还提供了一些有用的服务特性：
+			》底层服务包括依赖注入 xhr 缓存 url路由 和浏览器抽象服务
+			》还可以扩展和添加自己特定的应用服务
+6.ng-repeat ng的迭代器
+	如<li ng-repeat="phone in phones"></li>即以li为模板为每个phone创建一个<li>元素
 *************************************
-1.ng�Զ���ʼ��
-	ng����DOMContentLoaded�¼�����ʱִ�У���ͨ��ng-appָ��Ѱ�����Ӧ�ø�������
-	���ng-app�ҵ���ng��������
-		�������ָ��������ص�ģ��
-		������һ��Ӧ�õ�"ע����(injector)"
-		ע�⣺����ӵ�е�ng-appָ��ı�ǩΪ���ڵ����������е�DOM ��ʹ�������ָֻ��DOM�е�һ������Ϊ���ngӦ��
-2.ng���ĸ���
-	������ startup
-	��ִ���� runtime
-	�������� scope ��ͼ��������ļ�����
-	�������� controller Ӧ�õ���Ϊ
-	��ģ�� model Ӧ�õ�����
-	����ͼ view �û��ܿ�����
-	��ָ�� directives ��չhtml�﷨
-	�������� filter ���ݱ��ػ�
-	��ע���� injector �ۺ����Ӧ��
-	��ģ�� module ����ע����
-	��$ ng�������ռ� namespace
-		ע�⣺Ϊ�˷�ֹ�����������ͻ��ngΪ���ܳ�ͻ�Ķ���������ǰ׺"$"�������벻Ҫ�����Լ��Ĵ�������"$"ǰ׺
-********contentEditable html�е�һ�����ԡ�����html��contentEditable='true'ʱ�����ɿ�����Ԫ�صı༭ģʽ��*******
+1.ng自动初始化
+	ng会在DOMContentLoaded事件触发时执行，并通过ng-app指令寻找你的应用根作用域
+	如果ng-app找到：ng将会做：
+		》载入和指令内容相关的模块
+		》创建一个应用的"注入器(injector)"
+		注意：以已拥有的ng-app指令的标签为根节点来编译其中的DOM 这使得你可以只指定DOM中的一部分作为你的ng应用
+2.ng核心概述
+	》启动 startup
+	》执行期 runtime
+	》作用域 scope 视图与控制器的集合区
+	》控制器 controller 应用的行为
+	》模型 model 应用的数据
+	》视图 view 用户能看到的
+	》指令 directives 扩展html语法
+	》过滤器 filter 数据本地化
+	》注入器 injector 聚合你的应用
+	》模块 module 配置注入器
+	》$ ng的命名空间 namespace
+		注意：为了防止意外的命名冲突，ng为可能冲突的对象名加以前缀"$"，所以请不要在你自己的代码里用"$"前缀
+********contentEditable html中的一个属性。设置html的contentEditable='true'时，即可开启该元素的编辑模式。*******
 
+/********************angular*********************/
+1.架构概述
+angular是一个用html和js或者一个可以编译成js的语言如：Dart或TypeScript，来构建客户端应用的框架。
+该框架包括一系列库，有些是核心库 有些是可选库。
+angular应用的：用angular扩展语法编写html模块，用组件类管理这些模块，用服务添加应用逻辑，用模块打包发布组件与服务。
+通过引导根模块来启动该应用，angular在浏览器中接管 展示应用的内容，并根据我们提供的操作指令响应用户的交互。
 
+》模块 
+  angular应用是模块化的，并且angular有自己的模块系统，它被称为angular模块或NgModules。
+  每个angular应用至少有一个模块 -- 根模块，习惯命名为AppModule。
+  根模块在一些小型应用中可能是唯一的模块，大多数应用汇有很多特性模块，每个模块都是一个内聚的代码块专注于某个应用的领域 工作流 或紧密相关的功能。
+  
+  angular模块 无论是根模块还是特性模块 都是一个带有@NgModule装饰器的类。
+  
+  装饰器是用来装饰 js 类的函数，angular有很多装饰器，他们负责把元数据附加到类上。
+  
+  NgModule是一个装饰器函数 它接受一个用来描述模块属性的元数据对象。其中最重要的属性是：
+  》declarations -- 声明本模块中拥有的视图类。angular有三种视图类：组件  指令  管道。
+  》exports -- declarations的子集 可用于其他模块的组件模板。
+  》imports -- 本模块声明的组件模板 需要的类所在的其他模块
+  》providers -- 服务的创建者 并加入到全局服务列表中，可用于应用任何部分
+  》bootstrap -- 指定应用的主视图(根组件)，他是所有其他视图的宿主，***只有根模块才能设置bootstrap属性***
+  
+  示例：
+  //app.module.ts
+  import {NgModule} from '@angular/core'
+  import {BrowserModule} from '@angular/platform-browser'
+  
+  @NgModule({
+  	import:[BrowserModule],
+	providers:[Logger],
+	declarations:[AppComponent],
+	exports:[AppComponent ],
+	bootstrap:[AppComponent ]
+  });
+  
+  export class AppModule{}
+  //AppComponent 的export语句只是用于演示如何导出，并不是必须的，根模块不需要导出任何东西，因为其他组件不需要导入根模块。
+  
+  //我们通过引导根模块来启动应用，在开发期间，你通常在一个main.ts文件中引导 AppModule :
+  import {enableProdMode} from '@angular/core'
+  import {platfromBrowserDynamic} from '@angular/platform-browser-dynamic';
+  import {AppModule} from './app/app.module'
+  import {enviroment} from './environments/environment'
+  
+  if(environment.production) enableProdMode();
+  
+  platformBrowserDynamic().bootstrapModule(AppModule);
+》NgModules VS JS 模块
+   NgModule是一个带有@NgModule装饰器的类，是angular的基础特性之一。
+   
+   js也有自己的模块系统，用来管理一组js对象，他与angular的模块系统完全不同 且 完全无关。
+   js中每个文件是一个模块，文件中定义的所有对象都从属于哪个模块，通过export关键字 模块可以把他的某些对象声明为公共的。其他
+   js模块可以使用import语句来访问这些公共对象。
+   
+   import {NgModule} from '@angular/core'
+   import {AppComponent} from './app.component'
+   
+   export class AppModule{}
+ 》angular模块库
+   angular提供了一组js模块，可以把它们看做库模块。每个angular库的名字都带有@angular前缀。
+   如：
+   //导入装饰器
+   import {Component} from '@angular/core'
+   
+   //导入angular模块
+   import { BrowserModule } from '@angular/platform-browser';
+   
+   //使用angular的模块系统
+   @NgModule({
+   	imports:[BrowserModule],
+	exports:[]
+   });
+   
+ 》组件
+   组件负责控制屏幕上的一个小块区域，称之为 视图。
+   我们在类中定义组件的应用逻辑，为视图提供支持，组件通过一些由属性和方法组成的API和视图交互。
+   //hero-list.component.ts
+   export class HeroListComponent implements OnInit{
+   	heroes:Hero[];
+	selectedHero:Hero;
+	
+	constructor(private service:HeroService){}
+	
+	ngOnInit(){//生命周期钩子
+		this.heroes = this.service.getHeroes();
+	}
+	
+	selectHero(hero:Hero){this.selectedHero = hero;}
+   }
+》模板
+     我们通过组件的自带的模板来定义组件视图，模板以HTML形式存在，告诉angular如何渲染组件。
+     //hero-list.component.html
+	<h2>Hero List</h2>
+
+	<p><i>Pick a hero from the list</i></p>
+	<ul>
+	<li *ngFor="let hero of heroes" (click)="selectHero(hero)">
+	{{hero.name}}
+	</li>
+	</ul>
+
+	<app-hero-detail *ngIf="selectedHero" [hero]="selectedHero"></app-hero-detail>
+    模板除了可以使用像<h2>这样的html元素，还能使用其他元素(angular自己的一些模板语法)。
+    
+》元数据
+    元数据告诉angular如何处理一个类。
+    如：HeroListComponent只是一个类，需要我们告诉angular 它是一个组件。
+    要告诉angular HeroListComponent是个组件，只要把元数据附加到这个类上即可。
+    
+    在TypeScript中，我们用装饰器decorator来附加元数据
+    @Component({
+    	selector:'app-hero-list',//css选择器，它告诉angular在父级html中查找<hero-list>标签，创建并插入该组件。
+	templateUrl:'./hero-list.component.html',//组件html模板的模块的相对地址
+	providers:[HeroService]//组件所需服务的依赖注入提供商数组，这是在告诉angular该组件的构造函数需要一个HeroService服务，这样组件就可以从服务中获取英雄数据了。
+    })
+    export class HeroListComponent implements OnInit {
+	/* . . . */
+    }
+    //@Component装饰器 它把紧随其后的类标记为组件类。
+    //@Component装饰器能接受一个配置对象，angular会基于这些信息创建和展示组件及其视图。 里面的元数据会告诉angular从哪里获取你为组件指定的主要的构建块。
+
+》数据绑定
+   angular支持数据绑定，一种让模板的各部分与组件的各部分相互合作的机制。
+   数据绑定的四种形式：
+   》绑定值 {{value}}
+   》属性绑定 [property] = 'value'
+   》事件绑定 (event) = 'handler'
+   》双向绑定 [(ng-module)] = 'property'
+      双向数据绑定是最重要的，它使用ngModel指定组合了属性绑定和事件绑定的功能
+      <input [(ngModel)]="hero.name">
+      在双向绑定中，数据属性值通过属性绑定从组件流到输入框，用户的修改通过事件绑定流回组件，把属性值设置为最新的值。
+》指令 directive
+   angular模板是动态的，当angular渲染它们时，它会根据指令提供的操作对DOM进行转换。
+   
+   组件是一个带有模板的指令；@Component装饰器实际上就是一个@Directive装饰器，只是扩展了一些面向模板的特性。
+   
+   还有两种其他类型的指令：结构型指令和属性型指令。
+   它们往往像属性attribute一样出现在元素标签中，偶尔会以名字的形式出现，但多数时候还是作为赋值目标或绑定目标出现。
+   
+   结构型指令通过在DOM中添加 移除  和 替换元素来修改布局。
+   如：
+   <li *ngFor='let hero of heroes'></li>
+   <app-hero-detail *ngIf='selectedHero'></app-hero-detail>
+   
+   属性型指令修改一个现有元素的外观或行为，在模板中它们看起来就像是标准的html属性。
+   如：ngModel指令就是属性型指令，它实现了双向数据绑定。ngModel修改现有元素(一般是<input>)的行为：设置其显示属性值，并响应change事件。
+   <input [(ngModel)]='hero.name'/>
+   
+   angular还有少量指令，它们或者修改结构布局(如：ngSwitch)，或者修改DOM元素和组件的各个方面(如：ngStyle 和 ngClass)。
+   
+   当然我们也能编写自己的指令，像HeroListComponent这样的组件就是一种自定义指令。
+  
+  
+ 》服务
+   服务是一个广义范畴，包括：值 函数 或应用所需的特性。
+   几乎任何东西都可以是一个服务，典型的服务是一个类，具有专注的 明确的用途，它应该做一件特定的事情并把它做好。
+   
+   服务没有什么特别属于angular的特性，angular对于服务也没有什么定义，它甚至都没有定义服务的基类，也没有地方注册一个服务。
+   即便如此 服务仍然是任何angular应用的基础。组件就是最大的服务消费者。
+   
+   如：日志服务
+   //logger.service.ts
+   export class Logger{
+   	log(msg:any){
+		console.log(msg);
+	}
+	
+	error(msg:any){
+		console.error(msg);
+	}
+	
+	warn(msg:any){
+		console.warn(msg);
+	}
+   }
+   
+   组件类应保持简洁，组件本身不从服务器获取数据，不进行验证输入，也不直接往控制台写日志。它们把这些任务委托给服务。
+   组件的任务就是提供用户体验，仅此而已，它介于视图(模板渲染)和应用逻辑(通常包括模型的某些概念)之间。设计良好的组件为数据绑定提供属性和方法，
+   把其它琐事都委托给服务。
+   
+   angular不会强制要求我们遵循这些原则，但它帮助我们遵循这些原则，它让我们能轻易地把应用逻辑拆分到服务，并通过依赖注入来在组件中使用这些服务。
+   
+》依赖注入
+   依赖注入是提供类的新实例的一种方式，还负责处理好类所需的全部依赖。大多数依赖都是服务。angular使用依赖注入来提供新组件以及组件所需的服务。
+   
+   angular通过查看构造函数的参数类型得知组件需要哪些服务。如：HeroListComponent组件的构造函数需要一个HeroService服务：
+   constructor(private service:HeroService){}
+   
+   当angular创建组件时，会首先为组件所需的服务请求一个注入器(injector)。注入器维护了一个服务实例的容器，存放着以前创建的实例。如果所请求的服务实例不在容器中，注入器就会创建一个服务实例，并添加到容器中，然后把这个服务返回给angular。当所有请求的服务都被解析完并返回时，angular会以这些服务为参数去调用组件的构造函数 -- 这就是依赖注入。
+   
+   如果注入器还没有HeroService，它怎么知道该如何创建一个呢？
+   简单点说我们必须先用注入器injector为HeroService注册一个提供商provider。提供商用来创建或返回服务。通常就是这个服务类本身(相当于 new HeroService())。
+   
+   我们可以在模块中或组件中注册提供商。
+   但通常会把提供商添加到根模块上，以便于在任何地方都使用服务的同一个实例：
+   //app.module.ts
+   providers:[
+   	BackendService,
+  	HeroService,
+  	Logger
+   ]
+   
+   或者也可以在@Component元数据中的providers属性中把它注册在组件层
+   @Component({
+    selector:    'app-hero-list',
+    templateUrl: './hero-list.component.html',
+    providers:  [ HeroService ]
+   })
+   //把它注册在组件级表示该组件的每一个新实例都会有一个服务的新实例。
+   
+   需要记住的关于依赖注入的要点：
+      》依赖注入渗透在整个angular框架中，被到处使用。
+      》注入器injector是本机制的核心
+          注入器负责维护一个容器，用于存放它创建过的服务实例
+	  注入器能使用提供商创建一个新的服务实例。
+      》提供商是一个用于创建服务的配方
+      》把提供商注册到注入器中
+ 
+2.模板与数据绑定
+  》显示数据
+     在angular中最典型的数据显示方式，就是把HTML模板中的空间绑定到angular组件的属性。
+     
+     //使用插值表达式显示组件属性
+     要显示组件的属性，最简单的方式就是通过插值表达式interpolation来绑定属性名。要使用插值表达式，就是把属性名包裹在双花括号里面放进视图模板。
+     如:{{myHero}}
+        //app.component.ts
+	import {Component} from '@angular/core'
+	const obj = {
+		selector:'app-root',
+		template:`
+			<h1>{{title}}</h1>
+		`
+	}
+	
+	@Component(obj)
+	export class AppComponent {
+		title = 'Tour of Heroes';
+	}
+	
+	angular自动从组件中提取title属性的值，并且把这些值插入浏览器中。当这些属性发生变化时，angular就会自动刷新显示。
+	
+        注意：我们没有调用new来创建AppComponent类型的实例，是angular替我们创建了它，那么它是如何创建的呢？
+        @Component装饰器中指定的CSS选择器selector它指定了一个叫app-root的元素，该元素是index.html的body里的占位符。
+        //index.html
+	<body>
+	  <app-root></app-root>
+	</body>
+	//当我们通过main.ts中的AppComponent类启动时，angular在index.html中查找一个<app-root>元素，然后实例化一个AppComponent，并将其
+        渲染到<app-root>标签中。
+	
+    》内联inline模板还是模板文件
+       你可以在两种地方存放组件模板，你可以使用template属性把它定义为内联的，或者把模板定义在一个独立的html文件中，在通过@Component装饰器中的
+       templateUrl属性，在组件元数据中把它链接到组件。
+    
+    》使用构造函数还是变量初始化？
+    	 export class AppComponent{
+	 	title:string = 'Tour of Heroes';//变量初始化 更简单
+		myHero:string;
+		
+		constructor(){
+			this.myHero = 'Windstorm'//构造函数初始化
+		}
+	 }
+     》使用ngFor显示数组属性
+       <ul>
+       	<li *ngFor='let hero of heroes'>
+		{{hero}}
+	</li>
+       </ul>	
+       *ngFor是angular的迭代指令 它将<li>元素及其子元素标记为 迭代模板。
+     》为数据创建一个类
+     	 //hero.ts
+	 export class Hero{
+	 	 //利用typeScript 提供的简写形式 用构造函数的参数直接定义属性
+	 	constructor(
+			public id:number,
+			public name:string
+			 //这个简写语法做了很多事
+			 》声明了一个构造函数的参数及其类型
+			 》声明了一个同名的公共属性
+			 》当我们new出该类的一个实例时，把该属性初始化为相应的参数值
+		){}
+	 }
+	
+	 //使用Hero类
+	 导入了Hero类之后 组件的heros属性就可以返回一个类型化的Hero对象数组了
+	 heroes = [
+	 	new Hero(1,'windstorm')
+	 ];
+      》通过NgIf进行条件显示
+      	 当应用需要只在特定情况下显示视图或视图的一部分时。
+	 ngIf指令会根据一个布尔条件来显示或移除一个元素
+	 <p *ngIf='heroes.length > 3'>more heroes!</p>
+	 注意：ngIf并不是在显示和隐藏着条消息，它是在从DOM中添加和移除这个段落元素，这会提高性能 特别是在一些大的项目中 有条件地包含或排除
+	 一大堆带着很多数据绑定的html时。
+》模板语法
+      angular应用管理着用户之所见和所为，并通过Component类的实例(组件)和面向用户的模板来与用户交互。
+      
+      从使用模型-视图-控制器(MVC)或模型-视图-视图模型(MVVM)的经验中，很多开发人员都熟悉了组件和模板两个概念。在angular中组件扮演者控制器或视图
+      模型的角色，模板扮演视图的角色。
+      
+      》模板中的HTML
+      	 html是angular模板的语言，几乎所有html语法都是有效的模板语言。但值得注意的例外是<Script>元素被禁用了，以阻止脚本注入攻击的风险。实际上      	      <script>只是被忽略了
+	 
+	 有的合法的HTML被用在模板中是没有意义的<html> <body> <base>元素这个舞台上中并没有扮演有用的角色，剩下的所有元素基本上就都一样用了。
+	 
+	 可以通过组件和指令来扩展模板中的HTML词汇，它们看上去就是新的元素和属性。
+	 
+      》插值表达式 {{ ... }} interpolation
+      	 插值表达式可以把计算后的字符串插入到HTML元素标签内的文本或对标签的属性进行赋值。
+	 <h3>{{ title }} <img src="{{heroImageUrl}}" style="height:30px"/></h3>
+	 在括号之间的'素材'通常是组件属性的名字。一般来说 括号间的素材是一个模板表达式 angular先对他求值，再把它转换成字符串。
+	 <p>{{ getVal() }}</p>
+      》模板表达式
+      	 模板表达式产生一个值，angular执行这个表达式，并把它赋值给绑定目标的属性，这个绑定目标可能是HTML元素 组件 或 指令。
+	 {{ 1+1 }}中所包含的模板表达式是1+1。在属性绑定中会再次看到模板表达式，它出现在 = 右侧的引号中 如：[property]='expression'。
+	 
+	 很多js表达式也是合法的模板表达式但是不是全部。
+	 js中那么具有或可能引发副作用的表达式是被禁止的，包括：
+		 赋值(= += -= ...)
+		 new运算符
+		 使用;或,的链式表达式
+		 自增或自减操作符(++和--)
+	 和js语法的其他显著不同包括：
+	 	 不支持位运算 | 和 &
+		 具有新的模板表达式运算符 如：|、?.和!
+       》表达式上下文
+       	  典型的表达式上下文就是这个组件实例，它是各种绑定值得来源。如组件的属性。
+	  
+	  表达式的上下文可以包括组件之外的对象，如：模板的输入变量(let hero)和模板引用变量(#heroInput)就是备选的上下文对象之一
+	  <div *ngFor='let hero of heroes'>{hero.name}</div>
+	  <input #heroInput>{{heroInput.value}}
+	  表达式中的上下文变量是由模板变量 指令的上下文变量(如果有) 和组件的成员叠加而成的。如果我们要引用的变量名存在于一个以上的命名空间
+	  中，那么模板变量是最优先的  其次是指令的上下文变量 最后是组件的成员。
+	  模板表达式不能引用全局命名空间中的任何东西，如：window和document ，它也不能调用console.log或Math.max,它只能引用表达式上下文中的成员。
+       》表达式指南
+          模板表达式能成就或毁掉一个应用：遵循下面规则：
+	  	 没有可见的副作用
+		 执行迅速
+		 非常简单
+		 幂等性
+       》模板语句
+          模板语句用来响应由绑定目标(如html元素 组件 或 指令)触发的事件，模板语句将在事件绑定一节看到 它出现在=号右侧的引号中如：
+	  (event)='statement'
+	  <button (click)='deleteHero()'>Delete hero</button>
+	  模板语句有副作用，这是事件处理的关键，因为我们要根据用户的输入更新应用状态。
+	  
+	  响应事件是angular中单向数据流的另一方面，在一次事件循环中，可以随意改变任何地方的任何东西。和模板表达式一样，模板语句使用的语言也是像js
+	  。模板语句解析器和模板表达式解析器有所不同，特别之处在于它支持基本赋值(=)和表达式链(;和,)。
+	  
+	  然而某些js语法仍然是不允许的：
+	   new运算符
+	   自增和自减运算符 ++ --
+	   操作并赋值 如 += -=
+	   位操作符 | &
+	   模板表达式运算符
+	   
+	   》语句上下文
+	   	 语句只能引用语句上下文中 -- 通常是正在绑定事件的那个组件实例
+		 
+		 语句上下文可以引用模板自身上下文中的属性，在下面的例子中就把模板的$event对象 模板输入变量(let hero)和模板引用变量(#heroForm)
+		 传递给了组件中的一个事件处理器方法。
+		 <button (click)="onSave($event)">Save</button>
+		 <button *ngFor="let hero of heroes" (click)="deleteHero(hero)">{{hero.name}}</button>
+		 <form #heroForm (ngSubmit)="onSubmit(heroForm)"> ... </form>
+		 
+		 模板上下文中的变量名的优先级高于组件上下文中的变量名，
+		 模板语句不能引用全局命名空间的任何东西 如：不能引用window document 也不能调用console Math等。
+		 
+	    》语句指南
+	    	 和表达式一样 避免写复杂的模板语句  常规是函数调用或者属性赋值。
+        》绑定语法
+	    数据绑定是一种机制 用来协调用户所见和应用数据的。
+	    绑定的类型可以根据数据流的方向分成三类：从数据源到视图 从视图到数据源 以及双向的 从视图到数据源再到视图。
+	    单向：
+	     从数据源到视图目标 {{expression}} [target]='expression' bind-target='expression'
+	     
+	     从视图目标到数据源(事件)  (target)='statement'  on-target='statement'
+	    双向:
+	     [(target)] = 'expression' bindon-target='expression'
+	     
+	    除了插值表达式之外的绑定类型，在等号左边的目标名，无论是包在括号中[] ()还是用前缀形式 bind- on- bindon-。
+	    
+	 
+	 
 
 
 

@@ -83,7 +83,7 @@
 
             通过nvm ls 查看node可用的版本
             nvm use 版本号 [32的需要带上系统号:32] 切换node的版本
-        》nmp的目录后面再配置
+        》npm的目录后面再配置
     》配置Python环境
 
     》windows常用命令
@@ -135,10 +135,8 @@
                     或
                     process.stdout.getWindowSize();//获取行数以及列数，在对应的列数上换空行  达到视觉上清空的效果
                 将图片转成字符画：http://www.degraeve.com/img2txt.php
-
-
-
-
+            》SIGINT 在终端运行时，可以被所有平台支持，通常可以通过CTRL+C触发(虽然这个不能配置)。 当终端运行在raw模式，它不会被触发。
+            》data 当命令行中有回车符时 触发事件 把命令行中的输入内容传递给回掉函数
         》console
             node中内置的console模块，提供了操作控制台的输入输出功能，常见使用方式与客户端类似
 
@@ -147,6 +145,392 @@
     》全局函数
 
     》异步操作之回调函数
+
+4.Node调试
+    》方式1
+        node inspect 04.js 在命令行中进入debug模式
+    》方式2
+        断点模式 -- VScode很方便
+5.回调函数的设计 -- Node统一约定
+    对于一个函数如果需要定义回调函数：
+        》回调函数一定作为参数的最后一个参数出现
+            function foo1(name,age,callback){}
+        》回调函数的第一个参数默认接受错误信息，第二个参数才是真正的回调数据(便于外界获取调用错误情况)
+            foo1('嘻嘻',19,function(error,data){
+                if(error) throw error;
+
+                console.log(data);
+            })
+
+        这是为了强调错误优先：因为node中操作大多数都是异步的方式，无法通过try catch捕获异常，所以
+        错误优先的回调函数，第一个参数为上一步的错误信息。
+6.非阻塞异步
+    Node采用chrome V8引擎处理js脚本，V8最大特点就是单线程运行，一次只能运行一个任务。
+
+    Node大量采用异步操作，即任务不是马上执行，而是插在任务队列的尾部，等到前面的任务运行完后再执行。
+    从而提高代码的响应能力。
+
+    异步回调的问题：
+        相比较传统的代码：
+            异步事件驱动的代码，不容易阅读，不容易调试，不容易维护。
+
+
+    异步：
+        setTimeout()
+        $.ajax
+        文件操作
+    注意：Node中所有的会发生阻塞的操作都是异步的
+
+    I/O(input / output):从输入到输出之间的转化过程
+
+    》进程和线程
+        node进程启动过后默认会创建一个线程(默认创建的线程是主线程)，线程用于执行我们的代码。
+        》什么是进程
+            每一个 正在运行 的应用程序都称之为 进程。
+            每一个应用程序运行 都 至少 有一个进程
+            进程是用来给应用程序提供一个运行的环境。
+            进程是操作系统为应用程序分配资源的一个单位。
+        》什么是线程
+            用来执行应用程序中的代码
+            在一个进程内部，可以有很多的线程
+            在一个线程内部，同时只可以干一件事
+            而且传统的开发方式大部分都是I/O阻塞的，所以需要多个线程来更好的利用硬件资源。
+        》多线程的缺点
+            多线程其实都是假的，因为只有一个CPU(单核)。
+
+            线程之间共享某些数据，同步某个状态都很麻烦(多核的，主要问题)
+            更致命的是：
+                创建线程耗费
+                线程数量有限
+                CPU在不同线程之间转换，有一个上下文的转换，这个转换非常耗时。(单核的，主要问题)
+                
+            node是单线程就不会存在这些问题
+    》Node的核心特性 -- 非阻塞 I/O
+        node虽说是单线程的，但这仅仅是针对我们应用的代码而言，都是通过主线程完成的，
+        但是对于阻塞操作而言(如：操作文件)，node底层维护了一个线程池，用于处理阻塞的
+        操作，而主线程会把阻塞操作丢给线程池中的某个线程，而主线程就不会因为阻塞操作而
+        停止，它会一直处理各种操作。
+
+        Node平台将一个任务连同该任务的回调函数放到一个事件循环系统中
+        事件循环高效的管理系统线程池，同时高效的执行每一个任务
+        当任务执行完成过后自动执行回调函数。
+
+        总结：
+            Node中将所有的阻塞操作交给了内部实现的线程池
+            Node本身主线程主要就是不断的往返调度(事件循环)，所以它是非阻塞的
+
+    》平台实现差异
+        由于windows和*nix平台的差异，Node提供了libuv作为抽象封装层，保证上层
+        的Node与下层的自定义线程池(Unix和Linux)和IOCP(Windows)之间的独立性。
+    》非阻塞的优势
+        提高代码的响应效率
+        充分利用单核CPU的优势
+        改善I/O的不可预测带来的问题
+
+        缺点：
+            但是目前市面上大多数都是多核CPU，单线程是无法利用多核CPU的，一个线程只会在一个
+            CPU核心上工作，从而导致无法体现node的意义。
+            解决方案：
+                node无法创建多个线程，但可以创建多个进程，在node中，每个进程包含了一个线程 -- 很少有人这么做
+                大多数都是通过硬件虚拟化，把多核CPU化成单核CPU。
+
+7.模块化
+    Node实现CommonJS规范，所以可以使用模块化的方式组织代码结构。
+    模块与文件是一一对应关系，即加载一个模块，实际上就是加载对应的一个模块文件。
+
+    /******定义模块******/
+    //CMD规范
+        define(function (require,module,exports){
+            function add(a,b){}
+            function subtract(a,b){}
+
+            //导出
+            exports.add = add;
+            或
+            module.exports={add,subtract}
+        })
+
+    //commonJs规范
+        function add(a,b){}
+        function subtract(a,b){}
+
+        //导出
+        exports.add = add;
+        或
+        module.exports={add,subtract}
+
+    /******导入模块******/
+        require(path);
+    
+    》模块的分类
+        》文件模块 -- 自己写的功能模块文件
+        》核心模块 -- Node平台自带的一套基本的功能模块，也有人称为Node平台的API
+        》第三方模块 -- 社区或第三方个人开发好的功能模块，可以直接拿过来用
+    》模块化开发的流程
+        》创建模块 new calc.js
+        》导出成员 module.exports = {}
+        》载入模块 var calc = require('./calc.js)
+        》使用模块 calc.add(1,2)
+    》模块中的全局成员
+        》__dirname
+            用于获取当前文件 *所在目录* 的完整路径
+            在REPL环境无效
+        》__filename
+            用来获取 *当前文件* 的完整路径
+            在REPL环境同样无效
+        》module 模块对象
+            Node内部提供了一个Module构建函数，所有模块都是Module的实例，其属性
+            如下：
+            》id 模块的识别符，通常是带有绝对路径的模块文件名
+            》filename 模块定义的文件的绝对路径
+            》loaded 返回一个布尔值，表示模块是否已经完成加载
+            》parent 返回一个对象，表示调用该模块的模块
+            》children 返回一个数组，表示该模块要用到的其他模块
+            》exports 表示模块对外输出的值
+
+            其实 载入一个模块就是构建一个Module实例
+        》exports 映射到module.exports的别名
+            var module = {};
+            module.exports = {};
+            var exports = module.exports;
+
+        》require()
+            require.cache
+            require.extensions
+            require.main
+            require.resolve()   
+    》模块的定义
+        一个新的js文件就是一个模块；
+        一个合格的模块应该是有导出成员的，否则模块就失去了定义的价值。
+
+        模块内部是一个独立(封闭)的作用域(模块与模块之间不会冲突);
+        模块之间必须通过导出或导入的方式协同。
+
+        导出方式：
+            exports.name = value;
+            或
+            module.exports = {name:value};
+            或
+            exports = module.exports = {name:value}
+        》module.exports 和 exports的区别
+            module.exports是用于为模块导出成员的接口
+            exports是指向module.exports的别名，相当于在模块开始的时候执行：
+                var exports = module.exports;
+            一旦为module.exports赋值，就会切断之前两者的相关性。
+            最终模块的导出成员以module.exports为准。
+    》载入模块
+        》require简介
+            Node使用commonJs模块规范，内置的require函数用于加载模块文件。
+            require的基本功能是，读入并执行一个js文件，然后返回该模块的exports对象。
+            如果没有发现指定模块，会报错。
+        》模块的加载机制
+            读取模块文件 -》 执行读取的模块内容 -》 返回模块的exports对象
+
+            require的实现机制：
+            》将传入的模块ID通过加载规则找到对应的模块文件
+            》读取这个文件里面的代码
+            》通过拼接的方式为该段代码构建私有空间
+            》执行该代码
+            》拿到module.exports返回
+
+        》require扩展名
+            require加载文件时可以省略扩展名
+            当文件名相同，扩展名不同时的优先级：js>json(通常用作配置文件)>node(此时文件**.node预编译好的C++模块执行)
+
+            当模块名是一个文件夹时，默认载入其中的index.js,但是当文件夹中有package.json,并且package.json
+            中定义的main的入口文件存在时，它会去加载main对应的入口文件。
+        》require加载文件规则
+            》通过./或../开头：则按照相对路径从当前文件所在文件夹开始寻找模块
+            》通过/开头：则以系统根目录开始寻找模块
+            》如果参数字符串不以'./'或'/'开头，则表示加载的是一个默认提供的核心模块(位于Node的系统安装目录中)
+                require('fs');//加载核心模块中的文件系统模块
+              或者从当前目录向上搜索node_modules目录中的文件：(如果你自己的模块不想通过相对或绝对路径导入，可以把它放到node_modules中)
+                require('my_module');//各级node_modules文件夹中搜索my_modules.js文件
+
+            注意：模块名重复时，系统模块的优先级最高
+        》模块的缓存
+            第一次加载某个模块时，Node会缓存该模块。以后在加载该模块就直接从缓存中取出该模块的
+            module.exports属性(不会再次执行该模块)。
+
+            如果需要多次执行模块中的代码，一般可以让模块暴露行为函数。 //用的比较多
+                module.exports = new date();//有缓存  时间不会改变
+                module.exports = () => {//暴露行为函数，时间会改变
+                    return new date();
+                }
+            模块的缓存可以通过require.cache拿到，同样也可以删除。//用的比较少
+                清空缓存:delete require.cache[key];
+8.node的核心模块
+    》核心模块的意义
+        如果只是在服务器运行js代码，意义并不大，因为无法实现任何功能(读写文件，访问网络)。
+        Node的用处在于它本身还提供的一系列功能模块，用于与操作系统互动。
+
+        这些核心的功能模块在Node中已经内置了。
+    》常用的内置模块
+        》path 处理文件路径
+
+        》fs 操作文件系统
+
+        》child_process 新建子进程
+
+        》util 提供了一系列实用小工具
+
+        》http 提供了http服务器功能
+
+        》url 用于解析URL
+
+        》querystring 解析URL中的查询字符串
+
+        》crypto 提供了加密和解密功能
+    》包 -- npm -- node package manage -- npmjs.com
+        由于node是一套轻内核的平台，虽然提供了一系列的内置模块，但是不足以满足开发者的需求，于是乎出现了包 package 的概念。
+        与核心模块类似，就是将一些预先设计好的功能或者说API封装到一个文件夹，提供给开发者使用。
+
+        》包的加载机制
+            require('http');
+
+            先在系统核心(优先级最高)的模块中找。(以后不要创建一些和现有的包重名的包)
+            然后再到当前项目中node_modules目录中找。
+        》安装npm
+            npm不需要单独安装。默认在安装node的时候，会连带一起安装npm。
+            但是node附带的npm可能不是最新版本，最好用下面命令，更新到最新版本。
+                npm install npm -g;
+                默认安装到当前系统node所在目录下。
+            由于之前使用nvm的方式安装的node 所以需要重新配置 npm 的全局目录。
+                npm config set prefix path(如：c:\develop\nvm\npm)
+                npm config set catch path(如：c:\develop\nvm\npm-catch)//设置缓存目录
+                npm config set registry path(如：http://registry.npm.taobao.org/)//设置镜像
+            再配置npm的环境变量
+
+            配置镜像
+                npm install nrm(node register manager) -g
+
+                nrm ls 查看镜像源列表
+                nrm use cnpm 切换镜像源
+                nrm test 查看镜像源速度
+        》常用命令
+            npm config 查看配置
+            npm init 初始化package.json
+            npm search 
+            npm info 查看包的一些信息
+            npm install
+            npm uninstall
+            npm list 查看当前npm的依赖
+            npm outdated 判断哪个包需要更新
+            npm update 更新包
+            npm run
+            npm cache [clean || ls]操作缓存
+
+9.文件系统操作
+    》相关模块
+        》fs 基础的文件操作 API
+            》同步或异步调用
+                fs模块对文件的几乎所有操作都有同步和异步两种形式
+                如：readFile() 异步
+                    readFileSync() 同步
+                区别：
+                    同步调用会阻塞代码的执行 异步则不会。
+                    异步调用会将读取任务下达到任务队列，直到任务执行完成才会回调。
+                    异常处理，同步必须使用 try catch方式 异步可以通过回调函数的第一个参数处理。
+
+        》path 提供和路径相关的操作 API
+            在文件操作的过程中 都 必须 使用物理路径 (绝对路径)。
+
+            path模块提供了一系列与路径相关的API：
+            》path.join([p1][,p2][....])//链接多个路径
+            》path.basename(p,ext)//获取文件名
+            》path.dirname(p)//获取文件夹路径
+            》path.extname(p)//获取文件扩展名
+            》path.format(obj)和path.parse(p)
+            》path.relative(from,to) //获取从from到to的相对路径
+
+        》readline 用于读取大文本文件 一行一行的读取
+
+        》fs-extra 第三方的
+10. VScode 安装插件
+    ctrl + shift + p
+
+    然后安装relative插件
+     install 安装扩展  然后 搜索relative插件
+
+    使用插件的时候 直接搜索relative即可
+11.Buffer
+    读取文件时没有指定编码默认读取的是一个Buffer(缓冲区)。
+    》什么是缓冲区
+        缓冲区就是内存中操作数据的容器，只是数据容器而已。
+
+        通过缓冲区可以很方便的操作二进制数据，而且在大文件操作时必须有缓冲区。
+    》为什么要有缓冲区
+        js是比较擅长处理字符串，但是早期的应用场景主要用于处理HTML文档，不会有太大篇幅的数据处理，也不会接触到二进制的数据。
+
+        而在node中操作数据，网络通信是没有办法完全以字符串的方式操作的，所以在node中引入了一个二进制的缓冲区的实现 Buffer。
+    》readFile的方式确实是使用了Buffer，但是也是一次性读取
+        从buffer中读取数据  buffer.toString('编码')
+    》使用场景
+        把图片转成base64
+        buffter.toString('base64') -- 拿到的是图片内容  需要自己在前面加上dataUrl协议 如：data:image/png;base64,
+    》node中 编码之间的转换 用iconv-lite库
+
+12.文件写入
+    确保操作没有额外的问题，一定使用绝对路径的方式。
+    》异步文件写入
+        fs.writeFile(file,data[,option],callback);
+    》同步文件写入
+        fs.writeFileSync(file,data[,option]);
+    》流式文件写
+        fs.createWriteStream(path[,option]);
+    》移动 重命名文件或目录
+        fs.rename(oldPath,newPath)
+    》删除文件
+        fs.unlink(path)
+    》创建一个目录
+        fs.mkdir //只能一级一级的创建
+        fs.mkdirSync
+    》删除一个空目录
+        fs.rmdir
+        fs.rmdirSync
+    》读取一个目录
+        fs.readdir
+        fs.readdirSync    
+13.监听文件变化
+    fs.watchFile
+    fs.watch
+14.流
+    》什么是流
+        流是程序输入 或 输出 的一个连续的字节序列。
+
+        如：文件流 网络流
+        设备(如鼠标 键盘 磁盘 屏幕 调制解调器和打印机)的输入和输出都是用流来处理的。
+    》文件流
+        文件流就是以面向对象的概念对文件数据进行的抽象，文件流定义了一些对文件数据的操作方式。
+    》node中文件流的操作
+        在node核心模块fs中定义了一些与流相关的API
+        fs.createReadStream() => 得到一个ReadableStream
+        fs.createWriteStream() => 得到一个WritableStream
+
+    》npm ls --depth 0 查看根级依赖包
+15.网络操作
+    》HTTP基础知识
+        
+
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
 
 
 

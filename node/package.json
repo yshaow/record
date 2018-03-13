@@ -1,0 +1,7 @@
+{
+    "devDependencies": {
+        "browser-sync": "^2.23.6",
+        "iconv-lite": "^0.4.19",
+        "marked": "^0.3.16"
+    }
+}

@@ -42,3 +42,4 @@ unslider:http://www.jq22.com/jquery-info1940
 		第一步：在路由path前面加上基路径，因为'/'表示的是域名对应的根目录，如果不在根目录需要加上域名之后的多个层级目录
 		第二步：在webpack的配置文件中 build(生产环境)属性下的：assetsPublicPath属性，加上上面同样的基路径，避免组件中的
 			图片找不到位置。
+

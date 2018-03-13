@@ -1,0 +1,46 @@
+/******************angular1*********************/
+
+
+/******************angular2*********************/
+1.简介
+    适用于 大型 复杂的应用
+    不仅仅是一个开发框架，更是一个开发平台
+2. ng1 VS ng2
+    ng1：
+        结构化 MVC 框架
+        html 和 逻辑分离
+        客户端模板
+
+        angular.module('myModule')
+        .controller('myController',function(){
+
+        })
+
+        <div ng-controller='myController'>
+        
+        </div>
+    ng2：
+        基于UI的组件
+        模块设计
+        TypeScript
+        快
+
+        import {Component} from '@angular/core';
+        @Component({
+            selector:'my-app',
+            template:``
+        });
+
+        export class MyAppComponent{
+
+
+        }
+        <my-app></my-app>
+3.TypeScript
+    由微软提出，是js的一个扩展。
+4.ng2 安装
+    全局安装ng脚手架：npm install -g @angular/cli
+    创建一个项目：ng new my-app
+    开启服务：
+        cd my-app
+        ng serve --open
