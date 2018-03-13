@@ -83,7 +83,11 @@
 
             通过nvm ls 查看node可用的版本
             nvm use 版本号 [32的需要带上系统号:32] 切换node的版本
+<<<<<<< HEAD
         》npm的目录后面再配置
+=======
+        》nmp的目录后面再配置
+>>>>>>> 98a9ff8f1a2931c18eee9e0ed3ae8ab27a350c32
     》配置Python环境
 
     》windows常用命令
