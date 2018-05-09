@@ -1,45 +1,48 @@
-1.//Ïû³ıÒÆ¶¯¶ËÊ±  µã»÷a±êÇ©³öÏÖµÄÀ¶É«±³¾°
+1.//æ¶ˆé™¤ç§»åŠ¨ç«¯æ—¶  ç‚¹å‡»aæ ‡ç­¾å‡ºç°çš„è“è‰²èƒŒæ™¯
 a{
     -webkit-tap-highlight-color:transparent;
 }
-2.Õë¶Ô»ğºüä¯ÀÀÆ÷µÄCSS Hack:
+2.é’ˆå¯¹ç«ç‹æµè§ˆå™¨çš„CSS Hack:
 	@-moz-document url-prefix() {.selector {attribute: value;}}
-Õë¶ÔwebkitÄÚºË¼°Operaä¯ÀÀÆ÷µÄCSS Hack:
+é’ˆå¯¹webkitå†…æ ¸åŠOperaæµè§ˆå™¨çš„CSS Hack:
 	@media all and (min-width:0){.selector {attribute: value;/*for webkit and opera*/}}
-´ÓÕâ¸öÑùÊ½ÎÒÃÇÖ»ÄÜ°ÑwebkitÄÚºËµÄä¯ÀÀÆ÷ºÍOperaä¯ÀÀÆ÷´ÓÆäËüä¯ÀÀÆ÷ÖĞÇø·Ö³öÀ´£¬µ«²¢²»ÄÜÇø·ÖËüÃÇÁ©£¬Òò´ËÎÒÃÇ»¹ĞèÒªÔÚÉÏÃæÑùÊ½µÄ»ù´¡ÉÏÔÙ¼ÓÒ»¸öÑùÊ½£º
+ä»è¿™ä¸ªæ ·å¼æˆ‘ä»¬åªèƒ½æŠŠwebkitå†…æ ¸çš„æµè§ˆå™¨å’ŒOperaæµè§ˆå™¨ä»å…¶å®ƒæµè§ˆå™¨ä¸­åŒºåˆ†å‡ºæ¥ï¼Œä½†å¹¶ä¸èƒ½åŒºåˆ†å®ƒä»¬ä¿©ï¼Œå› æ­¤æˆ‘ä»¬è¿˜éœ€è¦åœ¨ä¸Šé¢æ ·å¼çš„åŸºç¡€ä¸Šå†åŠ ä¸€ä¸ªæ ·å¼ï¼š
 	@media screen and (-webkit-min-device-pixel-ratio:0) {.selector {attribute:value ForWebKit;/*only for webkit*/    }}
-3.¶àĞĞÎÄ±¾Ìí¼ÓÊ¡ÂÔºÅ
-	jQuery.dotdotdot.js²å¼ş
-/****************µØÖ·*****************/
+3.å¤šè¡Œæ–‡æœ¬æ·»åŠ çœç•¥å·
+	jQuery.dotdotdot.jsæ’ä»¶
+/****************åœ°å€*****************/
 dva:https://github.com/dvajs/dva-knowledgemap#javascript-%E8%AF%AD%E8%A8%80
 react:https://facebook.github.io/react/
 node-sass:https://npm.taobao.org/mirrors/node-sass/v4.5.0/
 vue:https://cn.vuejs.org/
 npm:https://www.npmjs.com/
 swiper:http://www.swiper.com.cn/
-Ä½¿ÎÍø£ºhttp://www.imooc.com/course/list?c=vuejs
+æ…•è¯¾ç½‘ï¼šhttp://www.imooc.com/course/list?c=vuejs
 webpack:http://webpack.github.io/
-ÈîÒ»·å£ºhttp://www.ruanyifeng.com/home.html
+é˜®ä¸€å³°ï¼šhttp://www.ruanyifeng.com/home.html
 compass:http://compass-style.org/
 html5tricks:http://www.html5tricks.com/
-Ìõ¼ş×¢ÊÍ£ºhttp://www.cnblogs.com/libinblog/p/4239227.html
-sass:http://sass-lang.com/  ÖĞÎÄ£ºhttp://www.css88.com/doc/sass/
-grunt²å¼ş£ºhttp://www.gruntjs.net/plugins
+æ¡ä»¶æ³¨é‡Šï¼šhttp://www.cnblogs.com/libinblog/p/4239227.html
+sass:http://sass-lang.com/  ä¸­æ–‡ï¼šhttp://www.css88.com/doc/sass/
+gruntæ’ä»¶ï¼šhttp://www.gruntjs.net/plugins
 es6:http://es6.ruanyifeng.com/
-µ¥ĞĞ ¶àĞĞ Ê¡ÂÔ£ºhttp://www.daqianduan.com/6179.html
-github£ºhttps://github.com/
-ÏìÓ¦Ê½µÄÊÊÅäÆÁÄ»£ºhttps://zhidao.baidu.com/question/1894060773333596020.html
-¼æÈİie8µÄrgba£ºhttp://www.tuicool.com/articles/juiEFrb
+å•è¡Œ å¤šè¡Œ çœç•¥ï¼šhttp://www.daqianduan.com/6179.html
+githubï¼šhttps://github.com/
+å“åº”å¼çš„é€‚é…å±å¹•ï¼šhttps://zhidao.baidu.com/question/1894060773333596020.html
+å…¼å®¹ie8çš„rgbaï¼šhttp://www.tuicool.com/articles/juiEFrb
 meta:http://blog.csdn.net/yc123h/article/details/51356143
 unslider:http://www.jq22.com/jquery-info1940
-/******************Vue¿Ó****************/
-1.µ¥ÎÄ¼ş×é¼şÖĞ style±êÇ©¼ÓÁËscoped »áÎªÑùÊ½Ìí¼ÓÊôĞÔÑ¡ÔñÆ÷  Èç¹ûÓÃÁËµÚÈı·½UI×é¼ş£¬¿ÉÄÜ»á³öÏÖÆ¥Åä²»µ½µÄÇé¿ö¡£
-	½â¾ö£ºÈ¥µô scoped  ±ÜÃâÓ°ÏìÈ«¾ÖÑùÊ½£¬¿ÉÒÔÌí¼Ó¶¥²ãÑ¡ÔñÆ÷
-2.¿ª·¢»·¾³ÖĞ£¬ajaxÒì²½ÇëÇóÕÒ²»µ½Â·¾¶µÄÎÊÌâ¡£
-	½â¾ö£ºÔÚwebpackÅäÖÃÖĞÌí¼Ó´úÀí£¬¼´¿ÉÒÔÕÒµ½
-3.vue-routerµÄÎÊÌâ£¬´ò°üÖ®ºó£¬·ÃÎÊÒ³Ãæ£¬ÄÚÈİÎŞ·¨ÏÔÊ¾µÄÎÊÌâ
-	½â¾ö£º
-		µÚÒ»²½£ºÔÚÂ·ÓÉpathÇ°Ãæ¼ÓÉÏ»ùÂ·¾¶£¬ÒòÎª'/'±íÊ¾µÄÊÇÓòÃû¶ÔÓ¦µÄ¸ùÄ¿Â¼£¬Èç¹û²»ÔÚ¸ùÄ¿Â¼ĞèÒª¼ÓÉÏÓòÃûÖ®ºóµÄ¶à¸ö²ã¼¶Ä¿Â¼
-		µÚ¶ş²½£ºÔÚwebpackµÄÅäÖÃÎÄ¼şÖĞ build(Éú²ú»·¾³)ÊôĞÔÏÂµÄ£ºassetsPublicPathÊôĞÔ£¬¼ÓÉÏÉÏÃæÍ¬ÑùµÄ»ùÂ·¾¶£¬±ÜÃâ×é¼şÖĞµÄ
-			Í¼Æ¬ÕÒ²»µ½Î»ÖÃ¡£
+/******************Vueå‘****************/
+1.å•æ–‡ä»¶ç»„ä»¶ä¸­ styleæ ‡ç­¾åŠ äº†scoped ä¼šä¸ºæ ·å¼æ·»åŠ å±æ€§é€‰æ‹©å™¨  å¦‚æœç”¨äº†ç¬¬ä¸‰æ–¹UIç»„ä»¶ï¼Œå¯èƒ½ä¼šå‡ºç°åŒ¹é…ä¸åˆ°çš„æƒ…å†µã€‚
+	è§£å†³ï¼šå»æ‰ scoped  é¿å…å½±å“å…¨å±€æ ·å¼ï¼Œå¯ä»¥æ·»åŠ é¡¶å±‚é€‰æ‹©å™¨
+2.å¼€å‘ç¯å¢ƒä¸­ï¼Œajaxå¼‚æ­¥è¯·æ±‚æ‰¾ä¸åˆ°è·¯å¾„çš„é—®é¢˜ã€‚
+	è§£å†³ï¼šåœ¨webpacké…ç½®ä¸­æ·»åŠ ä»£ç†ï¼Œå³å¯ä»¥æ‰¾åˆ°
+3.vue-routerçš„é—®é¢˜ï¼Œæ‰“åŒ…ä¹‹åï¼Œè®¿é—®é¡µé¢ï¼Œå†…å®¹æ— æ³•æ˜¾ç¤ºçš„é—®é¢˜
+	è§£å†³ï¼š
+		ç¬¬ä¸€æ­¥ï¼šåœ¨è·¯ç”±pathå‰é¢åŠ ä¸ŠåŸºè·¯å¾„ï¼Œå› ä¸º'/'è¡¨ç¤ºçš„æ˜¯åŸŸåå¯¹åº”çš„æ ¹ç›®å½•ï¼Œå¦‚æœä¸åœ¨æ ¹ç›®å½•éœ€è¦åŠ ä¸ŠåŸŸåä¹‹åçš„å¤šä¸ªå±‚çº§ç›®å½•
+		ç¬¬äºŒæ­¥ï¼šåœ¨webpackçš„é…ç½®æ–‡ä»¶ä¸­ build(ç”Ÿäº§ç¯å¢ƒ)å±æ€§ä¸‹çš„ï¼šassetsPublicPathå±æ€§ï¼ŒåŠ ä¸Šä¸Šé¢åŒæ ·çš„åŸºè·¯å¾„ï¼Œé¿å…ç»„ä»¶ä¸­çš„
+			å›¾ç‰‡æ‰¾ä¸åˆ°ä½ç½®ã€‚
+/*********************node-sasså®‰è£…é—®é¢˜**********************/
+1.npmå®‰è£…node-sasså¤±è´¥æ—¶
+ Â ä¸‹è½½å¯¹åº”çš„node-sassç‰ˆæœ¬åˆ°æœ¬åœ°ï¼Œç„¶ååœ¨npm installä¹‹å‰æ‰§è¡Œset SASS_BINARY_PATH=æœ¬åœ°node-sassçš„path(å¦‚ï¼šD:/tools/node-sass/win32-x64-57_binding.node)
 
