@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>培训</title>
+    <style>
+        * {
+            margin: 0 0;
+            padding: 0 0;
+            font-size: 0;
+        }
+
+        html, body {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .container {
+            width: 72px;
+            height: 72px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, .8);
+        }
+
+        .container:hover .item {
+            transform: translate(-50%, -50%) rotate(90deg);
+        }
+
+        .item, .item:before, .item:after {
+            content: "";
+            width: 24px;
+            height: 4px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transform-origin: 50% 50%;
+            background-color: rgba(255, 255, 255, .8);
+            transition: transform 200ms;
+            animation: widthChange 600ms linear infinite 200ms;
+        }
+
+        .item:before {
+            top: 0;
+            transform: translate(-50%, -10px);
+            animation: widthChange 600ms linear infinite;
+        }
+
+        .item:after {
+            top: 0;
+            transform: translate(-50%, 10px);
+            animation: widthChange 600ms linear infinite 400ms;
+        }
+
+        @keyframes widthChange {
+            0% {
+                width: 24px;
+            }
+
+            50% {
+                width: 36px;
+            }
+
+            100% {
+                width: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="item"></div>
+    </div>
+</body>
+</html>
