@@ -46,3 +46,5 @@ unslider:http://www.jq22.com/jquery-info1940
 1.npm安装node-sass失败时
   下载对应的node-sass版本到本地，然后在npm install之前执行set SASS_BINARY_PATH=本地node-sass的path(如：D:/tools/node-sass/win32-x64-57_binding.node)
 
+/**********************深拷贝实现**************************/
+var obj = JSON.parse(JSON.stringify(obj))
