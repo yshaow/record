@@ -48,3 +48,8 @@ unslider:http://www.jq22.com/jquery-info1940
 
 /**********************深拷贝实现**************************/
 var obj = JSON.parse(JSON.stringify(obj))
+/**********************require请求资源传递变量**************************/
+var test = '../../test.png'
+require(test) // 错误
+require('../../' + 'test' + '.png') // 正确
+需要吧后缀与变量拆分
