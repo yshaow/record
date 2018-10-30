@@ -54,4 +54,4 @@ require(test) // 错误
 require('../../' + 'test' + '.png') // 正确
 需要吧后缀与变量拆分
 /**********************去掉textarea右下角符号**************************/
-textarea {resize:none;}
+textarea {resize:none;} // 禁止调整大小
