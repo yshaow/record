@@ -55,3 +55,11 @@ require('../../' + 'test' + '.png') // 正确
 需要吧后缀与变量拆分
 /**********************去掉textarea右下角符号**************************/
 textarea {resize:none;} // 禁止调整大小
+
+/****************配置px2rem*****************/
+const cssLoader = {
+	loader: 'webpack-px2rem-loader?basePx=37.5&min=1&floatWidth=3!css-loader',
+	options: {
+	sourceMap: options.sourceMap
+	}
+}
